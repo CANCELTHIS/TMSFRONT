@@ -1,0 +1,201 @@
+/* Global Styles */
+* {
+    font-family: "Space Grotesk", serif;
+}
+
+#logo {
+    width: 80px;
+}
+
+.nav-link {
+    font-size: 18px;
+    color: #181E4B;
+}
+
+.headertext1 {
+    color: #DF6951;
+}
+
+.headertext2 {
+    color: #181E4B;
+    font-size: 50px;
+}
+
+.headertext1, .headertext2 {
+    margin-top: 10px;
+    margin-left: 5%;
+}
+
+.navbar-brand {
+    margin-left: 3.5%;
+}
+
+.headertext3 {
+    margin-top: 10px;
+    margin-left: 5%;
+}
+
+nav {
+    margin-top: -5px;
+    margin-right: 10px;
+}
+
+/* Top Navbar Styles */
+.navbar {
+    background-color: transparent !important; /* Removes background color */
+}
+
+.navbar-nav {
+    display: flex; /* Align items horizontally */
+    gap: 20px; /* Space out the items */
+    justify-content: center; /* Center the items */
+}
+
+.nav-item {
+    list-style: none;
+}
+
+.nav-link {
+    color: #181E4B; /* Color for the nav links */
+    font-size: 18px;
+    text-decoration: none;
+}
+
+.navbar-toggler {
+    border: none;
+}
+
+.navbar-toggler-icon {
+    background-color: #181E4B;
+}
+
+/* Hero Section */
+.Hero1 {
+    display: flex;
+    justify-content: space-around;
+}
+
+#car {
+    width: 500px;
+}
+
+#texthero2 {
+    color: #14183E;
+    margin-top: 20px;
+}
+
+.serviceText1 {
+    color: #14183E;
+}
+
+.car {
+    width: 250px;
+}
+
+/* Circles */
+.circle1, .circle2, .circle3, .circle4 {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    position: relative;
+}
+
+.circle1 {
+    background-color: #077D89;
+    top: 150px;
+}
+
+.circle2 {
+    background-color: #DF6951;
+    top: 80px;
+    left: 290px;
+}
+
+.circle3 {
+    background-color: #ffc107;
+    top: 50px;
+}
+
+.circle4 {
+    background-color: #443480;
+    top: 70px;
+    left: 310px;
+}
+
+/* Footer Styles */
+.footer {
+    background-color: #0b455b;
+    color: white;
+    padding: 20px 0;
+}
+
+.footer-column {
+    margin-left: 50px;
+}
+
+.footer-column p {
+    margin: 10px 0;
+}
+
+.footer-column h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    list-style-type: none;
+    padding: 0;
+}
+
+.footer-nav li {
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+}
+
+.social-icons a {
+    color: white;
+    text-decoration: none;
+}
+
+.social-icons a:hover {
+    color: #dcdcdc;
+}
+
+.subscribe {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.email-input {
+    padding: 10px;
+    width: 70%;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    position: relative;
+}
+
+.send-button {
+    padding: 10px;
+    background-color: #0b455b;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.send-button:hover {
+    background-color: #0a3e4b;
+}
+.navs{
+    display: flex;
+}
