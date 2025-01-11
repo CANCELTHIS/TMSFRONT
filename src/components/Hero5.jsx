@@ -1,6 +1,6 @@
 import React from 'react';
-import Allocate from "../assets/allocate.jpg";
-import Schedule from "../assets/schedul.jpg";
+import Allocate from "../assets/Allocate.jpg";
+import Schedule from "../assets/Schedule.jpg";
 
 const Hero5 = () => {
   return (
@@ -9,14 +9,10 @@ const Hero5 = () => {
       <div className="row justify-content-center mb-3">
         <div className="col-12 col-md-8">
           <div className="card h-100">
-            <div className="card-body d-flex flex-column flex-md-row align-items-center">
+            <div className="card-body d-flex align-items-center">
               {/* Image on the left */}
-              <div className="image-container mb-3 mb-md-0 me-md-4">
-                <img 
-                  src={Allocate} 
-                  alt="This is allocation Im" 
-                  className="card-img img-fluid" 
-                />
+              <div className="image-container me-4">
+                <img src={Allocate} alt="This is allocation Im" className="card-img" />
               </div>
               <div>
                 <h5 className="card-title">Get started Today!</h5>
@@ -38,7 +34,7 @@ const Hero5 = () => {
       <div className="row justify-content-center">
         <div className="col-12 col-md-8">
           <div className="card h-100">
-            <div className="card-body d-flex flex-column flex-md-row align-items-center">
+            <div className="card-body d-flex align-items-center">
               <div>
                 <h5 className="card-title">Trip Approval and Resource Allocation</h5>
                 <p className="card-text">
@@ -46,12 +42,8 @@ const Hero5 = () => {
                 </p>
               </div>
               {/* Image on the right */}
-              <div className="image-container ms-md-4 mt-3 mt-md-0">
-                <img 
-                  src={Schedule} 
-                  alt="allocation Image" 
-                  className="card-img img-fluid" 
-                />
+              <div className="image-container ms-4">
+                <img src={Schedule} alt="allocation Image" className="card-img" />
               </div>
             </div>
           </div>
