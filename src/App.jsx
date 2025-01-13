@@ -8,6 +8,7 @@ import Hero4 from './components/Hero4';
 import Hero5 from './components/Hero5';
 import EmailForm from './components/EmailForm';
 import Footer from './components/Footer';
+import Login from './components/Login';
 const App = () => {
   return (
     <div className='app' id="home">
@@ -19,6 +20,7 @@ const App = () => {
       <Hero5/>
       <EmailForm/>
       <Footer/>
+      <Login/>
     </div>
   );
 };
