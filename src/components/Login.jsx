@@ -33,7 +33,8 @@ const Login = () => {
           </button>
         </form>
         <div className="text-center mt-3">
-        Don’t have an account?<a href="#" className="text-decoration-none">Sign Up</a>
+          <span>Don’t have an account? </span>
+          <a href="#" className="text-decoration-none ms-1">Sign Up</a>
         </div>
       </div>
     </div>
