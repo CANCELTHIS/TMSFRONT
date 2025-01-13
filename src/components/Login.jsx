@@ -5,15 +5,15 @@ const Login = () => {
     <div className="container d-flex justify-content-center align-items-center vh-100">
       <div className="card p-4 shadow" style={{ width: '22rem' }}>
         <h1 className="text-center mb-4">Login</h1>
-        <h2>hellow </h2>
         <form>
           <div className="mb-3">
             <label htmlFor="email" className="form-label">Email Address</label>
             <input
-              type="text"
+              type="email"
               className="form-control"
               id="email"
               placeholder="Your email address"
+              required
             />
           </div>
           <div className="mb-3">
@@ -23,6 +23,7 @@ const Login = () => {
               className="form-control"
               id="password"
               placeholder="Your password"
+              required
             />
           </div>
           <button
@@ -34,7 +35,7 @@ const Login = () => {
           </button>
         </form>
         <div className="text-center mt-3">
-        Don’t have an account?<a href="#" className="text-decoration-none">Sign Up</a>
+          Don’t have an account? <a href="/Signup" className="text-decoration-none">Sign Up</a>
         </div>
       </div>
     </div>
