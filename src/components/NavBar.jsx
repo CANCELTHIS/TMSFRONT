@@ -3,7 +3,7 @@ import Logo from "../assets/Logo.jpg";
 import "../index.css";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { useLanguage } from '../context/LanguageContext'; // Importing from context
-
+import { FaLanguage } from "react-icons/fa6";
 const NavBar = () => {
   // Access the global language state and toggle function from the context
   const { mylanguage, toggleLanguage } = useLanguage();
@@ -46,7 +46,7 @@ const NavBar = () => {
                 </li>
                 <li className="nav-item">
                   <a className="nav-link" href="#" onClick={toggleLanguage}>
-                  {mylanguage === 'EN' ? 'EN' : 'አማ'} <IoMdArrowDropdown />
+                  {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={30}/>
                   </a>
                 </li>
               </section>

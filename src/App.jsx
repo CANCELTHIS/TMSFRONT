@@ -8,7 +8,6 @@ import Hero4 from './components/Hero4';
 import Hero5 from './components/Hero5';
 import EmailForm from './components/EmailForm';
 import Footer from './components/Footer';
-import Login from './components/Login';
 import { LanguageProvider } from './context/LanguageContext'; // Updated relative path
 
 const App = () => {
@@ -23,7 +22,6 @@ const App = () => {
         <Hero5 />
         <EmailForm />
         <Footer />
-        <Login />
       </div>
     </LanguageProvider>
   );
