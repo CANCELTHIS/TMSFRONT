@@ -5,7 +5,7 @@ const Login = () => {
     <div className="container d-flex justify-content-center align-items-center vh-100">
       <div className="card p-4 shadow" style={{ width: '22rem' }}>
         <h1 className="text-center mb-4">Login</h1>
-        <h2>hellow user</h2>
+        <h2>hellow </h2>
         <form>
           <div className="mb-3">
             <label htmlFor="email" className="form-label">Email Address</label>
