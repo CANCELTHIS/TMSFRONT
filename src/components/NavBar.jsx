@@ -1,15 +1,13 @@
 import React from 'react';
 import Logo from "../assets/Logo.jpg";
 import "../index.css";
-import { IoMdArrowDropdown } from "react-icons/io";
-import { useLanguage } from '../context/LanguageContext'; // Importing from context
+import { useLanguage } from '../context/LanguageContext'; 
 import { FaLanguage } from "react-icons/fa6";
 const NavBar = () => {
-  // Access the global language state and toggle function from the context
   const { mylanguage, toggleLanguage } = useLanguage();
 
   return (
-    <div>
+    <div className='mynav'>
       <nav className="navbar navbar-expand-lg navbar-light">
         <div className="container-fluid">
           <a className="navbar-brand" href="#">

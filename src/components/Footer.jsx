@@ -16,10 +16,10 @@ const Footer = () => {
               <p>
                 {mylanguage === 'EN' 
                   ? 'Copyright © 2025 Innovation and Technology Minister.' 
-                  : 'ቅጂ ማቅረብ  © 2025 ፣ ማህበረሰብና ቴክኖሎጂ ሚኒስቴር።'}
+                  : 'የቅጂ መብት  © 2025 ፣ የኢኖቬሽን እና ቴክኖሎጂ ሚኒስቴር።'}
               </p>
               <p>
-                {mylanguage === 'EN' ? 'All rights reserved' : 'ሁሉም መብቶች ተጠባባቂ ናቸው'}
+                {mylanguage === 'EN' ? 'All rights reserved' : 'ሁሉም መብቶች የተጠበቁ'}
               </p>
               <div className="social-icons">
                 <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-white me-2">
@@ -48,7 +48,7 @@ const Footer = () => {
                 <li>{mylanguage === 'EN' ? 'Home' : 'መነሻ'}</li>
                 <li>{mylanguage === 'EN' ? 'Service' : 'አገልግሎት'}</li>
                 <li>{mylanguage === 'EN' ? 'About Us' : 'ስለ እኛ'}</li>
-                <li>{mylanguage === 'EN' ? 'Contact' : 'እባኮት ያነጋግሩ'}</li>
+                <li>{mylanguage === 'EN' ? 'Contact' : 'አገናኝ'}</li>
               </ul>
             </div>
           </div>
@@ -57,13 +57,13 @@ const Footer = () => {
           <div className="col-12 col-md-4">
             <div className="footer-column">
               <h3 className="mb-3">
-                {mylanguage === 'EN' ? 'Stay up to date' : 'ቀጣይ ያሳዩ'}
+                {mylanguage === 'EN' ? 'Stay up to date' : 'ወቅታዊ ቆይታ'}
               </h3>
               <div className="subscribe">
                 <input
                   type="email"
                   className="email-input form-control"
-                  placeholder={mylanguage === 'EN' ? 'Enter your email address' : 'ኢሜል አድራሻዎን ይግቡ'}
+                  placeholder={mylanguage === 'EN' ? 'Enter your email address' : 'የኢሜል አድራሻዎን ያስገቡ'}
                 />
                 <button className="send-button btn btn-primary mt-2 mt-md-0">
                   <FaPaperPlane size={20} />

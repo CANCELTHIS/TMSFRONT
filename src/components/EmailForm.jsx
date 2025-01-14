@@ -2,36 +2,20 @@ import React, { useRef } from 'react';
 import emailjs from '@emailjs/browser';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap
 import "../index.css";
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext'; // Importing context
+import { ToastContainer, toast } from 'react-toastify';
 
 const EmailForm = () => {
-  const { mylanguage } = useLanguage(); // Access the current language context
+  const { mylanguage } = useLanguage();  // Access the current language from context
   const form = useRef();
 
-  // Language translations
-  const translations = {
-    EN: {
-      header: "Get in Touch",
-      subheader: "We are here for you! How can we help?",
-      name: "Name",
-      email: "Email",
-      message: "Message",
-      submit: "Submit",
-    },
-    AM: {
-      header: "እንኳን ወደ ማኅበረሰብ ተገናኝተዋል",
-      subheader: "እኛ ለእርስዎ እዚህ ነን! እንዴት ልርዳችሁ እንችላለን?",
-      name: "ስም",
-      email: "ኢሜል",
-      message: "መልእክት",
-      submit: "ማቅረብ",
-    },
-  };
-
-  const lang = translations[mylanguage] || translations.EN; // Fallback to English
+  // Toast notification
+  const notify = (senderName) => toast(`Your message from ${senderName} has been sent successfully!`);
 
   const sendEmail = (e) => {
     e.preventDefault();
+
+    const userName = form.current.user_name.value; // Get the sender's name from the form
 
     emailjs
       .sendForm('service_cf5gngo', 'template_0aua8iv', form.current, {
@@ -39,6 +23,8 @@ const EmailForm = () => {
       })
       .then(
         () => {
+          // Show toast on successful email send
+          notify(userName);
           console.log('SUCCESS!');
         },
         (error) => {
@@ -50,56 +36,66 @@ const EmailForm = () => {
   return (
     <div className="container py-4">
       {/* Header Section */}
-      <h2 className="text-center mb-3">{lang.header}</h2>
-      <p className="text-center text-muted mb-4">{lang.subheader}</p>
+      <h2 className="text-center mb-3">
+        {mylanguage === 'EN' ? 'Get in Touch' : 'ወደ ዳሰሳ ሂድ'}
+      </h2>
+      <p className="text-center text-muted mb-4">
+        {mylanguage === 'EN' ? 'We are here for you! How can we help?' : 'እኛ ለእርስዎ እዚህ ነን! እንዴት ልርዳችሁ እንችላለን?'}
+      </p>
 
       {/* Form Section */}
       <form ref={form} onSubmit={sendEmail} className="mx-auto emailform" style={{ maxWidth: '500px' }}>
         <div className="mb-3">
           <label htmlFor="name" className="form-label">
-            {lang.name}
+            {mylanguage === 'EN' ? 'Name' : 'ስም'}
           </label>
           <input
             type="text"
             name="user_name"
             className="form-control"
             id="name"
-            placeholder={lang.name}
+            placeholder={mylanguage === 'EN' ? 'Name' : 'ስም'}
             required
           />
         </div>
+
         <div className="mb-3">
           <label htmlFor="email" className="form-label">
-            {lang.email}
+            {mylanguage === 'EN' ? 'Email' : 'ኢሜል'}
           </label>
           <input
             type="email"
             name="user_email"
             className="form-control"
             id="email"
-            placeholder={lang.email}
+            placeholder={mylanguage === 'EN' ? 'Email' : 'ኢሜል'}
             required
           />
         </div>
+
         <div className="mb-3">
           <label htmlFor="message" className="form-label">
-            {lang.message}
+            {mylanguage === 'EN' ? 'Message' : 'መልእክት'}
           </label>
           <textarea
             name="message"
             className="form-control"
             id="message"
             rows="4"
-            placeholder={lang.message}
+            placeholder={mylanguage === 'EN' ? 'Message' : 'መልእክት'}
             required
           ></textarea>
         </div>
+
         <div className="d-flex justify-content-center">
-          <button type="submit" className="btn btn-primary">
-            {lang.submit}
+          <button type="submit" className="btn-custom">
+            {mylanguage === 'EN' ? 'Submit' : 'አስረክብ'}
           </button>
         </div>
       </form>
+
+      {/* ToastContainer */}
+      <ToastContainer />
     </div>
   );
 };
