@@ -209,4 +209,20 @@ nav {
 html {
     scroll-behavior: smooth;
   }
+.scroll{
+    max-width: 450px;
+    max-height: 500px;
+    border-radius: 10px;
+}
 
+.carousel .carousel-item img {
+    width: 90%;          
+    height: 400px;       
+    object-fit: cover;
+    border-radius: 10px;    
+  }
+  
+  .carousel .carousel-item {
+    padding: 5px;
+  }
+  
