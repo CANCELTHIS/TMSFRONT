@@ -1,16 +1,26 @@
 import React from "react";
 import { FaInstagram, FaYoutube, FaTelegram, FaPaperPlane } from "react-icons/fa";
 import "../index.css";
+import { useLanguage } from '../context/LanguageContext';
 
 const Footer = () => {
+  const { mylanguage } = useLanguage(); // Access the current language context
+
   return (
     <footer className="footer text-white py-4">
       <div className="container">
         <div className="row">
+          {/* First Column - Copyright and Social Media */}
           <div className="col-12 col-md-4 mb-4 mb-md-0">
             <div className="footer-column">
-              <p>Copyright © 2025 Innovation and Technology Minister.</p>
-              <p>All rights reserved</p>
+              <p>
+                {mylanguage === 'EN' 
+                  ? 'Copyright © 2025 Innovation and Technology Minister.' 
+                  : 'ቅጂ ማቅረብ  © 2025 ፣ ማህበረሰብና ቴክኖሎጂ ሚኒስቴር።'}
+              </p>
+              <p>
+                {mylanguage === 'EN' ? 'All rights reserved' : 'ሁሉም መብቶች ተጠባባቂ ናቸው'}
+              </p>
               <div className="social-icons">
                 <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-white me-2">
                   <FaInstagram size={30} />
@@ -28,26 +38,32 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* Second Column - Company Links */}
           <div className="col-12 col-md-4 mb-4 mb-md-0">
             <div className="footer-column">
-              <h3 className="mb-3">Company</h3>
+              <h3 className="mb-3">
+                {mylanguage === 'EN' ? 'Company' : 'ኩባንያ'}
+              </h3>
               <ul className="footer-nav list-unstyled">
-                <li>Home</li>
-                <li>Service</li>
-                <li>About Us</li>
-                <li>Contact</li>
+                <li>{mylanguage === 'EN' ? 'Home' : 'መነሻ'}</li>
+                <li>{mylanguage === 'EN' ? 'Service' : 'አገልግሎት'}</li>
+                <li>{mylanguage === 'EN' ? 'About Us' : 'ስለ እኛ'}</li>
+                <li>{mylanguage === 'EN' ? 'Contact' : 'እባኮት ያነጋግሩ'}</li>
               </ul>
             </div>
           </div>
 
+          {/* Third Column - Stay Up to Date */}
           <div className="col-12 col-md-4">
             <div className="footer-column">
-              <h3 className="mb-3">Stay up to date</h3>
+              <h3 className="mb-3">
+                {mylanguage === 'EN' ? 'Stay up to date' : 'ቀጣይ ያሳዩ'}
+              </h3>
               <div className="subscribe">
                 <input
                   type="email"
                   className="email-input form-control"
-                  placeholder="Enter your email address"
+                  placeholder={mylanguage === 'EN' ? 'Enter your email address' : 'ኢሜል አድራሻዎን ይግቡ'}
                 />
                 <button className="send-button btn btn-primary mt-2 mt-md-0">
                   <FaPaperPlane size={20} />

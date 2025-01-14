@@ -2,8 +2,11 @@ import React from 'react';
 import { FcQuestions, FcApproval } from "react-icons/fc";
 import { RiNotification4Fill } from "react-icons/ri";
 import { GrHostMaintenance } from "react-icons/gr";
+import { useLanguage } from '../context/LanguageContext';
 
 const ServiceCard = () => {
+  const { mylanguage } = useLanguage(); // Access the current language context
+
   return (
     <div className="container my-5">
       <div className="row g-4 justify-content-center">
@@ -13,10 +16,13 @@ const ServiceCard = () => {
               <FcQuestions size={50} />
             </div>
             <div className="card-body">
-              <h5 className="card-title">Simplified Requests</h5>
+              <h5 className="card-title">
+                {mylanguage === 'EN' ? 'Simplified Requests' : 'ቀላል ጥያቄዎች'}
+              </h5>
               <p className="card-text">
-                Easily submit transport requests through an intuitive,
-                user-friendly interface, reducing time and effort.
+                {mylanguage === 'EN' 
+                  ? 'Easily submit transport requests through an intuitive, user-friendly interface, reducing time and effort.'
+                  : 'በቀላሉ ጥያቄዎችን በተሳሳቢ እና ቀላል በሆነ ገፅ አቅርቡ፣ ጊዜን እና በአስቸጋሪነትን አንሳሳሉ።'}
               </p>
             </div>
           </div>
@@ -27,9 +33,13 @@ const ServiceCard = () => {
               <FcApproval size={50} />
             </div>
             <div className="card-body">
-              <h5 className="card-title">Streamlined Approvals</h5>
+              <h5 className="card-title">
+                {mylanguage === 'EN' ? 'Streamlined Approvals' : 'በቀላሉ ማጽደቅ'}
+              </h5>
               <p className="card-text">
-                Accelerate the approval process with automated workflows, ensuring quick and smooth decision-making.
+                {mylanguage === 'EN' 
+                  ? 'Accelerate the approval process with automated workflows, ensuring quick and smooth decision-making.'
+                  : 'ተሻሽለው የተቀመጡትን ሥራ እንዲወጣ ማስፈጸሚያን በፍጥነት ያንሳሉ።'}
               </p>
             </div>
           </div>
@@ -40,9 +50,13 @@ const ServiceCard = () => {
               <RiNotification4Fill size={50} />
             </div>
             <div className="card-body">
-              <h5 className="card-title">Real-Time Notifications</h5>
+              <h5 className="card-title">
+                {mylanguage === 'EN' ? 'Real-Time Notifications' : 'በቀላሉ ማሳወቂያዎች'}
+              </h5>
               <p className="card-text">
-                Stay updated with instant alerts on trip schedules, approvals, and vehicle status in real time.
+                {mylanguage === 'EN' 
+                  ? 'Stay updated with instant alerts on trip schedules, approvals, and vehicle status in real time.'
+                  : 'የተለያዩ የጉዞ ጊዜ ማሳወቂያዎችን በቀኝ ሰዓት አገኙ።'}
               </p>
             </div>
           </div>
@@ -53,9 +67,13 @@ const ServiceCard = () => {
               <GrHostMaintenance size={50} />
             </div>
             <div className="card-body">
-              <h5 className="card-title">Maintenance Management</h5>
+              <h5 className="card-title">
+                {mylanguage === 'EN' ? 'Maintenance Management' : 'የጠባቂነት አስተዳደር'}
+              </h5>
               <p className="card-text">
-                Streamline vehicle maintenance and refueling requests, ensuring timely and efficient handling.
+                {mylanguage === 'EN' 
+                  ? 'Streamline vehicle maintenance and refueling requests, ensuring timely and efficient handling.'
+                  : 'የመኪና ጠባቂነትን እና የእምነት ጥያቄዎችን በሰዓት አንሳሳሉ።'}
               </p>
             </div>
           </div>
