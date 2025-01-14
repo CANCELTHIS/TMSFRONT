@@ -89,12 +89,10 @@ const EmailForm = () => {
 
         <div className="d-flex justify-content-center">
           <button type="submit" className="btn-custom">
-            {mylanguage === 'EN' ? 'Submit' : 'አስረክብ'}
+            {mylanguage === 'EN' ? 'Submit' : 'ላክ'}
           </button>
         </div>
       </form>
-
-      {/* ToastContainer */}
       <ToastContainer />
     </div>
   );

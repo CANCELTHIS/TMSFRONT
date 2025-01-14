@@ -199,19 +199,14 @@ nav {
 .navs{
     display: flex;
 }
-<<<<<<< HEAD
-.btn-custom {
-    color: #ffffff; /* Text color */
-    background-color: #0B455B; /* No background */
-    padding: 10px 20px; /* Increase padding for a larger button */
-    font-size: 1.2rem; /* Slightly larger font size */
-    border: none; /* No border */
-    border-radius: 5px; /* Rounded corners */
-    transition: all 0.3s ease; /* Smooth hover effect */
-  }
-=======
+.btn-custom{
+    background-color: #0b455b;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+}
 html {
     scroll-behavior: smooth;
   }
-  
->>>>>>> b89bf21dc9a8e4f244bc5a28c7ab0a179416c402
+
