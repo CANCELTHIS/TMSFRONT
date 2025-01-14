@@ -8,7 +8,7 @@ import Hero4 from './components/Hero4';
 import Hero5 from './components/Hero5';
 import EmailForm from './components/EmailForm';
 import Footer from './components/Footer';
-import { LanguageProvider } from './context/LanguageContext'; // Updated relative path
+import { LanguageProvider } from './context/LanguageContext'; 
 
 const App = () => {
   return (

@@ -1,72 +1,102 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import emailjs from '@emailjs/browser';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap
 import "../index.css";
 import { useLanguage } from '../context/LanguageContext';
 
 const EmailForm = () => {
   const { mylanguage } = useLanguage(); // Access the current language context
+  const form = useRef();
+
+  // Language translations
+  const translations = {
+    EN: {
+      header: "Get in Touch",
+      subheader: "We are here for you! How can we help?",
+      name: "Name",
+      email: "Email",
+      message: "Message",
+      submit: "Submit",
+    },
+    AM: {
+      header: "እንኳን ወደ ማኅበረሰብ ተገናኝተዋል",
+      subheader: "እኛ ለእርስዎ እዚህ ነን! እንዴት ልርዳችሁ እንችላለን?",
+      name: "ስም",
+      email: "ኢሜል",
+      message: "መልእክት",
+      submit: "ማቅረብ",
+    },
+  };
+
+  const lang = translations[mylanguage] || translations.EN; // Fallback to English
+
+  const sendEmail = (e) => {
+    e.preventDefault();
+
+    emailjs
+      .sendForm('service_cf5gngo', 'template_0aua8iv', form.current, {
+        publicKey: 'DYWJ0edl9oKjFT5mp',
+      })
+      .then(
+        () => {
+          console.log('SUCCESS!');
+        },
+        (error) => {
+          console.log('FAILED...', error.text);
+        },
+      );
+  };
 
   return (
     <div className="container py-4">
       {/* Header Section */}
-      <h2 className="text-center mb-3">
-        {mylanguage === 'EN' ? 'Get in Touch' : 'እንኳን ወደ ማኅበረሰብ ተገናኝተዋል'}
-      </h2>
-      <p className="text-center text-muted mb-4">
-        {mylanguage === 'EN' ? 'We are here for you! How can we help?' : 'እኛ ለእርስዎ እዚህ ነን! እንዴት ልርዳችሁ እንችላለን?'}
-      </p>
+      <h2 className="text-center mb-3">{lang.header}</h2>
+      <p className="text-center text-muted mb-4">{lang.subheader}</p>
 
       {/* Form Section */}
-      <form className="mx-auto emailform" style={{ maxWidth: '500px' }}>
+      <form ref={form} onSubmit={sendEmail} className="mx-auto emailform" style={{ maxWidth: '500px' }}>
         <div className="mb-3">
           <label htmlFor="name" className="form-label">
-            {mylanguage === 'EN' ? 'Name' : 'ስም'}
+            {lang.name}
           </label>
           <input
             type="text"
+            name="user_name"
             className="form-control"
             id="name"
-            placeholder={mylanguage === 'EN' ? 'Enter your name' : 'ስምዎን ይግቡ'}
+            placeholder={lang.name}
             required
-            style={{ maxWidth: '100%' }}
           />
         </div>
-
         <div className="mb-3">
           <label htmlFor="email" className="form-label">
-            {mylanguage === 'EN' ? 'Email' : 'ኢሜል'}
+            {lang.email}
           </label>
           <input
             type="email"
+            name="user_email"
             className="form-control"
             id="email"
-            placeholder={mylanguage === 'EN' ? 'Enter your email' : 'ኢሜልዎን ይግቡ'}
+            placeholder={lang.email}
             required
-            style={{ maxWidth: '100%' }}
           />
         </div>
-
         <div className="mb-3">
           <label htmlFor="message" className="form-label">
-            {mylanguage === 'EN' ? 'Message' : 'መልእክት'}
+            {lang.message}
           </label>
           <textarea
+            name="message"
             className="form-control"
             id="message"
             rows="4"
-            placeholder={mylanguage === 'EN' ? 'Enter your message' : 'መልእክትዎን ይግቡ'}
+            placeholder={lang.message}
             required
-            style={{ maxWidth: '100%' }}
           ></textarea>
         </div>
-
-        {/* Center the Button */}
         <div className="d-flex justify-content-center">
-          <button
-            type="submit"
-            className="btn landingSubmit"
-            style={{ backgroundColor: '#0a3e4b', color: 'white' }}
-          >
-            {mylanguage === 'EN' ? 'Submit' : 'ማቅረብ'}
+          <button type="submit" className="btn btn-primary">
+            {lang.submit}
           </button>
         </div>
       </form>
