@@ -199,6 +199,7 @@ nav {
 .navs{
     display: flex;
 }
+<<<<<<< HEAD
 .btn-custom {
     color: #ffffff; /* Text color */
     background-color: #0B455B; /* No background */
@@ -208,3 +209,9 @@ nav {
     border-radius: 5px; /* Rounded corners */
     transition: all 0.3s ease; /* Smooth hover effect */
   }
+=======
+html {
+    scroll-behavior: smooth;
+  }
+  
+>>>>>>> b89bf21dc9a8e4f244bc5a28c7ab0a179416c402
