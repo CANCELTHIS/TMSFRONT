@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Logo from '../assets/Logo.jpg';
 import '../index.css';
 import { useLanguage } from '../context/LanguageContext';
 import { FaLanguage } from 'react-icons/fa6';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import LoginModal from './LoginModal';
 
-const NavBar = () => {
+const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) => {
   const { mylanguage, toggleLanguage } = useLanguage();
+  const [showLogin, setShowLogin] = useState(false);
+
+  const scrollToSection = (sectionRef) => {
+    sectionRef.current.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const logoVariants = {
     hidden: { opacity: 0, scale: 0.8 },
@@ -23,7 +28,7 @@ const NavBar = () => {
     <div className="mynav">
       <nav className="navbar navbar-expand-lg navbar-light">
         <div className="container-fluid">
-          <Link className="navbar-brand" to="/">
+          <a className="navbar-brand" href="/">
             <motion.img
               id="logo"
               src={Logo}
@@ -32,7 +37,7 @@ const NavBar = () => {
               animate="visible"
               variants={logoVariants}
             />
-          </Link>
+          </a>
           <button
             className="navbar-toggler"
             type="button"
@@ -47,7 +52,13 @@ const NavBar = () => {
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex justify-content-center">
               <section className="navs">
-                {['home', 'services', 'about', 'contact'].map((section, index) => (
+                {[ 
+                  { section: 'home', ref: homeRef },
+                  { section: 'services', ref: servicesRef },
+                  { section: 'about', ref: whyTMSRef },
+                  { section: 'contact', ref: emailFormRef },
+                 
+                ].map(({ section, ref }, index) => (
                   <motion.li
                     key={section}
                     className="nav-item"
@@ -56,7 +67,11 @@ const NavBar = () => {
                     variants={linkVariants}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Link className="nav-link" to={`/#${section}`}>
+                    <a
+                      className="nav-link"
+                      href="#"
+                      onClick={() => scrollToSection(ref)}  // Scroll to section on click
+                    >
                       {mylanguage === 'EN'
                         ? section.charAt(0).toUpperCase() + section.slice(1)
                         : section === 'home'
@@ -66,7 +81,7 @@ const NavBar = () => {
                         : section === 'about'
                         ? 'ስለ እኛ'
                         : 'እኛን እንደምን ደርሶ'}
-                    </Link>
+                    </a>
                   </motion.li>
                 ))}
                 <motion.li
@@ -81,24 +96,26 @@ const NavBar = () => {
                 </motion.li>
               </section>
             </ul>
-            <Link to="/login">
-              <motion.button
-                className="btn"
-                style={{
-                  backgroundColor: '#F09F33',
-                  color: 'white',
-                  marginTop: '-5px',
-                }}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
-              </motion.button>
-            </Link>
+            <motion.button
+              className="btn"
+              style={{
+                backgroundColor: '#F09F33',
+                color: 'white',
+                marginTop: '-5px',
+              }}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setShowLogin(true)} // Open login modal on click
+            >
+              {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
+            </motion.button>
           </div>
         </div>
       </nav>
+      
+      {/* Conditionally render the Login Modal */}
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 };

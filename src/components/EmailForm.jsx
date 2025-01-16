@@ -4,13 +4,14 @@ import 'bootstrap/dist/css/bootstrap.min.css'; // Import Bootstrap
 import "../index.css";
 import { useLanguage } from '../context/LanguageContext'; // Importing context
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Import Toastify styles
 
 const EmailForm = () => {
   const { mylanguage } = useLanguage();  // Access the current language from context
   const form = useRef();
 
   // Toast notification
-  const notify = (senderName) => toast(`Your message from ${senderName} has been sent successfully!`);
+  const notify = (senderName) => toast.success(`${mylanguage==="EN"?"Your message has been sent successfully!":"መልእክቶ በተሳካ ሁኒታተል"}`);
 
   const sendEmail = (e) => {
     e.preventDefault();
