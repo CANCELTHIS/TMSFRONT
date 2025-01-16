@@ -75,7 +75,7 @@ const NavBar = () => {
                   animate="visible"
                   variants={linkVariants}
                 >
-                  <a className="nav-link" href="" onClick={toggleLanguage}>
+                  <a className="nav-link" href="#" onClick={toggleLanguage}>
                     {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={30} />
                   </a>
                 </motion.li>
