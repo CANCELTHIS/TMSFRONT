@@ -1,30 +1,29 @@
 import React from 'react';
-import Logo from "../assets/Logo.jpg";
-import "../index.css";
-import { useLanguage } from '../context/LanguageContext'; 
-import { FaLanguage } from "react-icons/fa6";
-import { Link } from 'react-router-dom'; // Import Link from react-router-dom
+import Logo from '../assets/Logo.jpg';
+import '../index.css';
+import { useLanguage } from '../context/LanguageContext';
+import { FaLanguage } from 'react-icons/fa6';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const NavBar = () => {
-  const { mylanguage, toggleLanguage } = useLanguage(); // Correct usage
+  const { mylanguage, toggleLanguage } = useLanguage();
 
-  // Define animation variants
   const logoVariants = {
     hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
   };
 
   const linkVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
   };
 
   return (
-    <div className='mynav'>
+    <div className="mynav">
       <nav className="navbar navbar-expand-lg navbar-light">
         <div className="container-fluid">
-          <a className="navbar-brand" href="#home">
+          <Link className="navbar-brand" to="/">
             <motion.img
               id="logo"
               src={Logo}
@@ -33,7 +32,7 @@ const NavBar = () => {
               animate="visible"
               variants={logoVariants}
             />
-          </a>
+          </Link>
           <button
             className="navbar-toggler"
             type="button"
@@ -57,9 +56,17 @@ const NavBar = () => {
                     variants={linkVariants}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <a className="nav-link" href={`#${section}`}>
-                      {mylanguage === 'EN' ? section.charAt(0).toUpperCase() + section.slice(1) : section === 'home' ? 'መግቢያ' : section === 'services' ? 'አገልግሎቶች' : section === 'about' ? 'ስለ እኛ' : 'እኛን እንደምን ደርሶ'}
-                    </a>
+                    <Link className="nav-link" to={`/#${section}`}>
+                      {mylanguage === 'EN'
+                        ? section.charAt(0).toUpperCase() + section.slice(1)
+                        : section === 'home'
+                        ? 'መግቢያ'
+                        : section === 'services'
+                        ? 'አገልግሎቶች'
+                        : section === 'about'
+                        ? 'ስለ እኛ'
+                        : 'እኛን እንደምን ደርሶ'}
+                    </Link>
                   </motion.li>
                 ))}
                 <motion.li
@@ -68,19 +75,19 @@ const NavBar = () => {
                   animate="visible"
                   variants={linkVariants}
                 >
-                  <a className="nav-link" href="#" onClick={toggleLanguage}>
+                  <a className="nav-link" href="" onClick={toggleLanguage}>
                     {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={30} />
                   </a>
                 </motion.li>
               </section>
             </ul>
-            <a href="/Login">
+            <Link to="/login">
               <motion.button
                 className="btn"
                 style={{
                   backgroundColor: '#F09F33',
                   color: 'white',
-                  marginTop: '-5px'
+                  marginTop: '-5px',
                 }}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -88,7 +95,7 @@ const NavBar = () => {
               >
                 {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
               </motion.button>
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
