@@ -4,7 +4,7 @@ import "../index.css";
 import { useLanguage } from '../context/LanguageContext';
 
 const Footer = () => {
-  const { mylanguage } = useLanguage(); // Access the current language context
+  const { mylanguage } = useLanguage(); 
 
   return (
     <footer className="footer text-white py-4">
@@ -56,19 +56,6 @@ const Footer = () => {
           {/* Third Column - Stay Up to Date */}
           <div className="col-12 col-md-4">
             <div className="footer-column">
-              <h3 className="mb-3">
-                {mylanguage === 'EN' ? 'Stay up to date' : 'ወቅታዊ ቆይታ'}
-              </h3>
-              <div className="subscribe">
-                <input
-                  type="email"
-                  className="email-input form-control"
-                  placeholder={mylanguage === 'EN' ? 'Enter your email address' : 'የኢሜል አድራሻዎን ያስገቡ'}
-                />
-                <button className="send-button btn btn-primary mt-2 mt-md-0">
-                  <FaPaperPlane size={20} />
-                </button>
-              </div>
             </div>
           </div>
         </div>

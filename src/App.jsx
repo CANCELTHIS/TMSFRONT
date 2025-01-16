@@ -2,9 +2,9 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar';
 import "./index.css";
-import Hero1 from './components/Hero1';
-import Hero2 from './components/Hero2';
-import Hero3 from './components/Hero3';
+import Home from './components/Home';
+import Services from './components/Services';
+import WhyTMS from './components/WhyTMS';
 import EmailForm from './components/EmailForm';
 import Footer from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext'; 
@@ -19,17 +19,17 @@ const App = () => {
           
           {/* Home Section */}
           <div id="home">
-            <Hero1 />
+            <Home />
           </div>
           
           {/* Services Section */}
           <div id="services">
-            <Hero2 />
+            <Services />
           </div>
           
           {/* About Section */}
           <div id="about">
-            <Hero3 />
+            <WhyTMS />
           </div>
 
           {/* Contact Section */}

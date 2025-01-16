@@ -3,7 +3,7 @@ import Allocate from "../assets/Allocate.jpg";
 import Schedule from "../assets/Schedule.jpg";
 import { useLanguage } from '../context/LanguageContext';
 
-const Hero5 = () => {
+const CalltoAction = () => {
   const { mylanguage } = useLanguage(); // Access the current language context
 
   return (
@@ -66,4 +66,4 @@ const Hero5 = () => {
   );
 };
 
-export default Hero5;
+export default CalltoAction;

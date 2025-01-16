@@ -8,7 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import Car from "../assets/car.png";
 import "../index.css";
 
-const Hero4 = () => {
+const RequestSteps = () => {
   const { mylanguage } = useLanguage(); // Access the current language context
 
   return (
@@ -19,7 +19,7 @@ const Hero4 = () => {
 
       {/* Row to hold the cards */}
       <div className="cards">
-        <div className="d-flex flex-wrap justify-content-center space right">
+        <div className="d-flex flex-wrap justify-content-center space right gap-5">
           {/* Column for the three stacked cards on the left */}
           <div className="d-flex flex-column align-items-center col-12 col-sm-6 col-md-4 col-lg-3 gap-3">
             {/* Card 1 with Icon */}
@@ -87,12 +87,12 @@ const Hero4 = () => {
           </div>
 
           {/* Column for the single card on the right */}
-          <div className="d-flex flex-column align-items-center col-12 col-sm-6 col-md-4 col-lg-3 justify-content-center">
+          <div className="d-flex flex-column align-items-center col-12 col-sm-6 col-md-4 col-lg-3 justify-content-center gap-12">
             {/* Card 4 with Icon */}
             <div className="card w-100 d-flex justify-content-center mb-3">
               <div className="card-body">
                 <div className="align-items-center">
-                  <img src={Car} alt="car img" className="me-3 car" />
+                  <img src={Car} alt="car img" className="me-3 d-flex car" />
                   <div>
                     <h5 className="card-title">
                       {mylanguage === 'EN' ? 'Trip To Dire Dawa' : 'ጉዞ ወደ ድሬዳዋ'}
@@ -100,7 +100,7 @@ const Hero4 = () => {
                     <p className="card-text">
                       {mylanguage === 'EN'
                         ? '14-29 June by Biruk Nigusie'
-                        : '14-29 ጁን በብሩክ ንጉሲ'}{' '}
+                        : '14-29 ጁን በብሩክ '}{' '}
                       <span>
                         <IoLocation size={25} />
                       </span>
@@ -116,4 +116,4 @@ const Hero4 = () => {
   );
 };
 
-export default Hero4;
+export default RequestSteps;

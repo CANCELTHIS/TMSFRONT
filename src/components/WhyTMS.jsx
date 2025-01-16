@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
-const Hero3 = () => {
+const WhyTMS = () => {
   const { mylanguage } = useLanguage(); // Access the current language context
 
   return (
@@ -95,4 +95,4 @@ const Hero3 = () => {
   );
 };
 
-export default Hero3;
+export default WhyTMS;

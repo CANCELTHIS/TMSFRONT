@@ -1,20 +1,18 @@
 import React from 'react';
 import "../index.css";
 import Car from '../assets/car.png';
-import Car2 from '../assets/car2.png'; // Add more images as needed
-import Car3 from '../assets/car3.png'; // Add more images as needed
+import Car2 from '../assets/car2.png'; 
+import Car3 from '../assets/car3.png'; 
 import { useLanguage } from '../context/LanguageContext';
 import Typewriter from 'react-typewriter-effect';
 import { Carousel } from 'react-bootstrap';
 
-const Hero1 = () => {
-  const { mylanguage } = useLanguage(); // Access the current language from context
-
+const Home = () => {
+  const { mylanguage } = useLanguage();
   return (
     <div className="Hero1 bg-light w-100">
       <div className="container-fluid px-0">
         <div className="row align-items-center">
-          {/* Text Section */}
           <div className="col-lg-6 col-12 text-center text-lg-start p-4">
             <h5 className="headertext1">
               {mylanguage === 'EN' 
@@ -29,9 +27,9 @@ const Hero1 = () => {
                     "Revolutionize Your Workflow with TMS!",
                     "Efficient Transport Solutions for Modern Businesses!"
                   ]}
-                  multiTextLoop={true} // Enable looping
-                  typeSpeed={50}
-                  deleteSpeed={30}
+                  multiTextLoop={true} 
+                  typeSpeed={100}
+                  deleteSpeed={100}
                   cursorColor="#F09F33"
                 />
               ) : (
@@ -41,9 +39,9 @@ const Hero1 = () => {
                     "የትራንስፖርት አስተዳደር ስርዓት አብዮት ይፈጥሩ!",
                     "ለዘመናዊ ቢዝነሶች ውጤታማ የመጓጓዣ መፍትሄዎች!"
                   ]}
-                  multiTextLoop={true} // Enable looping
-                  typeSpeed={50}
-                  deleteSpeed={30}
+                  multiTextLoop={true} 
+                  typeSpeed={100}
+                  deleteSpeed={100}
                   cursorColor="#F09F33"
                 />
               )}
@@ -54,16 +52,14 @@ const Hero1 = () => {
                 : 'መጓጓዣ ለመቆጣጠር የሚያስችል ብልህ ዘዴ ይኑርህ። የትራንስፖርት አስተዳደር ስርዓት (TMS) የእርስዎን የስራ ፍሰት አብዮት, ጊዜ ለመቆጠብ, ውጤታማነትን ለመቀነስ እና ስፌት አልባ ቅንጅት ለማረጋገጥ እያንዳንዱን እርምጃ ዲጂቲንግ እና አውቶማቲክ ያደርገዋል.'}
             </p>
           </div>
-
-          {/* Image Section with Carousel */}
           <div className="col-lg-6 col-12 text-center">
-            <Carousel interval={3000} controls={false} indicators={true}> {/* Auto-slide every 3 seconds */}
+            <Carousel interval={3000} controls={false} indicators={true}> 
               <Carousel.Item>
                 <img
                   className="d-block img-fluid"
                   src={Car}
                   alt="First slide"
-                  style={{ height: '400px', objectFit: 'cover' }} // Ensures all images are equal in height
+                  style={{ height: '400px', objectFit: 'cover' }} 
                 />
                 <Carousel.Caption>
                   <h5>Efficient Fleet Management</h5>
@@ -99,4 +95,4 @@ const Hero1 = () => {
   );
 };
 
-export default Hero1;
+export default Home;

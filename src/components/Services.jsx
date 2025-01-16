@@ -2,7 +2,7 @@ import React from 'react';
 import ServiceCard from './ServiceCard';
 import { useLanguage } from '../context/LanguageContext';
 
-const Hero2 = () => {
+const Services = () => {
   const { mylanguage } = useLanguage(); // Access the current language context
 
   return (
@@ -17,4 +17,4 @@ const Hero2 = () => {
   );
 };
 
-export default Hero2;
+export default Services;

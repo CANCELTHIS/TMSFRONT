@@ -225,4 +225,7 @@ html {
   .carousel .carousel-item {
     padding: 5px;
   }
-  
+.car{
+    width: 100%;
+    border-radius: 10px;
+}
