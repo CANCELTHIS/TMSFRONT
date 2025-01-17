@@ -4,11 +4,12 @@ import { FcQuestions, FcApproval } from "react-icons/fc";
 import { RiNotification4Fill } from "react-icons/ri";
 import { GrHostMaintenance } from "react-icons/gr";
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 const ServiceCard = () => {
-  const { mylanguage } = useLanguage(); // Access the current language context
+  const { mylanguage } = useLanguage();
+  const { myTheme } = useTheme();
 
-  // Card variants for animation
   const cardVariants = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
@@ -47,7 +48,7 @@ const ServiceCard = () => {
   ];
 
   return (
-    <div className="container my-5">
+    <div className="mb-0 my-5">
       <motion.div
         className="row g-4 justify-content-center"
         initial="hidden"
@@ -61,7 +62,15 @@ const ServiceCard = () => {
             variants={cardVariants}
             whileHover="hover"
           >
-            <div className="card text-center" style={{ width: '100%', overflow: 'hidden' }}>
+            <div
+              className="mt-0 card text-center"
+              style={{
+                width: '100%',
+                overflow: 'hidden',
+                backgroundColor: myTheme === 'dark' ? '#4E6373' : '#FFFFFF',
+                color: myTheme === 'dark' ? '#C1C1C2' : '#181E4B',
+              }}
+            >
               <div className="d-flex justify-content-center align-items-center mt-3">
                 {icon}
               </div>

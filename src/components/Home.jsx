@@ -6,12 +6,14 @@ import Car3 from '../assets/car3.png';
 import { useLanguage } from '../context/LanguageContext';
 import Typewriter from 'react-typewriter-effect';
 import { Carousel } from 'react-bootstrap';
+import { useTheme } from '../context/ThemeContext';
 
 const Home = () => {
   const { mylanguage } = useLanguage();
+  const { myTheme } = useTheme();
 
   return (
-    <div className="Hero1 bg-light w-100">
+    <div className={`w-100 ${myTheme === "dark" ? "dark" : "light"}`}>
       <div className="container-fluid px-0">
         {/* Home Section */}
         <div id="home" className="row align-items-center">
@@ -21,28 +23,32 @@ const Home = () => {
                 ? 'Ministry of Innovation and Technology' 
                 : 'የኢኖቬሽንና ቴክኖሎጂ ሚኒስቴር'}
             </h5>
-            <h2 className="headertext2">
-  <Typewriter
-    key={mylanguage} // Add key prop to force re-render when language changes
-    multiText={mylanguage === 'EN' 
-      ? [
-          "Streamline Your Fleet, Optimize Your Journey!",
-          "Revolutionize Your Workflow with TMS!",
-          "Efficient Transport Solutions for Modern Businesses!"
-        ]
-      : [
-          "መጓጓዣዎን በማቀናበር, የእርስዎን ጉዞ ያሻሽሉ!",
-          "የትራንስፖርት አስተዳደር ስርዓት አብዮት ይፈጥሩ!",
-          "ለዘመናዊ ቢዝነሶች ውጤታማ የመጓጓዣ መፍትሄዎች!"
-        ]
-    }
-    multiTextLoop={true}
-    typeSpeed={100}
-    deleteSpeed={100}
-    cursorColor="#F09F33"
-  />
-</h2>
-
+            <h2 
+              className="headertext2"
+              style={{
+                color: myTheme === "dark" ? "#B3A2F0" : "#106374", // Apply the color for dark mode
+              }}
+            >
+              <Typewriter
+                key={mylanguage} // Force re-render when language changes
+                multiText={mylanguage === 'EN' 
+                  ? [
+                      "Streamline Your Fleet, Optimize Your Journey!",
+                      "Revolutionize Your Workflow with TMS!",
+                      "Efficient Transport Solutions for Modern Businesses!"
+                    ]
+                  : [
+                      "መጓጓዣዎን በማቀናበር, የእርስዎን ጉዞ ያሻሽሉ!",
+                      "የትራንስፖርት አስተዳደር ስርዓት አብዮት ይፈጥሩ!",
+                      "ለዘመናዊ ቢዝነሶች ውጤታማ የመጓጓዣ መፍትሄዎች!"
+                    ]
+                }
+                multiTextLoop={true}
+                typeSpeed={100}
+                deleteSpeed={100}
+                cursorColor="#F09F33"
+              />
+            </h2>
             <p className="headertext3">
               {mylanguage === 'EN' 
                 ? 'Discover a smarter way to manage transportation. The Transport Management System (TMS) revolutionizes your workflow, digitizing and automating every step to save time, reduce inefficiencies, and ensure seamless coordination.' 
@@ -60,7 +66,7 @@ const Home = () => {
                   style={{ height: '400px', objectFit: 'cover' }} 
                 />
                 <Carousel.Caption>
-                  <h5>{mylanguage === "EN" ? "Efficient Fleet Management":"ውጤታማ የመጓጓዣ አስተዳደር"}</h5>
+                  <h5>{mylanguage === "EN" ? "Efficient Fleet Management" : "ውጤታማ የመጓጓዣ አስተዳደር"}</h5>
                 </Carousel.Caption>
               </Carousel.Item>
               <Carousel.Item>
@@ -71,7 +77,7 @@ const Home = () => {
                   style={{ height: '400px', objectFit: 'cover' }}
                 />
                 <Carousel.Caption>
-                  <h5>{mylanguage === "EN" ? "Seamless Transportation ":"የተሳለጠ መጓጓዣ"}</h5>
+                  <h5>{mylanguage === "EN" ? "Seamless Transportation" : "የተሳለጠ መጓጓዣ"}</h5>
                 </Carousel.Caption>
               </Carousel.Item>
               <Carousel.Item>
@@ -82,25 +88,15 @@ const Home = () => {
                   style={{ height: '400px', objectFit: 'cover' }}
                 />
                 <Carousel.Caption>
-                  <h5>{mylanguage === "EN" ? "Innovative Solutions":"አዳዲስ መፍትሔዎች"}</h5>
+                  <h5>{mylanguage === "EN" ? "Innovative Solutions" : "አዳዲስ መፍትሔዎች"}</h5>
                 </Carousel.Caption>
               </Carousel.Item>
             </Carousel>
           </div>
         </div>
-
-        {/* Other Sections */}
-        <div id="services" className="section">
-          {/* Add content for services */}
-        </div>
-        <div id="about" className="section">
-          {/* Add content for about */}
-        </div>
-        <div id="contact" className="section">
-          {/* Add content for contact */}
-        </div>
       </div>
     </div>
   );
 };
+
 export default Home;

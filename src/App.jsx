@@ -10,6 +10,7 @@ import Footer from './components/Footer';
 import { LanguageProvider } from './context/LanguageContext';
 import LoginModal from './components/LoginModal'; // Importing LoginModal
 import SignupModal from './components/SignupModal'; // Importing SignupModal
+import { ThemeProvider } from './context/ThemeContext';
 
 const App = () => {
   const [modalType, setModalType] = useState(null); // Track active modal ('login' or 'signup')
@@ -25,6 +26,7 @@ const App = () => {
 
   return (
     <Router>
+      <ThemeProvider>
       <LanguageProvider>
         <div className={`app ${modalType ? 'blurred' : ''}`}>
           {/* Pass refs to NavBar */}
@@ -41,7 +43,10 @@ const App = () => {
           <div ref={servicesRef}><Services /></div>
           <div ref={whyTMSRef}><WhyTMS /></div>
           <div ref={emailFormRef}><EmailForm /></div>
-          <div ref={footerRef}><Footer /></div>
+          <div ref={footerRef}><Footer   homeRef={homeRef}
+  servicesRef={servicesRef}
+  aboutRef={whyTMSRef}
+  contactRef={emailFormRef} /></div>
         </div>
 
         {/* Modal Rendering */}
@@ -62,6 +67,7 @@ const App = () => {
           </div>
         )}
       </LanguageProvider>
+      </ThemeProvider>
     </Router>
   );
 };

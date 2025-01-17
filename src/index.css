@@ -159,14 +159,7 @@
     color: white;
     padding: 20px 0;
   }
-  
-  .footer-column {
-    margin-left: 50px;
-  }
-  
-  .footer-column p {
-    margin: 10px 0;
-  }
+
   
   .footer-column h3 {
     font-size: 1.5rem;
@@ -177,7 +170,7 @@
   .footer-nav {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 40px;
     list-style-type: none;
     padding: 0;
   }
@@ -402,4 +395,52 @@
   border: none; /* Remove any default border */
   width: 30px; /* Set the width of the hamburger icon */
   height: 3px; /* Set the height of the bars */
+}
+.dark{
+color: #B3A2F0 !important;
+background: linear-gradient(to right,#0C182C,#0A0E17,#0C203E);
+}
+.light{
+  background-color: #fff;
+  color: #181E4B;
+}
+#texthero2 {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+#logo{
+  width: 120px;
+}
+.flex{
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+.social-links{
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+}
+.quick-links{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  font-size:18px;
+}
+/* Add styles for dark theme inputs */
+input.dark-theme-input,
+textarea.dark-theme-input {
+  background-color: #B3A2F0; /* Subtle dark background */
+  color: #ffffff;          /* Light text color for readability */
+  border: 1px solid #B3A2F0;  /* Subtle border to match dark theme */
+}
+
+input.dark-theme-input:focus,
+textarea.dark-theme-input:focus {
+  border-color: #B3A2F0; 
+  outline: none;     
+}
+.copyright{
+  color: #F09F33;
 }
