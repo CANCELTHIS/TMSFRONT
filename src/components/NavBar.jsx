@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { FaLanguage } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
 import LoginModal from './LoginModal';
+import { GiHamburgerMenu } from "react-icons/gi";
 
 const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) => {
   const { mylanguage, toggleLanguage } = useLanguage();
@@ -27,7 +28,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
   return (
     <div className="mynav">
       <nav className="navbar navbar-expand-lg navbar-light">
-        <div className="container-fluid">
+        <div className="container-fluid d-flex gap-6">
           <a className="navbar-brand" href="/">
             <motion.img
               id="logo"
@@ -47,7 +48,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
             aria-expanded="false"
             aria-label="Toggle navigation"
           >
-            <span className="navbar-toggler-icon"></span>
+<GiHamburgerMenu/>
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
             <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex justify-content-center">
@@ -113,8 +114,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
           </div>
         </div>
       </nav>
-      
-      {/* Conditionally render the Login Modal */}
+
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );

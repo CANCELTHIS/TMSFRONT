@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { FcQuestions, FcApproval } from "react-icons/fc";
 import { RiNotification4Fill } from "react-icons/ri";
 import { GrHostMaintenance } from "react-icons/gr";
@@ -7,78 +8,75 @@ import { useLanguage } from '../context/LanguageContext';
 const ServiceCard = () => {
   const { mylanguage } = useLanguage(); // Access the current language context
 
+  // Card variants for animation
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.6, ease: "easeOut" } },
+    hover: { scale: 1.05, boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)", transition: { duration: 0.3 } },
+  };
+
+  const cardsData = [
+    {
+      icon: <FcQuestions size={50} />,
+      titleEN: 'Simplified Requests',
+      titleAM: 'ቀላል ጥያቄዎች',
+      textEN: 'Easily submit transport requests through an intuitive, user-friendly interface, reducing time and effort.',
+      textAM: 'በቀላሉ ጥያቄዎችን በተሳሳቢ እና ቀላል በሆነ ገፅ አቅርቡ፣ ጊዜን እና በአስቸጋሪነትን አንሳሳሉ።',
+    },
+    {
+      icon: <FcApproval size={50} />,
+      titleEN: 'Streamlined Approvals',
+      titleAM: 'በቀላሉ ማጽደቅ',
+      textEN: 'Accelerate the approval process with automated workflows, ensuring quick and smooth decision-making.',
+      textAM: 'ተሻሽለው የተቀመጡትን ሥራ እንዲወጣ ማስፈጸሚያን በፍጥነት ያንሳሉ።',
+    },
+    {
+      icon: <RiNotification4Fill size={50} />,
+      titleEN: 'Real-Time Notifications',
+      titleAM: 'በቀላሉ ማሳወቂያዎች',
+      textEN: 'Stay updated with instant alerts on trip schedules, approvals, and vehicle status in real time.',
+      textAM: 'የተለያዩ የጉዞ ጊዜ ማሳወቂያዎችን በቀኝ ሰዓት አገኙ።',
+    },
+    {
+      icon: <GrHostMaintenance size={50} />,
+      titleEN: 'Maintenance Management',
+      titleAM: 'የጠባቂነት አስተዳደር',
+      textEN: 'Streamline vehicle maintenance and refueling requests, ensuring timely and efficient handling.',
+      textAM: 'የመኪና ጠባቂነትን እና የእምነት ጥያቄዎችን በሰዓት አንሳሳሉ።',
+    },
+  ];
+
   return (
     <div className="container my-5">
-      <div className="row g-4 justify-content-center">
-        <div className="col-12 col-sm-6 col-lg-3 d-flex justify-content-center">
-          <div className="card text-center" style={{ width: '100%' }}>
-            <div className="d-flex justify-content-center align-items-center mt-3">
-              <FcQuestions size={50} />
+      <motion.div
+        className="row g-4 justify-content-center"
+        initial="hidden"
+        animate="visible"
+        transition={{ staggerChildren: 0.2 }}
+      >
+        {cardsData.map(({ icon, titleEN, titleAM, textEN, textAM }, index) => (
+          <motion.div
+            key={index}
+            className="col-12 col-sm-6 col-lg-3 d-flex justify-content-center"
+            variants={cardVariants}
+            whileHover="hover"
+          >
+            <div className="card text-center" style={{ width: '100%', overflow: 'hidden' }}>
+              <div className="d-flex justify-content-center align-items-center mt-3">
+                {icon}
+              </div>
+              <div className="card-body">
+                <h5 className="card-title">
+                  {mylanguage === 'EN' ? titleEN : titleAM}
+                </h5>
+                <p className="card-text">
+                  {mylanguage === 'EN' ? textEN : textAM}
+                </p>
+              </div>
             </div>
-            <div className="card-body">
-              <h5 className="card-title">
-                {mylanguage === 'EN' ? 'Simplified Requests' : 'ቀላል ጥያቄዎች'}
-              </h5>
-              <p className="card-text">
-                {mylanguage === 'EN' 
-                  ? 'Easily submit transport requests through an intuitive, user-friendly interface, reducing time and effort.'
-                  : 'በቀላሉ ጥያቄዎችን በተሳሳቢ እና ቀላል በሆነ ገፅ አቅርቡ፣ ጊዜን እና በአስቸጋሪነትን አንሳሳሉ።'}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="col-12 col-sm-6 col-lg-3 d-flex justify-content-center">
-          <div className="card text-center" style={{ width: '100%' }}>
-            <div className="d-flex justify-content-center align-items-center mt-3">
-              <FcApproval size={50} />
-            </div>
-            <div className="card-body">
-              <h5 className="card-title">
-                {mylanguage === 'EN' ? 'Streamlined Approvals' : 'በቀላሉ ማጽደቅ'}
-              </h5>
-              <p className="card-text">
-                {mylanguage === 'EN' 
-                  ? 'Accelerate the approval process with automated workflows, ensuring quick and smooth decision-making.'
-                  : 'ተሻሽለው የተቀመጡትን ሥራ እንዲወጣ ማስፈጸሚያን በፍጥነት ያንሳሉ።'}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="col-12 col-sm-6 col-lg-3 d-flex justify-content-center">
-          <div className="card text-center" style={{ width: '100%' }}>
-            <div className="d-flex justify-content-center align-items-center mt-3">
-              <RiNotification4Fill size={50} />
-            </div>
-            <div className="card-body">
-              <h5 className="card-title">
-                {mylanguage === 'EN' ? 'Real-Time Notifications' : 'በቀላሉ ማሳወቂያዎች'}
-              </h5>
-              <p className="card-text">
-                {mylanguage === 'EN' 
-                  ? 'Stay updated with instant alerts on trip schedules, approvals, and vehicle status in real time.'
-                  : 'የተለያዩ የጉዞ ጊዜ ማሳወቂያዎችን በቀኝ ሰዓት አገኙ።'}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="col-12 col-sm-6 col-lg-3 d-flex justify-content-center">
-          <div className="card text-center" style={{ width: '100%' }}>
-            <div className="d-flex justify-content-center align-items-center mt-3">
-              <GrHostMaintenance size={50} />
-            </div>
-            <div className="card-body">
-              <h5 className="card-title">
-                {mylanguage === 'EN' ? 'Maintenance Management' : 'የጠባቂነት አስተዳደር'}
-              </h5>
-              <p className="card-text">
-                {mylanguage === 'EN' 
-                  ? 'Streamline vehicle maintenance and refueling requests, ensuring timely and efficient handling.'
-                  : 'የመኪና ጠባቂነትን እና የእምነት ጥያቄዎችን በሰዓት አንሳሳሉ።'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 };

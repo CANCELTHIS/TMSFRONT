@@ -387,4 +387,19 @@
   .login-link {
     color: #27485D;
   }
-  
+  .card {
+  box-shadow: #077D89;
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+  background-color: #ffffff;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 15px 15px 15px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-toggler-icon {
+  background-color: transparent; /* No background */
+  border: none; /* Remove any default border */
+  width: 30px; /* Set the width of the hamburger icon */
+  height: 3px; /* Set the height of the bars */
+}
