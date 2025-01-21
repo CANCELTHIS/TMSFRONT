@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import SignupModal from './SignupModal';
 import '../index.css';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 const LoginModal = ({ onClose }) => {
   const [showSignup, setShowSignup] = useState(false);
 const {mylanguage} = useLanguage();
+const {myTheme} = useTheme();
   if (showSignup) {
     return <SignupModal onClose={() => setShowSignup(false)} />;
   }
 
   return (
     <div className="modal-overlay">
-      <div className="card p-4 shadow" style={{ width: '22rem', position: 'relative' }}>
+      <div className={`card p-4 shadow" style={{ width: '22rem', position: 'relative' }} ${myTheme==="dark"?"dark":"light"}`}>
         <button
           className="btn-close"
           style={{ position: 'absolute', top: '10px', right: '10px' }}

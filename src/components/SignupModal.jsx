@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import '../index.css'; // Import the CSS file for specific styles
-
+import { useTheme } from '../context/ThemeContext';
 const SignupModal = ({ onClose }) => {
   const { mylanguage } = useLanguage();
+  const {myTheme} = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     fname: '',
@@ -26,7 +27,7 @@ const SignupModal = ({ onClose }) => {
 
   return (
     <div className="modal-overlay">
-      <div className="card modal-card">
+      <div className={`card modal-card ${myTheme==="dark"?"dark":"light"}`}>
       <button
           className="btn-close"
           style={{ position: 'absolute', top: '10px', right: '10px' }}
