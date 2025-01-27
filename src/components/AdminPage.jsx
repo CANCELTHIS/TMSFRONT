@@ -227,6 +227,7 @@ const AdminPage = () => {
     user.role_display || roles.find((r) => r.id === user.role)?.label || "Staff"
   )}
 </td>
+
                       <td>{user.department || "N/A"}</td>
                       <td>{user.is_active ? "Active" : "Pending"}</td>
                       <td>
