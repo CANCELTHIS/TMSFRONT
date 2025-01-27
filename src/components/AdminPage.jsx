@@ -130,7 +130,7 @@ const AdminPage = () => {
         toast.error("You need to be logged in to update user roles.");
         return;
       }
-
+  
       const response = await fetch(
         `http://127.0.0.1:8000/users/${userId}/update_role/`,
         {
@@ -142,10 +142,17 @@ const AdminPage = () => {
           body: JSON.stringify({ role: selectedRole }),
         }
       );
-
+  
       if (response.ok) {
         toast.success("User role updated successfully!");
-        fetchUsers();
+  
+        // Update the UI without refreshing
+        setData((prevData) =>
+          prevData.map((user) =>
+            user.id === userId ? { ...user, role: selectedRole } : user
+          )
+        );
+  
         setEditingRoleId(null); // Exit editing mode
       } else {
         const errorData = await response.json();
@@ -155,7 +162,7 @@ const AdminPage = () => {
       toast.error("An error occurred while updating the role.");
     }
   };
-
+  
   const roles = [
     { id: 1, label: "Staff" },
     { id: 2, label: "Department Manager" },
@@ -204,24 +211,22 @@ const AdminPage = () => {
                       <td>{user.full_name || "N/A"}</td>
                       <td>{user.email}</td>
                       <td>
-                        {editingRoleId === user.id ? (
-                          <select
-                            value={selectedRole}
-                            onChange={(e) =>
-                              setSelectedRole(Number(e.target.value))
-                            }
-                            className="form-select form-select-sm"
-                          >
-                            {roles.map((role) => (
-                              <option key={role.id} value={role.id}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          user.role_display || "Staff"
-                        )}
-                      </td>
+  {editingRoleId === user.id ? (
+    <select
+      value={selectedRole}
+      onChange={(e) => setSelectedRole(Number(e.target.value))}
+      className="form-select form-select-sm"
+    >
+      {roles.map((role) => (
+        <option key={role.id} value={role.id}>
+          {role.label}
+        </option>
+      ))}
+    </select>
+  ) : (
+    user.role_display || roles.find((r) => r.id === user.role)?.label || "Staff"
+  )}
+</td>
                       <td>{user.department || "N/A"}</td>
                       <td>{user.is_active ? "Active" : "Pending"}</td>
                       <td>

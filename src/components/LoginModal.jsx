@@ -6,16 +6,6 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
 
-const ROLE_REDIRECTS = {
-  Employee: '/employee',
-  'Department Manager': '/department-manager',
-  'Finance Manager': '/finance-manager',
-  'Transport Manager': '/transport-manager',
-  CEO: '/ceo',
-  Driver: '/driver',
-  'System Admin': '/admin',
-};
-
 const LoginModal = ({ onClose }) => {
   const [showSignup, setShowSignup] = useState(false);
   const [email, setEmail] = useState('');
@@ -32,29 +22,14 @@ const LoginModal = ({ onClose }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Authenticate user and get token
-      const tokenResponse = await axios.post('http://127.0.0.1:8000/api/token/', { email, password });
-      const { access } = tokenResponse.data;
-      localStorage.setItem('authToken', access);
-
-      // Fetch user details
-      const userResponse = await axios.get('http://127.0.0.1:8000/api/user/me/', {
-        headers: { Authorization: `Bearer ${access}` },
+      const response = await axios.post('http://127.0.0.1:8000/api/token/', {
+        email,
+        password,
       });
-      const { role } = userResponse.data;
-
-      // Redirect to the appropriate role page
-      const redirectPath = ROLE_REDIRECTS[role] || '/unknown-role';
-      if (redirectPath === '/unknown-role') {
-        setError(
-          mylanguage === 'EN'
-            ? 'Unknown role. Please contact support.'
-            : 'ያልታወቀ ሚና። እባኮትን ድጋፍ ያግኙ።'
-        );
-        return;
-      }
-      onClose();
-      navigate(redirectPath);
+      const { access } = response.data;
+      localStorage.setItem('authToken', access); // Store the token in local storage
+      onClose(); // Close the modal
+      navigate('/admin'); // Redirect to AdminPage
     } catch (err) {
       setError(
         mylanguage === 'EN'
@@ -80,13 +55,13 @@ const LoginModal = ({ onClose }) => {
         {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleLogin}>
           <div className="mb-3">
-            <label htmlFor="login-email" className="form-label">
+            <label htmlFor="email" className="form-label">
               {mylanguage === 'EN' ? 'Email Address' : 'የኢሜል አድራሻ'}
             </label>
             <input
               type="email"
               className="form-control"
-              id="login-email"
+              id="email"
               placeholder={
                 mylanguage === 'EN' ? 'Your email address' : 'የኢሜል አድራሻዎን ያስገቡ'
               }
@@ -96,13 +71,13 @@ const LoginModal = ({ onClose }) => {
             />
           </div>
           <div className="mb-3">
-            <label htmlFor="login-password" className="form-label">
+            <label htmlFor="password" className="form-label">
               {mylanguage === 'EN' ? 'Password' : 'ፓስወርድ'}
             </label>
             <input
               type="password"
               className="form-control"
-              id="login-password"
+              id="password"
               placeholder={
                 mylanguage === 'EN' ? 'Your password' : 'ፓስወርድዎን ያስገቡ'
               }
