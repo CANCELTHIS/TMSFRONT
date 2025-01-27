@@ -1,160 +1,168 @@
-import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import '../index.css'; // Import the CSS file for specific styles
-import { useTheme } from '../context/ThemeContext';
+import React, { useState } from "react";
+import axios from "axios";
+import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
+import { toast } from "react-toastify";
+
 const SignupModal = ({ onClose }) => {
-  const { mylanguage } = useLanguage();
-  const {myTheme} = useTheme();
   const [formData, setFormData] = useState({
-    name: '',
-    fname: '',
-    phone: '',
-    email: '',
-    role: '',
-    department: '',
+    full_name: "",
+    phone_number: "",
+    email: "",
+    department: "",
+    password: "",
+    confirm_password: "",
   });
+
+  const { mylanguage } = useLanguage();
+  const { myTheme } = useTheme();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form Data Submitted: ', formData);
-    // Add your submission logic here (e.g., API call)
+
+    if (
+      !formData.full_name ||
+      !formData.phone_number ||
+      !formData.email ||
+      !formData.department ||
+      !formData.password ||
+      !formData.confirm_password
+    ) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (formData.password !== formData.confirm_password) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/register/",
+        { ...formData, role: 1 }, // Default role = Employee
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      toast.success(response.data.message || "Registration successful!");
+      setFormData({
+        full_name: "",
+        phone_number: "",
+        email: "",
+        department: "",
+        password: "",
+        confirm_password: "",
+      });
+
+      setTimeout(() => onClose(), 2000);
+    } catch (err) {
+      toast.error(
+        err.response?.data?.detail || "There was an issue with registration."
+      );
+    }
   };
 
   return (
     <div className="modal-overlay">
-      <div className={`card modal-card ${myTheme==="dark"?"dark":"light"}`}>
-      <button
+      <div
+        className={`card p-4 shadow modal-card ${myTheme === "dark" ? "dark" : "light"}`}
+        style={{ width: "22rem", position: "relative" }}
+      >
+        <button
           className="btn-close"
-          style={{ position: 'absolute', top: '10px', right: '10px' }}
+          style={{ position: "absolute", top: "10px", right: "10px" }}
           onClick={onClose}
         ></button>
-        <h1 className="modal-title">
-          {mylanguage === "EN" ? "Sign Up" : "ይመዝገቡ"}
+        <h1 className="text-center mb-4">
+          {mylanguage === "EN" ? "Sign Up" : "\u12ed\u1218\u12dd\u1308\u1269"}
         </h1>
+
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="name" className="form-label label">
-              {mylanguage === "EN" ? "Name" : "ስም"}
-            </label>
             <input
               type="text"
-              className="form-control input-field"
-              id="name"
-              name="name"
-              value={formData.name}
+              name="full_name"
+              className="form-control"
+              placeholder={mylanguage === "EN" ? "Full Name" : "\u1218\u1209 \u1235\u121d"}
+              value={formData.full_name}
               onChange={handleChange}
-              placeholder={mylanguage === "EN" ? "Enter your name" : "ስምዎን ይግቡ"}
               required
             />
           </div>
-
           <div className="mb-3">
-            <label htmlFor="phone" className="form-label label">
-              {mylanguage === "EN" ? "Phone" : "ስልክ ቁጥር"}
-            </label>
             <input
-              type="tel"
-              className="form-control input-field"
-              id="phone"
-              name="phone"
-              value={formData.phone}
+              type="text"
+              name="phone_number"
+              className="form-control"
+              placeholder={mylanguage === "EN" ? "Phone Number" : "\u1235\u120d\u132d \u1241\u132d\u122d"}
+              value={formData.phone_number}
               onChange={handleChange}
-              placeholder={mylanguage === "EN" ? "Enter your phone number" : "ስልክ ቁጥርዎን ይግቡ"}
               required
             />
           </div>
-
           <div className="mb-3">
-            <label htmlFor="email" className="form-label label">
-              {mylanguage === "EN" ? "Email" : "ኢሜል"}
-            </label>
             <input
               type="email"
-              className="form-control input-field"
-              id="email"
               name="email"
+              className="form-control"
+              placeholder={mylanguage === "EN" ? "Email" : "\u12a2\u1218\u120d"}
               value={formData.email}
               onChange={handleChange}
-              placeholder={mylanguage === "EN" ? "Enter your email address" : "ኢሜል አድራሻዎን ይግቡ"}
               required
             />
           </div>
-
           <div className="mb-3">
-            <label htmlFor="role" className="form-label label">
-              {mylanguage === "EN" ? "Role" : "ክፍል"}
-            </label>
-            <select
-              className="form-select input-field"
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              required
-            >
-              <option value="">
-                {mylanguage === "EN" ? "Select a role" : "ክፍል ይምረጡ"}
-              </option>
-              <option value="Admin">
-                {mylanguage === "EN" ? "Admin" : "አስተዳዳሪ"}
-              </option>
-              <option value="Manager">
-                {mylanguage === "EN" ? "Manager" : "አስተዳዳሪ"}
-              </option>
-              <option value="Employee">
-                {mylanguage === "EN" ? "Employee" : "ሰራተኛ"}
-              </option>
-            </select>
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="department" className="form-label label">
-              {mylanguage === "EN" ? "Department" : "ክፍል"}
-            </label>
-            <select
-              className="form-select input-field"
-              id="department"
+            <input
+              type="text"
               name="department"
+              className="form-control"
+              placeholder={mylanguage === "EN" ? "Department" : "\u12ad\u134d\u120d"}
               value={formData.department}
               onChange={handleChange}
               required
-            >
-              <option value="">
-                {mylanguage === "EN" ? "Select a department" : "ክፍል ይምረጡ"}
-              </option>
-              <option value="HR">
-                {mylanguage === "EN" ? "HR" : "አሰፋላሊ"}
-              </option>
-              <option value="Finance">
-                {mylanguage === "EN" ? "Finance" : "ፋይናንስ"}
-              </option>
-              <option value="IT">
-                {mylanguage === "EN" ? "IT" : "ኢቲ"}
-              </option>
-              <option value="Marketing">
-                {mylanguage === "EN" ? "Marketing" : "ማርኬቲንግ"}
-              </option>
-            </select>
+            />
           </div>
-
-          <div className="text-center">
-            <button type="submit" className="btn submit-btn">
-              {mylanguage === "EN" ? "Sign Up" : "መመዝገብ"}
-            </button>
+          <div className="mb-3">
+            <input
+              type="password"
+              name="password"
+              className="form-control"
+              placeholder={mylanguage === "EN" ? "Password" : "\u134b\u1230\u12f0"}
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
           </div>
+          <div className="mb-3">
+            <input
+              type="password"
+              name="confirm_password"
+              className="form-control"
+              placeholder={
+                mylanguage === "EN"
+                  ? "Confirm Password"
+                  : "\u134b\u1230\u12f0\u1295 \u12a5\u1295\u12f0\u1308 \u12eb\u1235\u1308\u1269"
+              }
+              value={formData.confirm_password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="btn w-100"
+            style={{ backgroundColor: "#27485D", color: "#ffffff" }}
+          >
+            {mylanguage === "EN" ? "Sign Up" : "\u12ed\u1218\u12dd\u1308\u1269"}
+          </button>
         </form>
-
-        <div className="text-center mt-3">
-          {mylanguage === "EN" ? "Already have an account?" : "አሁንም አካውንት አላችሁ?"}{' '}
-          <a href="#" className="text-decoration-none login-link" onClick={() => onClose()}>
-            {mylanguage === "EN" ? "Login" : "ይግቡ"}
-          </a>
-        </div>
       </div>
     </div>
   );

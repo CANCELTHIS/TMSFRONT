@@ -4,12 +4,12 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import "../index.css";
 
-const Services = () => {
+const Services = ({ servicesRef }) => {
   const { mylanguage } = useLanguage(); // Access the current language context
   const { myTheme } = useTheme();
 
   return (
-    <div className={`${myTheme === "dark" ? "dark" : "light"}`}>
+    <div ref={servicesRef} id="services" className={`${myTheme === "dark" ? "dark" : "light"}`}>
       <h2 
         className="d-flex justify-content-center" 
         id="texthero2"

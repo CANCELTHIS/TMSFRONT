@@ -13,7 +13,7 @@
   }
   
   .headertext1 {
-    color: #DF6951;
+    color: #ec931e;
   }
   
   .headertext2 {
@@ -449,4 +449,95 @@ textarea.dark-theme-input:focus {
 }
 .headertext1{
   font-size: 24px;
+}
+.modal-card {
+  max-width: 400px; /* You can adjust this value as per your needs */
+  width: 100%;
+  padding: 20px; /* Reduced padding */
+  max-height: 500px; /* Adjust max height */
+  overflow-y: auto; /* Ensure scrolling if content overflows */
+  border-radius: 8px;
+}
+
+.modal-title {
+  font-size: 24px; /* Reduce title size */
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.input-field {
+  padding: 8px 12px; /* Slightly smaller padding for input fields */
+}
+
+.btn-submit {
+  padding: 10px 20px; /* Adjust the submit button size */
+  width: 100%; /* Ensure the button fits well inside */
+}
+
+.alert {
+  margin-top: 10px; /* Add space between alert and form fields */
+}
+.sidebar-item:hover {
+  background-color: #0b455b !important;
+  color: white !important;
+}
+.admin-footer{
+  
+  width: 100%;
+}
+.admin-page {
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f8f9fa; /* Adjust according to theme */
+}
+/* Apply blur to only the main content area when modal is open */
+.admin-content.blurred {
+  filter: blur(5px); /* Blur effect */
+  pointer-events: none; /* Prevent interactions with the blurred content */
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Dark transparent background */
+  z-index: 1049; /* Behind the modal */
+}
+
+/* Modal Styles */
+.rejection-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1050; 
+  width: 90%;
+  max-width: 400px;
+  background-color: #ffffff;
+  padding: 20px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.rejection-modal h5 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.rejection-modal textarea {
+  width: 100%;
+  resize: none;
+}
+
+.rejection-modal .btn-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+}
+.rejectionsubmit{
+  
+  background-color:#0b455b !important;
 }

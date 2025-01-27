@@ -9,7 +9,7 @@ import Utilization from '../assets/Utilization.jpg';
 import Compatibility from '../assets/Compatibility.jpg';
 import Language from '../assets/Language.jpg';
 
-const WhyTMS = () => {
+const WhyTMS = ({whyTMSRef}) => {
   const { mylanguage } = useLanguage(); // Access the current language context
   const { myTheme } = useTheme();
 
@@ -65,7 +65,8 @@ const WhyTMS = () => {
   ];
 
   return (
-    <div className={`container-fluid py-5 px-5 ${myTheme==="dark"?"dark":"light"}`}>
+    <div ref={whyTMSRef} id="about">
+    <div className={`container-fluid py-5 px-5 ${myTheme==="dark"?"dark":"light"}`} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
       <h2 
         className="d-flex justify-content-center" 
         id="texthero2"
@@ -120,9 +121,8 @@ const WhyTMS = () => {
         ))}
       </motion.div>
     </div>
+    </div>
   );
 };
+
 export default WhyTMS;
-
-
-

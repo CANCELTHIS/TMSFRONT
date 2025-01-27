@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import Logo from '../assets/Logo.jpg';
-import '../index.css';
+import Logo from '../assets/Logo.jpg'; // Adjust the path as necessary
 import { useLanguage } from '../context/LanguageContext';
 import { FaLanguage } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
@@ -10,7 +9,7 @@ import { useTheme } from "../context/ThemeContext";
 import { MdDarkMode } from "react-icons/md";
 import { LuSunMedium } from "react-icons/lu";
 
-const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) => {
+const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
   const { mylanguage, toggleLanguage } = useLanguage();
   const [showLogin, setShowLogin] = useState(false);
   const { myTheme, toggleTheme } = useTheme();
@@ -37,7 +36,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
             <motion.img
               id="logo"
               src={Logo}
-              alt="MiNT Logo"
+              alt="Logo"
               initial="hidden"
               animate="visible"
               variants={logoVariants}
@@ -55,8 +54,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
             <GiHamburgerMenu />
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex  justify-content-center">
-
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex justify-content-center">
               <section className="navs">
                 {[
                   { section: 'home', ref: homeRef },
@@ -78,7 +76,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
                       onClick={() => scrollToSection(ref)}
                       style={{
                         color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                        fontSize:"20px"
+                        fontSize: "20px"
                       }}
                     >
                       {mylanguage === 'EN'
@@ -105,7 +103,6 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, onOpenModal }) 
                     onClick={toggleLanguage}
                     style={{
                       color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                      
                     }}
                   >
                     {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={30} />
