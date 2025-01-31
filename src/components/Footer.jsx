@@ -1,15 +1,20 @@
 import React from 'react';
-import { color, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FaFacebook, FaYoutube, FaLinkedin, FaTelegram } from 'react-icons/fa';
 import { useLanguage } from '../context/LanguageContext';
 
-const Footer = ({ homeRef, servicesRef, aboutRef, contactRef }) => {
+const Footer = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, myTheme }) => {
   const { mylanguage } = useLanguage(); // Access language context
 
   const scrollToSection = (sectionRef) => {
-    sectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (sectionRef?.current) {
+      sectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
-
+  const linkVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0 },
+  };
   return (
     <footer className="footer">
       <div className="footer-content">
@@ -37,45 +42,58 @@ const Footer = ({ homeRef, servicesRef, aboutRef, contactRef }) => {
 
           {/* Quick Links */}
           <div className="quick-links">
-            {[
-              { section: 'home', ref: homeRef },
-              { section: 'services', ref: servicesRef },
-              { section: 'about', ref: aboutRef },
-              { section: 'contact', ref: contactRef },
-            ].map(({ section, ref }) => (
-              <motion.div
-                key={section}
-                className="link"
-                whileHover={{ scale: 1.1 }}
-                onClick={() => scrollToSection(ref)}
-              >
-                {mylanguage === 'EN'
-                  ? section.charAt(0).toUpperCase() + section.slice(1)
-                  : section === 'home'
-                  ? 'መግቢያ'
-                  : section === 'services'
-                  ? 'አገልግሎቶች'
-                  : section === 'about'
-                  ? 'ስለ እኛ'
-                  : 'እኛን እንዴት እንደምን ደርስ'}
-              </motion.div>
-            ))}
+            <ul>
+              {[
+                { section: 'home', ref: homeRef },
+                { section: 'services', ref: servicesRef },
+                { section: 'about', ref: whyTMSRef },
+                { section: 'contact', ref: emailFormRef },
+              ].map(({ section, ref }, index) => (
+                <motion.li
+                  key={section}
+                  className="nav-item"
+                  initial="hidden"
+                  animate="visible"
+                  variants={linkVariants}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <a
+                    className="nav-link"
+                    href="#"
+                    onClick={() => scrollToSection(ref)}
+                    style={{
+                      color: myTheme === 'dark' ? '#B3A2F0' : '#fff',
+                      fontSize: '20px',
+                    }}
+                  >
+                    {mylanguage === 'EN'
+                        ? section.charAt(0).toUpperCase() + section.slice(1)
+                        : section === 'home'
+                        ? 'መግቢያ'
+                        : section === 'services'
+                        ? 'አገልግሎቶች'
+                        : section === 'about'
+                        ? 'ስለ እኛ'
+                        : 'እኛን እንደምን ደርሶ'}
+                  </a>
+                </motion.li>
+              ))}
+            </ul>
           </div>
-
-          {/* Philosophy Section */}
           <div className="philosophy">
-            <h4 style={{color:"#F09F33"}}>{mylanguage === 'EN' ? 'Our Philosophy' : 'ፍልስፍናችን'}</h4>
+            <h4 style={{ color: '#F09F33' }}>
+              {mylanguage === 'EN' ? 'Our Philosophy' : 'ፍልስፍናችን'}
+            </h4>
             <p>
-  {mylanguage === 'EN'
-    ? (
-        <>
-          We believe in innovation and technology to create <br />
-          sustainable solutions for a better tomorrow.
-        </>
-      )
-    : 'እኛ በኢኖቬሽንና ቴክኖሎጂ ላይ እንምናለን እና ለወደፊት ቀላል የሆኑ መፍትሄዎችን እንፈጥራለን።'}
-</p>
-
+              {mylanguage === 'EN' ? (
+                <>
+                  We believe in innovation and technology to create <br />
+                  sustainable solutions for a better tomorrow.
+                </>
+              ) : (
+                'እኛ በኢኖቬሽንና ቴክኖሎጂ ላይ እንምናለን እና ለወደፊት ቀላል የሆኑ መፍትሄዎችን እንፈጥራለን።'
+              )}
+            </p>
           </div>
         </div>
       </div>

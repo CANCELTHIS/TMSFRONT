@@ -44,8 +44,11 @@ const SignupModal = ({ onClose }) => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/register/",
-        { ...formData, role: 1 }, // Default role = Employee
+        "http://127.0.0.1:8000/register/",  // Ensure this matches your backend endpoint
+        { 
+          ...formData, 
+          role: 1 // Default role = Employee
+        },
         {
           headers: { "Content-Type": "application/json" },
         }
@@ -81,7 +84,7 @@ const SignupModal = ({ onClose }) => {
           onClick={onClose}
         ></button>
         <h1 className="text-center mb-4">
-          {mylanguage === "EN" ? "Sign Up" : "\u12ed\u1218\u12dd\u1308\u1269"}
+          {mylanguage === "EN" ? "Sign Up" : "ይመዝገቡ"}
         </h1>
 
         <form onSubmit={handleSubmit}>
@@ -90,7 +93,7 @@ const SignupModal = ({ onClose }) => {
               type="text"
               name="full_name"
               className="form-control"
-              placeholder={mylanguage === "EN" ? "Full Name" : "\u1218\u1209 \u1235\u121d"}
+              placeholder={mylanguage === "EN" ? "Full Name" : "ሙሉ ስም"}
               value={formData.full_name}
               onChange={handleChange}
               required
@@ -101,7 +104,7 @@ const SignupModal = ({ onClose }) => {
               type="text"
               name="phone_number"
               className="form-control"
-              placeholder={mylanguage === "EN" ? "Phone Number" : "\u1235\u120d\u132d \u1241\u132d\u122d"}
+              placeholder={mylanguage === "EN" ? "Phone Number" : "ስልክ ቁጥር"}
               value={formData.phone_number}
               onChange={handleChange}
               required
@@ -112,7 +115,7 @@ const SignupModal = ({ onClose }) => {
               type="email"
               name="email"
               className="form-control"
-              placeholder={mylanguage === "EN" ? "Email" : "\u12a2\u1218\u120d"}
+              placeholder={mylanguage === "EN" ? "Email" : "ኢሜል"}
               value={formData.email}
               onChange={handleChange}
               required
@@ -123,7 +126,7 @@ const SignupModal = ({ onClose }) => {
               type="text"
               name="department"
               className="form-control"
-              placeholder={mylanguage === "EN" ? "Department" : "\u12ad\u134d\u120d"}
+              placeholder={mylanguage === "EN" ? "Department" : "ክፍል"}
               value={formData.department}
               onChange={handleChange}
               required
@@ -134,7 +137,7 @@ const SignupModal = ({ onClose }) => {
               type="password"
               name="password"
               className="form-control"
-              placeholder={mylanguage === "EN" ? "Password" : "\u134b\u1230\u12f0"}
+              placeholder={mylanguage === "EN" ? "Password" : "ፕስወርድ"}
               value={formData.password}
               onChange={handleChange}
               required
@@ -146,9 +149,7 @@ const SignupModal = ({ onClose }) => {
               name="confirm_password"
               className="form-control"
               placeholder={
-                mylanguage === "EN"
-                  ? "Confirm Password"
-                  : "\u134b\u1230\u12f0\u1295 \u12a5\u1295\u12f0\u1308 \u12eb\u1235\u1308\u1269"
+                mylanguage === "EN" ? "Confirm Password" : "ፕስወርድን ያረጋግጡ"
               }
               value={formData.confirm_password}
               onChange={handleChange}
@@ -160,7 +161,7 @@ const SignupModal = ({ onClose }) => {
             className="btn w-100"
             style={{ backgroundColor: "#27485D", color: "#ffffff" }}
           >
-            {mylanguage === "EN" ? "Sign Up" : "\u12ed\u1218\u12dd\u1308\u1269"}
+            {mylanguage === "EN" ? "Sign Up" : "ይመዝገቡ"}
           </button>
         </form>
       </div>

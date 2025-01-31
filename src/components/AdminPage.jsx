@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -61,16 +60,16 @@ const AdminPage = () => {
         toast.error("You need to be logged in to approve users.");
         return;
       }
-
+  
       const response = await fetch(`http://127.0.0.1:8000/approve/${userId}/`, {
-        method: "PATCH",
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action: "approve" }),
+        body: JSON.stringify({ action: "approve" }), // Use action: 'approve'
       });
-
+  
       if (response.ok) {
         toast.success("User approved successfully!");
         fetchUsers();
@@ -82,12 +81,7 @@ const AdminPage = () => {
       toast.error("An error occurred while approving the user.");
     }
   };
-
-  const handleReject = (userId) => {
-    setSelectedUserId(userId); // Store the user ID for rejection
-    setShowRejectModal(true); // Open the rejection modal
-  };
-
+  
   const sendRejectionEmail = async (rejectionReason) => {
     try {
       const token = localStorage.getItem("authToken");
@@ -95,22 +89,22 @@ const AdminPage = () => {
         toast.error("You need to be logged in to reject users.");
         return;
       }
-
+  
       const response = await fetch(
         `http://127.0.0.1:8000/approve/${selectedUserId}/`,
         {
-          method: "PATCH",
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            action: "reject",
-            rejection_message: rejectionReason,
+            action: "reject", // Use action: 'reject'
+            rejection_message: rejectionReason, // Rejection reason
           }),
         }
       );
-
+  
       if (response.ok) {
         toast.success("User rejected successfully!");
         fetchUsers();
@@ -122,6 +116,12 @@ const AdminPage = () => {
       toast.error("An error occurred while rejecting the user.");
     }
   };
+  
+
+  const handleReject = (userId) => {
+    setSelectedUserId(userId); // Store the user ID for rejection
+    setShowRejectModal(true); // Open the rejection modal
+  };
 
   const handleRoleChange = async (userId) => {
     try {
@@ -130,7 +130,6 @@ const AdminPage = () => {
         toast.error("You need to be logged in to update user roles.");
         return;
       }
-  
       const response = await fetch(
         `http://127.0.0.1:8000/users/${userId}/update_role/`,
         {
@@ -162,15 +161,6 @@ const AdminPage = () => {
       toast.error("An error occurred while updating the role.");
     }
   };
-  
-  const roles = [
-    { id: 1, label: "Staff" },
-    { id: 2, label: "Department Manager" },
-    { id: 3, label: "Finance Manager" },
-    { id: 4, label: "Transport Manager" },
-    { id: 5, label: "CEO" },
-    { id: 6, label: "Driver" },
-  ];
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -182,13 +172,10 @@ const AdminPage = () => {
   }, [currentPage, navigate]);
 
   return (
-    <div className="admin-container d-flex flex-column">
+    <div className="admin-container d-flex flex-column mt-5">
       <Header username="Admin" />
       <div className="container-fluid">
-        <div className="row">
-          <div className="col-12 col-md-3 col-lg-2 admin-sidebar bg-light">
-            <Sidebar />
-          </div>
+        <div className="row mt-4">
           <div className="col-12 col-md-9 col-lg-10 admin-content p-4">
             {error && <p className="text-danger">{error}</p>}
             {isLoading && <p>Loading users...</p>}
@@ -211,24 +198,9 @@ const AdminPage = () => {
                       <td>{user.full_name || "N/A"}</td>
                       <td>{user.email}</td>
                       <td>
-  {editingRoleId === user.id ? (
-    <select
-      value={selectedRole}
-      onChange={(e) => setSelectedRole(Number(e.target.value))}
-      className="form-select form-select-sm"
-    >
-      {roles.map((role) => (
-        <option key={role.id} value={role.id}>
-          {role.label}
-        </option>
-      ))}
-    </select>
-  ) : (
-    user.role_display || roles.find((r) => r.id === user.role)?.label || "Staff"
-  )}
-</td>
-
-                      <td>{user.department || "N/A"}</td>
+                        {user.role_display || "Staff"}
+                      </td>
+                      <td>{user.department ? user.department.name : "N/A"}</td> {/* Fixed department display */}
                       <td>{user.is_active ? "Active" : "Pending"}</td>
                       <td>
                         {editingRoleId === user.id ? (
@@ -306,14 +278,12 @@ const AdminPage = () => {
           </div>
         </div>
       </div>
-
       {showRejectModal && (
         <Rejection
           setModalOpen={setShowRejectModal}
           sendRejectionEmail={sendRejectionEmail}
         />
       )}
-
       <ToastContainer />
     </div>
   );

@@ -1,94 +1,80 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import './index.css';
 import Home from './components/Home';
-import AdminPage from './components/AdminPage';
+import Services from './components/Services';
+import WhyTMS from './components/WhyTMS';
+import EmailForm from './components/EmailForm';
+import Footer from './components/Footer';
+import NavBar from './components/NavBar';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
 import LoginModal from './components/LoginModal';
 import SignupModal from './components/SignupModal';
-import Footer from './components/Footer';
-import NavBar from './components/NavBar';
-import Services from './components/Services'; // Your Services component
-import WhyTMS from './components/WhyTMS'; // Your WhyTMS component
-import EmailForm from './components/EmailForm'; // Your EmailForm component
+import Sidebar from './components/Sidebar';
+import AdminPage from './components/AdminPage';
+import AdminDepartmentPage from './components/AdminDepartmentPage';
+import AccountPage from './components/AccountPage';
+import HistoryPage from './components/HistoryPage';
+import TransportDashboard from './components/TransportDashboard';
+import VehicleManagement from './components/VehicleManagement';
 
 const App = () => {
-  const [modalType, setModalType] = useState(null); 
-  const [isAuthenticated, setIsAuthenticated] = useState(false); 
-  const [authToken, setAuthToken] = useState(null); 
-  const [isAdmin, setIsAdmin] = useState(false); 
-
+  const [modalType, setModalType] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
+  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
-  // Creating refs for each section
   const homeRef = useRef(null);
   const servicesRef = useRef(null);
   const whyTMSRef = useRef(null);
   const emailFormRef = useRef(null);
   const footerRef = useRef(null);
 
-  // Check authentication on mount
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
       setIsAuthenticated(true);
       setAuthToken(token);
-      checkAdminStatus(token); 
+      checkUserRole(token);
     }
   }, []);
 
-  const checkAdminStatus = async (token) => {
+  const checkUserRole = async (token) => {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/user/me/', {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       if (response.ok) {
         const userData = await response.json();
-        if (userData.role === 'admin') {
-          setIsAdmin(true); 
-        }
+        setUserRole(userData.role);
       }
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('Error checking user role:', error);
     }
   };
 
-  const closeModal = () => setModalType(null); 
-
-  const ProtectedRoute = ({ children }) => {
-    if (!isAuthenticated) {
-      return <Navigate to="/" />;
-    }
-    return children;
-  };
+  const closeModal = () => setModalType(null);
 
   const handleLogin = async (email, password) => {
     try {
       const response = await fetch('http://127.0.0.1:8000/api/token/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('authToken', data.access); 
+        localStorage.setItem('authToken', data.access);
         setIsAuthenticated(true);
         setAuthToken(data.access);
-        setModalType(null); // Close the modal
-        checkAdminStatus(data.access); 
-
-        // Wait until `isAdmin` is set and then navigate
+        setModalType(null);
+        checkUserRole(data.access);
         setTimeout(() => {
-          navigate(isAdmin ? '/admin' : '/');
-        }, 500); 
+          navigate(userRole === 'admin' ? '/admin' : '/');
+        }, 500);
       } else {
         alert('Invalid credentials. Please try again.');
       }
@@ -102,48 +88,80 @@ const App = () => {
     <ThemeProvider>
       <LanguageProvider>
         <div className={`app ${modalType ? 'blurred' : ''}`}>
-          
-          {/* Modal Rendering */}
-          {modalType === 'login' && (
-            <LoginModal onClose={closeModal} onLogin={handleLogin} />
-          )}
-          {modalType === 'signup' && <SignupModal onClose={closeModal} />}
-
-          {/* Routes for Navigation */}
           <Routes>
-            
-            <Route path="/" element={
-              <>
-                {/* Navigation Bar with refs for sections */}
-                <NavBar
-                  homeRef={homeRef}
-                  servicesRef={servicesRef}
-                  whyTMSRef={whyTMSRef}
-                  emailFormRef={emailFormRef}
-                  footerRef={footerRef}
-                  onOpenModal={setModalType}
-                />
-                
-                {/* Sections */}
-                <div ref={homeRef}><Home /></div>
-                <div ref={servicesRef}><Services /></div>
-                <div ref={whyTMSRef}><WhyTMS /></div>
-                <div ref={emailFormRef}><EmailForm /></div>
-                <div ref={footerRef}><Footer /></div>
-              </>
-            } />
-
-            {/* Admin Route - Protected */}
             <Route
-              path="/admin"
+              path="/"
               element={
-                <ProtectedRoute>
-                  <AdminPage />
-                </ProtectedRoute>
+                <>
+                  <NavBar
+                    homeRef={homeRef}
+                    servicesRef={servicesRef}
+                    whyTMSRef={whyTMSRef}
+                    emailFormRef={emailFormRef}
+                    footerRef={footerRef}
+                    onOpenModal={setModalType}
+                  />
+                  <div ref={homeRef}><Home /></div>
+                  <div ref={servicesRef}><Services /></div>
+                  <div ref={whyTMSRef}><WhyTMS /></div>
+                  <div ref={emailFormRef}><EmailForm /></div>
+                  <Footer homeRef={homeRef} servicesRef={servicesRef} aboutRef={whyTMSRef} contactRef={emailFormRef} />
+                </>
+              }
+            />
+
+            {/* Admin Pages */}
+            <Route
+              path="/admin/*"
+              element={
+                <div className="d-flex">
+                  <Sidebar role="admin" />
+                  <div className="container">
+                    <Routes>
+                      <Route path="admin" element={<AdminPage />} />
+                      <Route path="admin-department" element={<AdminDepartmentPage />} />
+                      <Route path="account-page" element={<AccountPage />} />
+                      <Route path="history" element={<HistoryPage />} />
+                    </Routes>
+                  </div>
+                </div>
+              }
+            />
+
+            {/* Transport Manager Pages */}
+            <Route
+              path="/transport/*"
+              element={
+                <div className="d-flex">
+                  <Sidebar role="transport_manager" />
+                  <div className="container">
+                    <Routes>
+                      <Route path="transport-dashboard" element={<TransportDashboard />} />
+                      <Route path="vehicle-management" element={<VehicleManagement />} />
+                    </Routes>
+                  </div>
+                </div>
               }
             />
           </Routes>
 
+          {/* Modals */}
+          {modalType === 'login' && (
+            <div className="modal-overlay">
+              <div className="modal">
+                <button className="close-button" onClick={closeModal}>X</button>
+                <LoginModal onLogin={handleLogin} />
+              </div>
+            </div>
+          )}
+          {modalType === 'signup' && (
+            <div className="modal-overlay">
+              <div className="modal">
+                <button className="close-button" onClick={closeModal}>X</button>
+                <SignupModal />
+              </div>
+            </div>
+          )}
         </div>
       </LanguageProvider>
     </ThemeProvider>

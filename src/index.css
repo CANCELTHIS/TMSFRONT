@@ -1,543 +1,543 @@
 /* Global Styles */
 * {
-    font-family: "Space Grotesk", serif;
-  }
-  
-  #logo {
-    width: 80px;
-  }
-  
-  .nav-link {
-    font-size: 18px;
-    color: #181E4B;
-  }
-  
-  .headertext1 {
-    color: #ec931e;
-  }
-  
-  .headertext2 {
-    color: #181E4B;
-    font-size: 50px;
-  }
-  
-  .headertext1, .headertext2 {
-    margin-top: 10px;
-    margin-left: 5%;
-  }
-  
-  .navbar-brand {
-    margin-left: 3.5%;
-  }
-  
-  .headertext3 {
-    margin-top: 10px;
-    margin-left: 5%;
-  }
-  
-  nav {
-    margin-top: -5px;
-    margin-right: 10px;
-  }
-  
-  /* Navbar Styles */
-  .navbar {
-    background-color: transparent !important; /* Removes background color */
-  }
-  
-  .navbar-nav {
-    display: flex; /* Align items horizontally */
-    gap: 20px; /* Space out the items */
-    justify-content: center; /* Center the items */
-  }
-  
-  .navbar-toggler {
-    border: none;
-  }
-  
-  .navbar-toggler-icon {
-    background-color: #181E4B;
-  }
-  
-  .nav-item {
-    list-style: none;
-  }
-  
-  .nav-link {
-    color: #181E4B; /* Color for the nav links */
-    font-size: 18px;
-    text-decoration: none;
-  }
-  
-  /* On Small Screens (Mobile) */
-  @media (max-width: 767px) {
-    .navbar-collapse {
-      display: flex;
-      flex-direction: column;
-      align-items: center; /* Center the items in the collapsible navbar */
-    }
-  
-    .navbar-nav {
-      display: flex;
-      flex-direction: column; /* Stack items vertically */
-      gap: 15px; /* Space out items vertically */
-      width: 100%; /* Ensure the nav takes up the full width */
-      align-items: center;
-    }
-  
-    .navbar-nav .nav-item {
-      width: 100%; /* Make each nav item take the full width */
-      text-align: center; /* Center the text */
-    }
-  
-    .navbar-toggler {
-      position: relative;
-      z-index: 1050; /* Ensure the toggler is above other elements */
-    }
-  
-    .navbar-collapse {
-      padding-top: 10px; /* Add some padding for better layout */
-    }
-  }
-  
-  /* Hero Section */
-  .Hero1 {
-    display: flex;
-    justify-content: space-around;
-  }
-  
-  #car {
-    width: 500px;
-  }
-  
-  #texthero2 {
-    color: #14183E;
-    margin-top: 20px;
-  }
-  
-  .serviceText1 {
-    color: #14183E;
-  }
-  
-  .car {
-    width: 250px;
-  }
-  
-  /* Circles */
-  .circle1, .circle2, .circle3, .circle4 {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    position: relative;
-  }
-  
-  .circle1 {
-    background-color: #077D89;
-    top: 150px;
-  }
-  
-  .circle2 {
-    background-color: #DF6951;
-    top: 80px;
-    left: 290px;
-  }
-  
-  .circle3 {
-    background-color: #ffc107;
-    top: 50px;
-  }
-  
-  .circle4 {
-    background-color: #443480;
-    top: 70px;
-    left: 310px;
-  }
-  
-  /* Footer Styles */
-  .footer {
-    background-color: #0b455b;
-    color: white;
-    padding: 20px 0;
-  }
-
-  
-  .footer-column h3 {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-  
-  .footer-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .footer-nav li {
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  
-  .social-icons {
-    display: flex;
-    gap: 15px;
-  }
-  
-  .social-icons a {
-    color: white;
-    text-decoration: none;
-  }
-  
-  .social-icons a:hover {
-    color: #dcdcdc;
-  }
-  
-  .subscribe {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  
-  .email-input {
-    padding: 10px;
-    width: 70%;
-    border: none;
-    border-radius: 5px;
-    color: white;
-    position: relative;
-  }
-  
-  .send-button {
-    padding: 10px;
-    background-color: #0b455b;
-    color: white;
-    border: none;
-    border-radius: 5px;
-  }
-  
-  .send-button:hover {
-    background-color: #0a3e4b;
-  }
-  
-  /* Custom Navs Class */
-  .navs {
-    display: flex;
-  }
-  
-  /* Custom Button */
-  .btn-custom {
-    background-color: #0b455b;
-    padding: 1rem 1.5rem;
-    border: none;
-    border-radius: 10px;
-    color: #fff;
-  }
-  
-  /* Smooth Scroll */
-  html {
-    scroll-behavior: smooth;
-  }
-  
-  /* Scrollable Modal */
-  .scroll {
-    max-width: 450px;
-    max-height: 500px;
-    border-radius: 10px;
-  }
-  
-  .carousel .carousel-item img {
-    width: 90%;
-    height: 400px;
-    object-fit: cover;
-    border-radius: 10px;
-  }
-  
-  .carousel .carousel-item {
-    padding: 5px;
-  }
-  
-  .car {
-    width: 100%;
-    border-radius: 10px;
-  }
-  
-  /* Light Theme (default) */
-  .app.light {
-    background-color: #ffffff;
-    color: #000000;
-  }
-  
-  /* Dark Theme */
-  .app.dark {
-    background-color: #333333;
-    color: #ffffff;
-  }
-  
-  /* Customize NavBar for dark/light mode */
-  .navbar-light {
-    background-color: #f8f9fa;
-  }
-  
-  .navbar-dark {
-    background-color: #343a40;
-  }
-  
-  /* Blurred Background */
-  .blurred {
-    filter: blur(5px);
-    pointer-events: none;
-  }
-  
-  /* Modal Overlay and Styling */
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-  }
-  
-  .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    width: 30rem;
-    position: relative;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 1.5rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-  }
-.signup{
-    margin-left: 50px;
+  font-family: "Space Grotesk", serif;
 }
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  
-  .modal-card {
-    width: 30rem;
-    position: relative;
-    padding: 2rem 2.5rem;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  .close-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-  }
-  
-  .modal-title {
-    text-align: center;
-    margin-bottom: .5rem;
-  }
-  
-  .label {
-    margin-left: 3rem;
-    display: block;
-  }
-  
-  .input-field {
-    width: 75%;
-    margin: 0 auto;
-  }
-  
-  .submit-btn {
-    width: 75%;
-    background-color: #27485D;
-    color: #ffffff;
-  }
-  
-  .login-link {
-    color: #27485D;
-  }
-  .card {
-  box-shadow: #077D89;
+
+#logo {
+  width: 80px;
+}
+
+.nav-link {
+  font-size: 18px;
+  color: #181E4B;
+}
+
+.headertext1 {
+  color: #ec931e;
+}
+
+.headertext2 {
+  color: #181E4B;
+  font-size: 50px;
+}
+
+.headertext1, .headertext2 {
+  margin-top: 10px;
+  margin-left: 5%;
+}
+
+.navbar-brand {
+  margin-left: 3.5%;
+}
+
+.headertext3 {
+  margin-top: 10px;
+  margin-left: 5%;
+}
+
+nav {
+  margin-top: -5px;
+  margin-right: 10px;
+}
+
+/* Navbar Styles */
+.navbar {
+  background-color: transparent !important; /* Removes background color */
+}
+
+.navbar-nav {
+  display: flex; /* Align items horizontally */
+  gap: 20px; /* Space out the items */
+  justify-content: center; /* Center the items */
+}
+
+.navbar-toggler {
   border: none;
-  border-radius: 15px;
-  overflow: hidden;
-  background-color: #ffffff;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 15px 15px 15px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-toggler-icon {
-  background-color: transparent; /* No background */
-  border: none; /* Remove any default border */
-  width: 30px; /* Set the width of the hamburger icon */
-  height: 3px; /* Set the height of the bars */
+  background-color: #181E4B;
 }
-.dark{
-color: #B3A2F0 !important;
-background: linear-gradient(to right,#0C182C,#0A0E17,#0C203E);
+
+.nav-item {
+  list-style: none;
 }
-.light{
-  background-color: #fff;
-  color: #181E4B;
+
+.nav-link {
+  color: #181E4B; /* Color for the nav links */
+  font-size: 18px;
+  text-decoration: none;
 }
+
+/* On Small Screens (Mobile) */
+@media (max-width: 767px) {
+  .navbar-collapse {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the items in the collapsible navbar */
+  }
+
+  .navbar-nav {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    gap: 15px; /* Space out items vertically */
+    width: 100%; /* Ensure the nav takes up the full width */
+    align-items: center;
+  }
+
+  .navbar-nav .nav-item {
+    width: 100%; /* Make each nav item take the full width */
+    text-align: center; /* Center the text */
+  }
+
+  .navbar-toggler {
+    position: relative;
+    z-index: 1050; /* Ensure the toggler is above other elements */
+  }
+
+  .navbar-collapse {
+    padding-top: 10px; /* Add some padding for better layout */
+  }
+}
+
+/* Hero Section */
+.Hero1 {
+  display: flex;
+  justify-content: space-around;
+}
+
+#car {
+  width: 500px;
+}
+
 #texthero2 {
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-#logo{
-  width: 120px;
-}
-.flex{
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-}
-.social-links{
-  display: flex;
-  gap: 10px;
-  cursor: pointer;
-}
-.quick-links{
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  cursor: pointer;
-  font-size:18px;
-}
-/* Add styles for dark theme inputs */
-input.dark-theme-input,
-textarea.dark-theme-input {
-  background-color: #B3A2F0; /* Subtle dark background */
-  color: #ffffff;          /* Light text color for readability */
-  border: 1px solid #B3A2F0;  /* Subtle border to match dark theme */
+  color: #14183E;
+  margin-top: 20px;
 }
 
-input.dark-theme-input:focus,
-textarea.dark-theme-input:focus {
-  border-color: #B3A2F0; 
-  outline: none;     
-}
-.copyright{
-  color: #F09F33;
-}
-.headertext3{
-  font-size: larger;
-}
-.headertext1{
-  font-size: 24px;
-}
-.modal-card {
-  max-width: 400px; /* You can adjust this value as per your needs */
-  width: 100%;
-  padding: 20px; /* Reduced padding */
-  max-height: 500px; /* Adjust max height */
-  overflow-y: auto; /* Ensure scrolling if content overflows */
-  border-radius: 8px;
+.serviceText1 {
+  color: #14183E;
 }
 
-.modal-title {
-  font-size: 24px; /* Reduce title size */
-  text-align: center;
+.car {
+  width: 250px;
+}
+
+/* Circles */
+.circle1, .circle2, .circle3, .circle4 {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.circle1 {
+  background-color: #077D89;
+  top: 150px;
+}
+
+.circle2 {
+  background-color: #DF6951;
+  top: 80px;
+  left: 290px;
+}
+
+.circle3 {
+  background-color: #ffc107;
+  top: 50px;
+}
+
+.circle4 {
+  background-color: #443480;
+  top: 70px;
+  left: 310px;
+}
+
+/* Footer Styles */
+.footer {
+  background-color: #0b455b;
+  color: white;
+  padding: 20px 0;
+}
+
+
+.footer-column h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
   margin-bottom: 20px;
 }
 
-.input-field {
-  padding: 8px 12px; /* Slightly smaller padding for input fields */
+.footer-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  list-style-type: none;
+  padding: 0;
 }
 
-.btn-submit {
-  padding: 10px 20px; /* Adjust the submit button size */
-  width: 100%; /* Ensure the button fits well inside */
+.footer-nav li {
+  font-size: 1rem;
+  cursor: pointer;
 }
 
-.alert {
-  margin-top: 10px; /* Add space between alert and form fields */
+.social-icons {
+  display: flex;
+  gap: 15px;
 }
-.sidebar-item:hover {
-  background-color: #0b455b !important;
-  color: white !important;
+
+.social-icons a {
+  color: white;
+  text-decoration: none;
 }
-.admin-footer{
-  
+
+.social-icons a:hover {
+  color: #dcdcdc;
+}
+
+.subscribe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.email-input {
+  padding: 10px;
+  width: 70%;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  position: relative;
+}
+
+.send-button {
+  padding: 10px;
+  background-color: #0b455b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.send-button:hover {
+  background-color: #0a3e4b;
+}
+
+/* Custom Navs Class */
+.navs {
+  display: flex;
+}
+
+/* Custom Button */
+.btn-custom {
+  background-color: #0b455b;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+}
+
+/* Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Scrollable Modal */
+.scroll {
+  max-width: 450px;
+  max-height: 500px;
+  border-radius: 10px;
+}
+
+.carousel .carousel-item img {
+  width: 90%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.carousel .carousel-item {
+  padding: 5px;
+}
+
+.car {
   width: 100%;
-}
-.admin-page {
-  min-height: 100vh;
-  padding: 20px;
-  background-color: #f8f9fa; /* Adjust according to theme */
-}
-/* Apply blur to only the main content area when modal is open */
-.admin-content.blurred {
-  filter: blur(5px); /* Blur effect */
-  pointer-events: none; /* Prevent interactions with the blurred content */
+  border-radius: 10px;
 }
 
-/* Modal Overlay */
+/* Light Theme (default) */
+.app.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Dark Theme */
+.app.dark {
+  background-color: #333333;
+  color: #ffffff;
+}
+
+/* Customize NavBar for dark/light mode */
+.navbar-light {
+  background-color: #f8f9fa;
+}
+
+.navbar-dark {
+  background-color: #343a40;
+}
+
+/* Blurred Background */
+.blurred {
+  filter: blur(5px);
+  pointer-events: none;
+}
+
+/* Modal Overlay and Styling */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Dark transparent background */
-  z-index: 1049; /* Behind the modal */
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 30rem;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+.signup{
+  margin-left: 50px;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: 30rem;
+  position: relative;
+  padding: 2rem 2.5rem;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.modal-title {
+  text-align: center;
+  margin-bottom: .5rem;
+}
+
+.label {
+  margin-left: 3rem;
+  display: block;
+}
+
+.input-field {
+  width: 75%;
+  margin: 0 auto;
+}
+
+.submit-btn {
+  width: 75%;
+  background-color: #27485D;
+  color: #ffffff;
+}
+
+.login-link {
+  color: #27485D;
+}
+.card {
+box-shadow: #077D89;
+border: none;
+border-radius: 15px;
+overflow: hidden;
+background-color: #ffffff;
+transition: all 0.3s ease-in-out;
+box-shadow: 15px 15px 15px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-toggler-icon {
+background-color: transparent; /* No background */
+border: none; /* Remove any default border */
+width: 30px; /* Set the width of the hamburger icon */
+height: 3px; /* Set the height of the bars */
+}
+.dark{
+color: #B3A2F0 !important;
+background: linear-gradient(to right,#0C182C,#0A0E17,#0C203E);
+}
+.light{
+background-color: #fff;
+color: #181E4B;
+}
+#texthero2 {
+margin-top: 0 !important;
+padding-top: 0 !important;
+}
+#logo{
+width: 120px;
+}
+.flex{
+display: flex;
+align-items: center;
+justify-content: space-evenly;
+}
+.social-links{
+display: flex;
+gap: 10px;
+cursor: pointer;
+}
+.quick-links{
+display: flex;
+flex-direction: column;
+gap: 10px;
+cursor: pointer;
+font-size:18px;
+}
+/* Add styles for dark theme inputs */
+input.dark-theme-input,
+textarea.dark-theme-input {
+background-color: #B3A2F0; /* Subtle dark background */
+color: #ffffff;          /* Light text color for readability */
+border: 1px solid #B3A2F0;  /* Subtle border to match dark theme */
+}
+
+input.dark-theme-input:focus,
+textarea.dark-theme-input:focus {
+border-color: #B3A2F0; 
+outline: none;     
+}
+.copyright{
+color: #F09F33;
+}
+.headertext3{
+font-size: larger;
+}
+.headertext1{
+font-size: 24px;
+}
+.modal-card {
+max-width: 400px; /* You can adjust this value as per your needs */
+width: 100%;
+padding: 20px; /* Reduced padding */
+max-height: 500px; /* Adjust max height */
+overflow-y: auto; /* Ensure scrolling if content overflows */
+border-radius: 8px;
+}
+
+.modal-title {
+font-size: 24px; /* Reduce title size */
+text-align: center;
+margin-bottom: 20px;
+}
+
+.input-field {
+padding: 8px 12px; /* Slightly smaller padding for input fields */
+}
+
+.btn-submit {
+padding: 10px 20px; /* Adjust the submit button size */
+width: 100%; /* Ensure the button fits well inside */
+}
+
+.alert {
+margin-top: 10px; /* Add space between alert and form fields */
+}
+.sidebar-item:hover {
+background-color: #0b455b !important;
+color: white !important;
+}
+.admin-footer{
+
+width: 100%;
+}
+.admin-page {
+min-height: 100vh;
+padding: 20px;
+background-color: #f8f9fa; /* Adjust according to theme */
+}
+/* Apply blur to only the main content area when modal is open */
+.admin-content.blurred {
+filter: blur(5px); /* Blur effect */
+pointer-events: none; /* Prevent interactions with the blurred content */
+}
+
+/* Modal Overlay */
+.modal-overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(0, 0, 0, 0.5); /* Dark transparent background */
+z-index: 1049; /* Behind the modal */
 }
 
 /* Modal Styles */
 .rejection-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1050; 
-  width: 90%;
-  max-width: 400px;
-  background-color: #ffffff;
-  padding: 20px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+z-index: 1050; 
+width: 90%;
+max-width: 400px;
+background-color: #ffffff;
+padding: 20px;
+box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+border-radius: 10px;
 }
 
 .rejection-modal h5 {
-  font-size: 18px;
-  margin: 0;
+font-size: 18px;
+margin: 0;
 }
 
 .rejection-modal textarea {
-  width: 100%;
-  resize: none;
+width: 100%;
+resize: none;
 }
 
 .rejection-modal .btn-close {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
+background: none;
+border: none;
+font-size: 1.2rem;
 }
 .rejectionsubmit{
-  
-  background-color:#0b455b !important;
+
+background-color:#0b455b !important;
 }
