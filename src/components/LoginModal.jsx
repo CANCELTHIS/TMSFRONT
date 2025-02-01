@@ -29,7 +29,7 @@ const LoginModal = ({ onClose }) => {
       const { access } = response.data;
       localStorage.setItem('authToken', access); // Store the token in local storage
       onClose(); // Close the modal
-      navigate('/admin'); // Redirect to AdminPage
+      navigate('/admin/admin'); // Redirect to AdminPage
     } catch (err) {
       setError(
         mylanguage === 'EN'

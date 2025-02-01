@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
@@ -14,8 +14,29 @@ const SignupModal = ({ onClose }) => {
     confirm_password: "",
   });
 
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const { mylanguage } = useLanguage();
   const { myTheme } = useTheme();
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/departments/");
+        setDepartments(response.data);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        setError("Failed to load departments.");
+        toast.error("Failed to load departments.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,14 +46,7 @@ const SignupModal = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.full_name ||
-      !formData.phone_number ||
-      !formData.email ||
-      !formData.department ||
-      !formData.password ||
-      !formData.confirm_password
-    ) {
+    if (Object.values(formData).some((field) => !field)) {
       toast.error("Please fill in all fields.");
       return;
     }
@@ -43,16 +57,12 @@ const SignupModal = ({ onClose }) => {
     }
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/register/",  // Ensure this matches your backend endpoint
-        { 
-          ...formData, 
-          role: 1 // Default role = Employee
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      const response = await axios.post("http://127.0.0.1:8000/register/", {
+        ...formData,
+        role: 1, // Default role = Employee
+      }, {
+        headers: { "Content-Type": "application/json" },
+      });
 
       toast.success(response.data.message || "Registration successful!");
       setFormData({
@@ -66,9 +76,7 @@ const SignupModal = ({ onClose }) => {
 
       setTimeout(() => onClose(), 2000);
     } catch (err) {
-      toast.error(
-        err.response?.data?.detail || "There was an issue with registration."
-      );
+      toast.error(err.response?.data?.detail || "There was an issue with registration.");
     }
   };
 
@@ -122,15 +130,26 @@ const SignupModal = ({ onClose }) => {
             />
           </div>
           <div className="mb-3">
-            <input
-              type="text"
+            <select
               name="department"
               className="form-control"
-              placeholder={mylanguage === "EN" ? "Department" : "ክፍል"}
               value={formData.department}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="">
+                {loading
+                  ? "Loading..."
+                  : mylanguage === "EN"
+                  ? "Select Department"
+                  : "ክፍል ይምረጡ"}
+              </option>
+              {departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-3">
             <input
@@ -148,9 +167,7 @@ const SignupModal = ({ onClose }) => {
               type="password"
               name="confirm_password"
               className="form-control"
-              placeholder={
-                mylanguage === "EN" ? "Confirm Password" : "ፕስወርድን ያረጋግጡ"
-              }
+              placeholder={mylanguage === "EN" ? "Confirm Password" : "ፕስወርድን ያረጋግጡ"}
               value={formData.confirm_password}
               onChange={handleChange}
               required

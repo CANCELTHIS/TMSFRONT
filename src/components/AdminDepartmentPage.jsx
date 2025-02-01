@@ -5,6 +5,7 @@ import axios from "axios"; // For API requests
 
 const AdminDepartmentPage = () => {
   const [departments, setDepartments] = useState([]);  // Ensure it's always an array
+  const [users, setUsers] = useState([]); // State for users
   const [showModal, setShowModal] = useState(false);
   const [currentDepartment, setCurrentDepartment] = useState(null);
   const [formValues, setFormValues] = useState({
@@ -23,29 +24,48 @@ const AdminDepartmentPage = () => {
     },
   });
 
-  // Fetch departments when the component loads
+  // Fetch departments and users when the component loads
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const fetchDepartmentsAndUsers = async () => {
       try {
-        const response = await axiosInstance.get("http://127.0.0.1:8000/departments/"); // Ensure this is correct endpoint
-        if (Array.isArray(response.data)) {
-          setDepartments(response.data);
+        // Fetch departments
+        const departmentResponse = await axiosInstance.get("http://127.0.0.1:8000/departments/");
+        const userResponse = await axiosInstance.get("http://127.0.0.1:8000/users/"); // Endpoint for users
+        
+        // Check if the data is valid
+        if (Array.isArray(departmentResponse.data) && Array.isArray(userResponse.data)) {
+          const fetchedDepartments = departmentResponse.data;
+          const fetchedUsers = userResponse.data;
+
+          // Sort users by department and role to find the Department Manager
+          const sortedDepartments = fetchedDepartments.map(department => {
+            // Find the department manager by filtering users based on department and role
+            const departmentManager = fetchedUsers.find(
+              user => user.department === department.name && user.role === 2 // Role 2 is Department Manager
+            );
+
+            return {
+              ...department,
+              manager: departmentManager ? departmentManager.full_name : "", // Set manager name if exists
+            };
+          });
+
+          setDepartments(sortedDepartments);
+          setUsers(fetchedUsers);
         } else {
-          console.error("API response is not an array", response.data);
+          console.error("API response is not an array", departmentResponse.data, userResponse.data);
           setDepartments([]); // Default to empty array if response is not an array
+          setUsers([]);
         }
       } catch (error) {
-        if (error.response && error.response.status === 404) {
-          console.error("Department endpoint not found");
-        } else {
-          console.error("Error fetching departments:", error);
-        }
+        console.error("Error fetching data:", error);
         setDepartments([]); // Default to empty array in case of error
+        setUsers([]);
       }
     };
-    fetchDepartments();
+
+    fetchDepartmentsAndUsers();
   }, []);
-  
 
   const validateInput = () => {
     const errors = {};
@@ -103,13 +123,6 @@ const AdminDepartmentPage = () => {
       <div className="flex-grow-1">
         <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
           <h2 className="h5">Department Management</h2>
-          <div className="d-flex align-items-center">
-            <span className="me-2">Hello, Admin</span>
-            <span
-              className="rounded-circle border d-flex align-items-center justify-content-center"
-              style={{ width: "40px", height: "40px" }}
-            ></span>
-          </div>
         </div>
 
         <div className="container py-4">
@@ -136,7 +149,7 @@ const AdminDepartmentPage = () => {
                         <tr key={dept.id}>
                           <td>{index + 1}</td>
                           <td>{dept.name}</td>
-                          <td>{dept.manager}</td>
+                          <td>{dept.department_manager}</td>
                         </tr>
                       ))
                     ) : (
