@@ -149,7 +149,7 @@ const AdminDepartmentPage = () => {
                         <tr key={dept.id}>
                           <td>{index + 1}</td>
                           <td>{dept.name}</td>
-                          <td>{dept.department_manager}</td>
+                          <td>{dept.manager}</td>
                         </tr>
                       ))
                     ) : (
@@ -211,7 +211,6 @@ const AdminDepartmentPage = () => {
           </div>
         )}
 
-        <Footer />
       </div>
     </div>
   );
