@@ -13,7 +13,7 @@ const Home = () => {
   const { myTheme } = useTheme();
 
   return (
-    <div className={`w-100 ${myTheme === "dark" ? "dark" : "light"}`}>
+    <div className={`w-100 ${myTheme === "dark" ? "dark" : "light"}`} style={{marginTop:"80px"}}>
       <div className="container-fluid px-0">
         {/* Home Section */}
         <div id="home" className="row align-items-center">

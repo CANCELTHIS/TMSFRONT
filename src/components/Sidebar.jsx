@@ -11,7 +11,7 @@ import '../index.css';
 const Sidebar = ({ role }) => {
   const location = useLocation(); 
 
-  const getActiveClass = (path) => location.pathname === path ? "active text-primary fw-bold" : "text-dark";
+  const getActiveClass = (path) => location.pathname === path ? "active text-primary  fw-bold" : "text-dark";
   const adminMenus = [
     { path: "/admin/admin", icon: <MdDashboard />, label: "Dashboard" },
     { path: "/admin/admin-department", icon: <IoIosPeople />, label: "Departments" },
@@ -26,7 +26,7 @@ const Sidebar = ({ role }) => {
   const isAdminPage = location.pathname.startsWith("/admin");
 
   return (
-    <div className="d-flex flex-column bg-light px-3 py-4 mt-4" style={{ width: "220px", height: "80vh"}}>
+    <div className="d-flex flex-column bg-light px-3 py-4 " style={{ width: "220px", height: "100vh"}}>
       <div className="text-center">
         <img src={Logo} alt="Logo" className="img-fluid mb-3" style={{ maxWidth: "100px" }} />
       </div>

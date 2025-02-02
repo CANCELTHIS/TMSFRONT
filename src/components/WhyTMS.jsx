@@ -66,8 +66,8 @@ const WhyTMS = ({whyTMSRef}) => {
 
   return (
     <div ref={whyTMSRef} id="about">
-    <div className={`container-fluid py-5 px-5 ${myTheme==="dark"?"dark":"light"}`} style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-      <h2 
+<div className={`container-fluid py-5 px-5 ${myTheme==="dark" ? "dark" : "light"}`}>
+<h2 
         className="d-flex justify-content-center" 
         id="texthero2"
         style={{

@@ -283,7 +283,8 @@ const AdminPage = () => {
                         ) : (
                           <>
                             <button
-                              className="btn btn-sm btn-primary me-2"
+                              className="btn btn-sm me-2"
+                              style={{backgroundColor:"#0b455b", color:"#fff"}}
                               onClick={() => {
                                 setEditingRoleId(user.id);
                                 setSelectedRole(user.role);

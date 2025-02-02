@@ -127,7 +127,7 @@ const AdminDepartmentPage = () => {
 
         <div className="container py-4">
           <div className="d-flex justify-content-start align-items-center mb-4">
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <button className="btn" style={{backgroundColor:"#0b455b",color:"#fff"}} onClick={() => setShowModal(true)}>
               + Add Department
             </button>
           </div>
@@ -149,7 +149,7 @@ const AdminDepartmentPage = () => {
                         <tr key={dept.id}>
                           <td>{index + 1}</td>
                           <td>{dept.name}</td>
-                          <td>{dept.manager}</td>
+                          <td>{dept.department_manager}</td>
                         </tr>
                       ))
                     ) : (

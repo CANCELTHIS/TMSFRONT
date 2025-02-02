@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-
 const AccountPage = () => {
   const itemsPerPage = 5;
   const [accounts, setAccounts] = useState([]);
@@ -203,7 +202,7 @@ const AccountPage = () => {
                             <td>
                               {editAccount && editAccount.id === acc.id ? (
                                 <>
-                                  <button className="btn btn-primary btn-sm me-2" onClick={handleSaveEdit}>
+                                  <button style={{backgroundColor:"#0b455b", color:"#fff"}} className="btn btn-sm me-2" onClick={handleSaveEdit}>
                                     Save
                                   </button>
                                   <button className="btn btn-secondary btn-sm" onClick={handleCancelEdit}>
@@ -211,7 +210,7 @@ const AccountPage = () => {
                                   </button>
                                 </>
                               ) : (
-                                <button className="btn btn-warning btn-sm me-2" onClick={() => handleEdit(acc)}>
+                                <button style={{backgroundColor:"#0b455b", color:"#fff"}} className="btn btn-sm me-2" onClick={() => handleEdit(acc)}>
                                   Edit
                                 </button>
                               )}

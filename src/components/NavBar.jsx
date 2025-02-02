@@ -30,8 +30,8 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
 
   return (
     <div className={`mynav ${myTheme === "dark" ? "dark" : "light"}`}>
-      <nav className={`navbar navbar-expand-lg navbar-light ${myTheme === "dark" ? "dark" : "light"}`}>
-        <div className="container-fluid d-flex gap-6">
+<nav className={`navbar navbar-expand-lg navbar-light fixed-top ${myTheme === "dark" ? "dark" : "light"}`}>
+<div className="container-fluid d-flex gap-6">
           <a className="navbar-brand" href="/">
             <motion.img
               id="logo"
@@ -40,6 +40,7 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
               initial="hidden"
               animate="visible"
               variants={logoVariants}
+              
             />
           </a>
           <button
@@ -51,10 +52,10 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
             aria-expanded="false"
             aria-label="Toggle navigation"
           >
-            <GiHamburgerMenu />
+            <GiHamburgerMenu color='#F09F33'/>
           </button>
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex justify-content-center">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex gap-4">
               <section className="navs">
                 {[
                   { section: 'home', ref: homeRef },
@@ -68,8 +69,10 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
                     initial="hidden"
                     animate="visible"
                     variants={linkVariants}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.5 }}
+                    style={{marginRight:"20px"}}
                   >
+                    
                     <a
                       className="nav-link"
                       href="#"
@@ -98,32 +101,33 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
                   variants={linkVariants}
                 >
                   <a
-                    className="nav-link"
+                    className="nav-link "
                     href="#"
                     onClick={toggleLanguage}
                     style={{
                       color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
                     }}
                   >
-                    {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={30} />
+                    {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={20} />
                   </a>
                 </motion.li>
-              </section>
-            </ul>
-            {/* Light/Dark Theme Toggle Icon */}
-            <motion.div
-              className="theme-icon"
+                <motion.div
+              className="theme-icon mt-2"
               onClick={toggleTheme}
               style={{
-                display: 'flex',
+                
                 alignItems: 'center',
                 cursor: 'pointer',
                 color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                marginRight: '10px',
+                
               }}
             >
-              {myTheme === 'dark' ? <LuSunMedium size={30} /> : <MdDarkMode size={30} />}
+              {myTheme === 'dark' ? <LuSunMedium size={20} /> : <MdDarkMode size={20} />}
             </motion.div>
+              </section>
+            </ul>
+            
+            
             <motion.button
               className="btn"
               style={{

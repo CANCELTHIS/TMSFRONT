@@ -19,6 +19,7 @@ import HistoryPage from './components/HistoryPage';
 import TransportDashboard from './components/TransportDashboard';
 import VehicleManagement from './components/VehicleManagement';
 
+
 const App = () => {
   const [modalType, setModalType] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -97,6 +98,7 @@ const App = () => {
                     homeRef={homeRef}
                     servicesRef={servicesRef}
                     whyTMSRef={whyTMSRef}
+                    
                     emailFormRef={emailFormRef}
                     footerRef={footerRef}
                     onOpenModal={setModalType}

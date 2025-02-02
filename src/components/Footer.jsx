@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaFacebook, FaYoutube, FaLinkedin, FaTelegram } from 'react-icons/fa';
 import { useLanguage } from '../context/LanguageContext';
 
-const Footer = ({ homeRef, servicesRef, whyTMSRef, emailFormRef, myTheme }) => {
+const Footer = ({  homeRef, servicesRef, whyTMSRef, emailFormRef,myTheme }) => {
   const { mylanguage } = useLanguage(); // Access language context
 
   const scrollToSection = (sectionRef) => {
