@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import '../index.css'; // Import the index.css for custom styles
 
 const HistoryPage = () => {
   const itemsPerPage = 10; // Number of items to display per page
@@ -7,6 +8,7 @@ const HistoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1); // Current page number
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState(''); // Added state for filtering by status
 
   // Get the token from localStorage
   const token = localStorage.getItem('authToken');
@@ -26,9 +28,7 @@ const HistoryPage = () => {
           },
         });
 
-        // Check if response has the expected structure
         console.log(response.data); // Check the structure of the response
-
         setHistory(response.data); // Store the response data in the state
         setLoading(false); // Set loading to false once data is fetched
       } catch (err) {
@@ -43,10 +43,15 @@ const HistoryPage = () => {
   // Pagination logic
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentPageHistory = history.slice(startIndex, endIndex);
+  const filteredHistory = history.filter(record => {
+    if (filter === 'approved') return record.status === 'approve';
+    if (filter === 'rejected') return record.status === 'reject';
+    return true; // No filter applied
+  });
+  const currentPageHistory = filteredHistory.slice(startIndex, endIndex);
 
   const handleNextPage = () => {
-    if (currentPage * itemsPerPage < history.length) {
+    if (currentPage * itemsPerPage < filteredHistory.length) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -63,6 +68,28 @@ const HistoryPage = () => {
 
       {loading && <p>Loading...</p>}
       {error && <div className="alert alert-danger">{error}</div>}
+
+      {/* Filter Options */}
+      <div className="mb-3">
+        <button 
+          className="btn btn-outline myapprove me-2 btn-success"
+          onClick={() => setFilter('approved')}
+        >
+          Approved
+        </button>
+        <button 
+          className="btn btn-outline-danger myreject"
+          onClick={() => setFilter('rejected')}
+        >
+          Rejected
+        </button>
+        <button 
+          className="btn btn-outline btn-secondary  ms-2"
+          onClick={() => setFilter('')}
+        >
+          All
+        </button>
+      </div>
 
       <div className="card shadow-sm">
         <div className="card-body">
@@ -87,9 +114,9 @@ const HistoryPage = () => {
                       <td
                         className={
                           record.status === 'approve'
-                            ? 'text-success fw-bold' // Green for Approved
+                            ? 'text-success fw-bold' // Green for Approved (from CSS)
                             : record.status === 'reject'
-                            ? 'text-danger fw-bold' // Red for Rejected
+                            ? 'text-danger fw-bold' // Red for Rejected (from CSS)
                             : ''
                         }
                       >
@@ -121,12 +148,12 @@ const HistoryPage = () => {
           Previous
         </button>
         <small>
-          Page {currentPage} of {Math.ceil(history.length / itemsPerPage)}
+          Page {currentPage} of {Math.ceil(filteredHistory.length / itemsPerPage)}
         </small>
         <button
           className="btn btn-secondary btn-sm"
           onClick={handleNextPage}
-          disabled={currentPage * itemsPerPage >= history.length}
+          disabled={currentPage * itemsPerPage >= filteredHistory.length}
         >
           Next
         </button>

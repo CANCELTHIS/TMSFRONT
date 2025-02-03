@@ -107,6 +107,7 @@ const AdminPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ action: "approve" }),
+        
       });
 
       if (response.ok) {
@@ -120,7 +121,6 @@ const AdminPage = () => {
       toast.error("An error occurred while approving the user.");
     }
   };
-
   // Handle role change
   const handleRoleChange = async (userId) => {
     try {
@@ -217,6 +217,7 @@ const AdminPage = () => {
 
   return (
     <div className="admin-container d-flex flex-column mt-5">
+    
       <Header username="Admin" />
       <div className="container-fluid">
         <div className="row mt-4">
@@ -258,6 +259,7 @@ const AdminPage = () => {
                           getRoleLabel(user.role) // Display role label dynamically
                         )}
                       </td>
+                      
                       <td>
                         {user.department
                           ? departments.find((dep) => dep.id === user.department)?.name
@@ -281,10 +283,10 @@ const AdminPage = () => {
                             </button>
                           </>
                         ) : (
-                          <>
+                          <div style={{display:"flex", gap:"30px",alignItems:"center",justifyContent:"center"}}>
                             <button
                               className="btn btn-sm me-2"
-                              style={{backgroundColor:"#0b455b", color:"#fff"}}
+                              style={{backgroundColor:"#0b455b", color:"#fff",width:"90px"}}
                               onClick={() => {
                                 setEditingRoleId(user.id);
                                 setSelectedRole(user.role);
@@ -308,7 +310,7 @@ const AdminPage = () => {
                                 </button>
                               </>
                             )}
-                          </>
+                          </div>
                         )}
                       </td>
                     </tr>
