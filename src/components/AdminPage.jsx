@@ -13,6 +13,9 @@ const AdminPage = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState(""); // To store the rejection message
+  const [showApproveModal, setShowApproveModal] = useState(false); // To control approve modal visibility
+  const [userToApprove, setUserToApprove] = useState(null); // To store the user that needs approval
   const navigate = useNavigate();
 
   const ROLE_CHOICES = [
@@ -92,7 +95,7 @@ const AdminPage = () => {
   };
 
   // Handle approving a user
-  const handleApprove = async (userId) => {
+  const handleApprove = async () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
@@ -100,18 +103,18 @@ const AdminPage = () => {
         return;
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/approve/${userId}/`, {
+      const response = await fetch(`http://127.0.0.1:8000/approve/${userToApprove.id}/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ action: "approve" }),
-        
       });
 
       if (response.ok) {
         toast.success("User approved successfully!");
+        setShowApproveModal(false); // Close modal
         fetchUsers();
       } else {
         const errorData = await response.json();
@@ -119,40 +122,6 @@ const AdminPage = () => {
       }
     } catch (error) {
       toast.error("An error occurred while approving the user.");
-    }
-  };
-  // Handle role change
-  const handleRoleChange = async (userId) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        toast.error("You need to be logged in to update user roles.");
-        return;
-      }
-      const response = await fetch(
-        `http://127.0.0.1:8000/update-role/${userId}/`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ role: selectedRole }),
-        }
-      );
-      if (response.ok) {
-        toast.success("User role updated successfully!");
-
-        // After successful update, refetch users to reflect the updated data
-        fetchUsers();
-
-        setEditingRoleId(null); // Exit editing mode
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.error || "Failed to update user role.");
-      }
-    } catch (error) {
-      toast.error("An error occurred while updating the role.");
     }
   };
 
@@ -168,7 +137,16 @@ const AdminPage = () => {
     setShowRejectModal(true); // Open the rejection modal
   };
 
-  // Handle rejection email sending
+  // Confirm rejection action
+  const confirmRejection = () => {
+    if (!rejectionReason) {
+      toast.error("Please provide a rejection message.");
+      return;
+    }
+    sendRejectionEmail(rejectionReason); // Call to send rejection email
+  };
+
+  // Send rejection email
   const sendRejectionEmail = async (rejectionReason) => {
     try {
       const token = localStorage.getItem("authToken");
@@ -195,6 +173,8 @@ const AdminPage = () => {
       if (response.ok) {
         toast.success("User rejected successfully!");
         fetchUsers();
+        setShowRejectModal(false); // Close the rejection modal after submission
+        setRejectionReason(""); // Reset rejection message
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to reject user.");
@@ -217,7 +197,6 @@ const AdminPage = () => {
 
   return (
     <div className="admin-container d-flex flex-column mt-5">
-    
       <Header username="Admin" />
       <div className="container-fluid">
         <div className="row mt-4">
@@ -242,74 +221,27 @@ const AdminPage = () => {
                     <tr key={user.id}>
                       <td>{user.full_name || "N/A"}</td>
                       <td>{user.email}</td>
-                      <td>
-                        {editingRoleId === user.id ? (
-                          <select
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value)}
-                            className="form-select"
-                          >
-                            {ROLE_CHOICES.map((role) => (
-                              <option key={role.value} value={role.value}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          getRoleLabel(user.role) // Display role label dynamically
-                        )}
-                      </td>
-                      
-                      <td>
-                        {user.department
-                          ? departments.find((dep) => dep.id === user.department)?.name
-                          : "N/A"}
-                      </td>
+                      <td>{getRoleLabel(user.role)}</td>
+                      <td>{user.department}</td>
                       <td>{user.is_active ? "Active" : "Pending"}</td>
                       <td>
-                        {editingRoleId === user.id ? (
-                          <>
-                            <button
-                              className="btn btn-sm btn-success me-2"
-                              onClick={() => handleRoleChange(user.id)}
-                            >
-                              Save
-                            </button>
-                            <button
-                              className="btn btn-sm btn-secondary"
-                              onClick={() => setEditingRoleId(null)}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        ) : (
+                        {!user.is_active && (
                           <div style={{display:"flex", gap:"30px",alignItems:"center",justifyContent:"center"}}>
                             <button
-                              className="btn btn-sm me-2"
-                              style={{backgroundColor:"#0b455b", color:"#fff",width:"90px"}}
+                              className="btn btn-sm btn-success me-2"
                               onClick={() => {
-                                setEditingRoleId(user.id);
-                                setSelectedRole(user.role);
+                                setUserToApprove(user);
+                                setShowApproveModal(true);
                               }}
                             >
-                              Edit Role
+                              Approve
                             </button>
-                            {!user.is_active && (
-                              <>
-                                <button
-                                  className="btn btn-sm btn-success me-2"
-                                  onClick={() => handleApprove(user.id)}
-                                >
-                                  Approve
-                                </button>
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => handleReject(user.id)}
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            )}
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => handleReject(user.id)}
+                            >
+                              Reject
+                            </button>
                           </div>
                         )}
                       </td>
@@ -325,6 +257,85 @@ const AdminPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Approve Modal */}
+      {showApproveModal && (
+        <div className="modal show" style={{ display: "block" }} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Approval</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowApproveModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to approve this user?</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowApproveModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleApprove}
+                >
+                  Approve
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="modal show" style={{ display: "block" }} tabIndex="-1">
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Rejection</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowRejectModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <textarea
+                  className="form-control"
+                  placeholder="Provide rejection reason"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                />
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowRejectModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={confirmRejection}
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
