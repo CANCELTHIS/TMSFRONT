@@ -70,7 +70,6 @@ const AdminDepartmentPage = () => {
   const validateInput = () => {
     const errors = {};
     if (!formValues.name) errors.name = "Department name is required.";
-    if (!formValues.manager) errors.manager = "Manager name is required.";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -186,17 +185,7 @@ const AdminDepartmentPage = () => {
                     />
                     {formErrors.name && <small className="text-danger">{formErrors.name}</small>}
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label">Manager</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="manager"
-                      value={formValues.manager}
-                      onChange={(e) => setFormValues({ ...formValues, manager: e.target.value })}
-                    />
-                    {formErrors.manager && <small className="text-danger">{formErrors.manager}</small>}
-                  </div>
+                  
                 </div>
                 <div className="modal-footer">
                   <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>

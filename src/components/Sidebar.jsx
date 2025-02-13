@@ -39,7 +39,7 @@ const Sidebar = ({ role }) => {
             </Link>
           </li>
         ))}
-        
+
         {isTransportPage && transportMenus.map((menu, index) => (
           <li className="nav-item" key={index}>
             <Link to={menu.path} className={`nav-link d-flex align-items-center ${getActiveClass(menu.path)} sidebar-link`}>

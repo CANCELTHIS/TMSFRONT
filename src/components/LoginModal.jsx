@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignupModal from './SignupModal';
-import '../index.css';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
-
+import { jwtDecode } from "jwt-decode";
+import operation from "../assets/CarImg.jpg";
+import { IoClose } from "react-icons/io5";
 const LoginModal = ({ onClose }) => {
   const [showSignup, setShowSignup] = useState(false);
   const [email, setEmail] = useState('');
@@ -26,10 +27,30 @@ const LoginModal = ({ onClose }) => {
         email,
         password,
       });
+
       const { access } = response.data;
-      localStorage.setItem('authToken', access); // Store the token in local storage
-      onClose(); // Close the modal
-      navigate('/admin/admin'); // Redirect to AdminPage
+      localStorage.setItem('authToken', access);
+      const decodedToken = jwtDecode(access);
+      console.log('Decoded Token:', decodedToken);
+      onClose();
+
+      if (decodedToken.role === 1) {
+        navigate('/employee');
+      } else if (decodedToken.role === 2) {
+        navigate('/department-manager');
+      } else if (decodedToken.role === 3) {
+        navigate('/finance-manager');
+      } else if (decodedToken.role === 4) {
+        navigate('/transport-manager');
+      } else if (decodedToken.role === 5) {
+        navigate('/ceo');
+      } else if (decodedToken.role === 6) {
+        navigate('/driver');
+      } else if (decodedToken.role === 7) {
+        navigate('/admin/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(
         mylanguage === 'EN'
@@ -41,70 +62,66 @@ const LoginModal = ({ onClose }) => {
 
   return (
     <div className="modal-overlay">
-      <div
-        className={`card p-4 shadow" style={{ width: '22rem', position: 'relative' }} ${
-          myTheme === 'dark' ? 'dark' : 'light'
-        }`}
-      >
-        <button
-          className="btn-close"
-          style={{ position: 'absolute', top: '10px', right: '10px' }}
-          onClick={onClose}
-        ></button>
-        <h1 className="text-center mb-4">{mylanguage === 'EN' ? 'Login' : 'መግቢያ'}</h1>
-        {error && <div className="alert alert-danger">{error}</div>}
-        <form onSubmit={handleLogin}>
-          <div className="mb-3">
-            <label htmlFor="email" className="form-label">
-              {mylanguage === 'EN' ? 'Email Address' : 'የኢሜል አድራሻ'}
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              id="email"
-              placeholder={
-                mylanguage === 'EN' ? 'Your email address' : 'የኢሜል አድራሻዎን ያስገቡ'
-              }
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+      <div className={`login-modal ${myTheme === 'dark' ? 'dark' : 'light'}`}>
+        {/* Left side image container */}
+        <div className="image-container">
+          <img src={operation} alt="Login" className="full-height-image" />
+        </div>
+
+        {/* Right side form container */}
+        <div className="form-container">
+          
+
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          <form onSubmit={handleLogin}>
+            <button className="btn-close mb-5" onClick={onClose} ><IoClose size={30}/></button>
+            <h1 className="text-center mb-4">
+              {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
+            </h1>
+            <div className="mb-3">
+              <label htmlFor="email" className="form-label">
+                {mylanguage === 'EN' ? 'Email Address' : 'የኢሜል አድራሻ'}
+              </label>
+              <input
+                type="email"
+                className="form-control"
+                
+                id="email"
+                placeholder={mylanguage === 'EN' ? 'Your email address' : 'የኢሜል አድራሻዎን ያስገቡ'}
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                
+              />
+            </div>
+
+            <div className="mb-3">
+              <label htmlFor="password" className="form-label">
+                {mylanguage === 'EN' ? 'Password' : 'ፓስወርድ'}
+              </label>
+              <input
+                type="password"
+                className="form-control"
+                id="password"
+                placeholder={mylanguage === 'EN' ? 'Your password' : 'ፓስወርድዎን ያስገቡ'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <button type="submit" className="btn w-100 login-btn">
+              {mylanguage === 'EN' ? 'Login' : 'ይግቡ'}
+            </button>
+          </form>
+
+          <div className="text-center mt-3 d-flex">
+            <pre>{mylanguage === 'EN' ? "Don't have an account?" : 'አካዉንት የሎትም?'}</pre>
+            <a href="#" className="text-decoration-none signup" onClick={() => setShowSignup(true)}>
+              {mylanguage === 'EN' ? 'Sign Up' : 'ይመዝገቡ'}
+            </a>
           </div>
-          <div className="mb-3">
-            <label htmlFor="password" className="form-label">
-              {mylanguage === 'EN' ? 'Password' : 'ፓስወርድ'}
-            </label>
-            <input
-              type="password"
-              className="form-control"
-              id="password"
-              placeholder={
-                mylanguage === 'EN' ? 'Your password' : 'ፓስወርድዎን ያስገቡ'
-              }
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <button
-            type="submit"
-            className="btn w-100"
-            style={{ backgroundColor: '#27485D', color: '#ffffff' }}
-          >
-            {mylanguage === 'EN' ? 'Login' : 'ይግቡ'}
-          </button>
-        </form>
-        <div className="text-center mt-3">
-          {mylanguage === 'EN'
-            ? "Don't have an account?"
-            : 'አካዉንት የሎትም?'}
-          <a
-            href="#"
-            className="text-decoration-none signup"
-            onClick={() => setShowSignup(true)}
-          >
-            {mylanguage === 'EN' ? 'Sign Up' : 'ይመዝገቡ'}
-          </a>
         </div>
       </div>
     </div>

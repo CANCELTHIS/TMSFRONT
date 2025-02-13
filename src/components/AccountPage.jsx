@@ -31,20 +31,22 @@ const AccountPage = () => {
       setIsLoading(false);
       return;
     }
-
+  
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/users/?page=${currentPage}`, {
+      const response = await axios.get(`http://127.0.0.1:8000/approved-users/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setAccounts(response.data);
+      const filteredAccounts = response.data.filter(user => user.role !== 7);
+      
+      setAccounts(filteredAccounts);
       setIsLoading(false);
     } catch (error) {
-      setError("Failed to load users.");
+      setError("Failed to load approved users.");
       setIsLoading(false);
     }
   };
-
+  
+  
   const fetchDepartments = async () => {
     try {
       const response = await axios.get('http://127.0.0.1:8000/departments/');
@@ -76,16 +78,23 @@ const AccountPage = () => {
     const endpoint = isActive
       ? `http://127.0.0.1:8000/deactivate/${id}/`
       : `http://127.0.0.1:8000/activate/${id}/`;
-
+  
     try {
       await axios.post(endpoint, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchUsers();
+  
+      // Update the UI without refetching the entire list
+      setAccounts((prevAccounts) =>
+        prevAccounts.map((acc) =>
+          acc.id === id ? { ...acc, is_active: !isActive } : acc
+        )
+      );
     } catch (error) {
       setError("Failed to update status.");
     }
   };
+  
 
   const handleEdit = (account) => {
     setEditAccount(account);
@@ -99,21 +108,28 @@ const AccountPage = () => {
   };
 
   const handleSaveEdit = async () => {
-    const token = localStorage.getItem('authToken');
-
+    const token = localStorage.getItem("authToken");
+  
     try {
-      await axios.patch(
+      const response = await axios.patch(
         `http://127.0.0.1:8000/update-role/${editAccount.id}/`,
         { role: formValues.role },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      fetchUsers();
+  
+      const updatedAccounts = accounts.map((acc) =>
+        acc.id === editAccount.id
+          ? { ...acc, role: formValues.role } // Don't modify is_active
+          : acc
+      );
+  
+      setAccounts(updatedAccounts);
       setEditAccount(null);
     } catch (error) {
       setError("Failed to update role.");
     }
   };
+  
 
   const handleCancelEdit = () => {
     setEditAccount(null); // Cancel the editing mode
@@ -141,10 +157,6 @@ const AccountPage = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h2 className="h5">Account Management</h2>
           <div className="d-flex align-items-center">
-            <span className="me-2">Hello, Admin</span>
-            <span className="rounded-circle border d-flex align-items-center justify-content-center" style={{ width: "40px", height: "40px" }}>
-              &#x1F464;
-            </span>
           </div>
         </div>
 

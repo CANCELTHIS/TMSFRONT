@@ -1,6 +1,12 @@
+import React from 'react';
+
 const EmployeePage = () => {
-    return <div>Hello Employee</div>;
-  };
-  
-  export default EmployeePage;
-  
+  return (
+    <div>
+      <h1>Hello, Employee</h1>
+      <p>Welcome to your Employee Dashboard</p>
+    </div>
+  );
+};
+
+export default EmployeePage;

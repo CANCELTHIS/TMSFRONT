@@ -29,13 +29,26 @@ const Header = ({ role, userId }) => {
       .catch(error => console.error("Error fetching user data:", error));
   }, [userId]);
 
-  const handleLogout = () => {
-    // Clear the token (for example, remove it from localStorage or sessionStorage)
-    localStorage.removeItem("access_token"); // Assuming the token is stored in localStorage
-
-    // Redirect to base URL or login page
-    navigate("/"); // This will redirect the user to the base URL (you can change the route as per your app's structure)
+  const handleLogout = async () => {
+    try {
+      const refreshToken = localStorage.getItem("refresh_token");
+  
+      if (refreshToken) {
+        await axios.post("http://127.0.0.1:8000/api/logout/", { refresh: refreshToken });
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Remove tokens from localStorage
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+  
+      // Redirect to login page after logging out
+      navigate("/");
+    }
   };
+  
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;

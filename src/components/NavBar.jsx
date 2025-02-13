@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Logo from '../assets/Logo.jpg'; // Adjust the path as necessary
+import Logo from '../assets/Logo.jpg';
 import { useLanguage } from '../context/LanguageContext';
 import { FaLanguage } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
@@ -13,9 +13,11 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
   const { mylanguage, toggleLanguage } = useLanguage();
   const [showLogin, setShowLogin] = useState(false);
   const { myTheme, toggleTheme } = useTheme();
+  const [activeSection, setActiveSection] = useState('home'); // Track active section
 
-  const scrollToSection = (sectionRef) => {
+  const scrollToSection = (sectionRef, section) => {
     sectionRef.current.scrollIntoView({ behavior: 'smooth' });
+    setActiveSection(section); // Update active section
   };
 
   const logoVariants = {
@@ -30,8 +32,8 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
 
   return (
     <div className={`mynav ${myTheme === "dark" ? "dark" : "light"}`}>
-<nav className={`navbar navbar-expand-lg navbar-light fixed-top ${myTheme === "dark" ? "dark" : "light"}`}>
-<div className="container-fluid d-flex gap-6">
+      <nav className={`navbar navbar-expand-lg navbar-light fixed-top ${myTheme === "dark" ? "dark" : "light"}`}>
+        <div className="container-fluid d-flex gap-6">
           <a className="navbar-brand" href="/">
             <motion.img
               id="logo"
@@ -40,7 +42,6 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
               initial="hidden"
               animate="visible"
               variants={logoVariants}
-              
             />
           </a>
           <button
@@ -70,16 +71,17 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
                     animate="visible"
                     variants={linkVariants}
                     transition={{ delay: index * 0.5 }}
-                    style={{marginRight:"20px"}}
+                    style={{ marginRight: "20px" }}
                   >
-                    
                     <a
                       className="nav-link"
                       href="#"
-                      onClick={() => scrollToSection(ref)}
+                      onClick={() => scrollToSection(ref, section)}
                       style={{
                         color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                        fontSize: "20px"
+                        fontSize: "20px",
+                        textDecoration: activeSection === section ? 'underline' : 'none',
+                        fontWeight: activeSection === section ? 'bold' : 'normal',
                       }}
                     >
                       {mylanguage === 'EN'
@@ -94,14 +96,9 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
                     </a>
                   </motion.li>
                 ))}
-                <motion.li
-                  className="nav-item"
-                  initial="hidden"
-                  animate="visible"
-                  variants={linkVariants}
-                >
+                <motion.li className="nav-item" initial="hidden" animate="visible" variants={linkVariants}>
                   <a
-                    className="nav-link "
+                    className="nav-link"
                     href="#"
                     onClick={toggleLanguage}
                     style={{
@@ -112,22 +109,18 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
                   </a>
                 </motion.li>
                 <motion.div
-              className="theme-icon mt-2"
-              onClick={toggleTheme}
-              style={{
-                
-                alignItems: 'center',
-                cursor: 'pointer',
-                color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                
-              }}
-            >
-              {myTheme === 'dark' ? <LuSunMedium size={20} /> : <MdDarkMode size={20} />}
-            </motion.div>
+                  className="theme-icon mt-2"
+                  onClick={toggleTheme}
+                  style={{
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
+                  }}
+                >
+                  {myTheme === 'dark' ? <LuSunMedium size={20} /> : <MdDarkMode size={20} />}
+                </motion.div>
               </section>
             </ul>
-            
-            
             <motion.button
               className="btn"
               style={{
