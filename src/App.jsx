@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, Navigate ,useNavigate} from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import './index.css';
 import Home from './components/Home';
 import Services from './components/Services';
@@ -19,12 +19,15 @@ import AccountPage from './components/AccountPage';
 import HistoryPage from './components/HistoryPage';
 import VehicleManagement from './components/VehicleManagement';
 import EmployeePage from './components/EmployeePage';
-import FinanceManagerPage from './components/FinanceManagerPage';
-import DepartmentManagerPage from './components/DepartmentManagerPage';
-import DriverPage from './components/DriverPage';
-import CEOPPage from './components/CEOPPage';
-import TransportDashboard from './components/TransportManagerPage';
-import PleaseLoginPage  from './PleaseLoginPage'
+import PleaseLoginPage from './PleaseLoginPage';
+import MaintenanceRequest from './components/MaintenanceRequest';
+import MaintenanceTable from './components/MaintenanceTable';
+import VehicleRequest from './components/VehicleRequest';
+import DriverSchedule from './components/DriverSchedule';
+import RefuelingPage from './components/RefuelingPage';
+import TransportManagerDashbord from './components/TransportManagerDashbord';
+import ReportPage from './components/ReportPage';
+
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
@@ -57,7 +60,7 @@ const App = () => {
 
   const checkUserRole = async (token) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/user/me/', {
+      const response = await fetch('http://127.0.0.1:8000/users/me', {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -79,23 +82,23 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('authToken', data.access);
         setIsAuthenticated(true);
         setAuthToken(data.access);
         setModalType(null);
-        
-        const userResponse = await fetch('http://127.0.0.1:8000/api/user/me/', {
+
+        const userResponse = await fetch('http://127.0.0.1:8000/users/me', {
           method: 'GET',
           headers: { Authorization: `Bearer ${data.access}` },
         });
-  
+
         if (userResponse.ok) {
           const userData = await userResponse.json();
           setUserRole(userData.role);
-  
+
           // Redirect based on role
           switch (userData.role) {
             case 'admin':
@@ -105,19 +108,19 @@ const App = () => {
               navigate('/employee');
               break;
             case 'department_manager':
-              navigate('/department-manager');
+              navigate('/department-manager/vehicle-request');
               break;
             case 'finance_manager':
               navigate('/finance-manager');
               break;
             case 'transport_manager':
-              navigate('/transport-manager');
+              navigate('/transport-manage/transport-dashboard');
               break;
             case 'ceo':
-              navigate('/ceo');
+              navigate('/ceo/vehicle-request');
               break;
             case 'driver':
-              navigate('/driver');
+              navigate('/driver/driver-schedule');
               break;
             default:
               navigate('/'); // Fallback
@@ -132,7 +135,6 @@ const App = () => {
       alert('An error occurred. Please try again later.');
     }
   };
-  
 
   return (
     <ThemeProvider>
@@ -159,62 +161,93 @@ const App = () => {
                 </>
               }
             />
+
             {/* Protected Routes */}
             <Route
-              path="/employee"
+              path="/employee/*"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <EmployeePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/department-manager"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <DepartmentManagerPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/finance-manager"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <FinanceManagerPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/transport-manager/*"
-              element={
-                <div className="d-flex">
-                  <Header role="transport_manager" />
-                  <Sidebar role="transport_manager" />
-                  <div className="container">
-                    <Routes>
-                      <Route path="transport-dashboard" element={<TransportDashboard />} />
-                      <Route path="vehicle-management" element={<VehicleManagement />} />
-                    </Routes>
+                  <div className="d-flex">
+                    <Header role="employee" />
+                    <Sidebar role="employee" />
+                    <div className="container">
+                      <EmployeePage />
+                    </div>
                   </div>
-                </div>
-              }
-            />
-            <Route
-              path="/ceo"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <CEOPPage />
                 </ProtectedRoute>
               }
             />
+
             <Route
-              path="/driver"
+              path="/department-manager/*"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <DriverPage />
+                  <div className="d-flex">
+                    <Header role="department_manager" />
+                    <Sidebar role="department_manager" />
+                    <div className="container">
+                      <Routes>
+                        <Route path="vehicle-request" element={<VehicleRequest />} />
+                        <Route path="refueling" element={<RefuelingPage />} />
+                      </Routes>
+                    </div>
+                  </div>
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/finance-manager/*"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <div className="d-flex">
+                    <Header role="finance_manager" />
+                    <Sidebar role="finance_manager" />
+                    <div className="container">
+                      <Routes>
+                        <Route path="vehicle-request" element={<VehicleRequest />} />
+                      </Routes>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/ceo/*"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <div className="d-flex">
+                    <Header role="ceo" />
+                    <Sidebar role="ceo" />
+                    <div className="container">
+                      <Routes>
+                        <Route path="vehicle-request" element={<VehicleRequest />} />
+                      </Routes>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/driver/*"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <div className="d-flex">
+                    <Header role="driver" />
+                    <Sidebar role="driver" />
+                    <div className="container">
+                      <Routes>
+                        <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        <Route path="driver-schedule" element={<DriverSchedule />} />
+                      </Routes>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
             {/* Admin Pages */}
             <Route
               path="/admin/*"
@@ -235,9 +268,9 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-            {/* Transport Manager Pages */}
+
             <Route
-              path="/transport/*"
+              path="/transport-manager/*"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
                   <div className="d-flex">
@@ -245,14 +278,18 @@ const App = () => {
                     <Sidebar role="transport_manager" />
                     <div className="container">
                       <Routes>
-                        <Route path="transport-dashboard" element={<TransportDashboard />} />
                         <Route path="vehicle-management" element={<VehicleManagement />} />
+                        <Route path="maintenance-table" element={<MaintenanceTable />} />
+                        <Route path="vehicle-request" element={<VehicleRequest />} />
+                        <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
+                        <Route path="report" element={<ReportPage/>} />
                       </Routes>
                     </div>
                   </div>
                 </ProtectedRoute>
               }
             />
+
             <Route path="/-login" element={<PleaseLoginPage />} />
           </Routes>
 
@@ -280,5 +317,3 @@ const App = () => {
 };
 
 export default App;
-
-

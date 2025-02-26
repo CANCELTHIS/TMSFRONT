@@ -1,29 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { FaUserCircle, FaSignOutAlt, FaArrowLeft } from "react-icons/fa";
+import { FaSignOutAlt, FaArrowLeft } from "react-icons/fa";
+import { MdAccountCircle } from "react-icons/md";
+import { IoIosNotificationsOutline } from "react-icons/io";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirecting
+import { useNavigate } from "react-router-dom";
 
 const Header = ({ role, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
-    email: "",
     phoneNumber: "",
     password: "",
   });
 
-  const navigate = useNavigate(); // Initialize navigate for redirection
+  const navigate = useNavigate();
 
+  // Fetch user data on component mount
   useEffect(() => {
-    // Fetch user data
     axios.get(`/api/users/${userId}/`)
       .then(response => {
         setFormData({
           fullName: response.data.full_name,
-          email: response.data.email,
           phoneNumber: response.data.phone_number,
-          password: "",
+          password: "", // Don't show password initially
         });
       })
       .catch(error => console.error("Error fetching user data:", error));
@@ -32,23 +32,17 @@ const Header = ({ role, userId }) => {
   const handleLogout = async () => {
     try {
       const refreshToken = localStorage.getItem("refresh_token");
-  
       if (refreshToken) {
         await axios.post("http://127.0.0.1:8000/api/logout/", { refresh: refreshToken });
       }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Remove tokens from localStorage
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
-  
-      // Redirect to login page after logging out
       navigate("/");
     }
   };
-  
-  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,7 +52,7 @@ const Header = ({ role, userId }) => {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     axios.put(`/api/users/${userId}/`, formData)
-      .then(response => {
+      .then(() => {
         console.log("Profile updated successfully");
         setIsEditing(false);
       })
@@ -67,16 +61,15 @@ const Header = ({ role, userId }) => {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light px-4 shadow-sm">
-      <span className="navbar-brand fw-bold text-primary">{role}</span>
       <div className="ms-auto d-flex align-items-center position-relative">
+        {/* Notification Icon */}
+        <IoIosNotificationsOutline size={24} className="me-3 cursor-pointer" />
+        
+        {/* Profile Icon */}
         <div className="user-menu" onClick={() => setIsEditing(!isEditing)}>
-          <img
-            src="https://via.placeholder.com/40" // Placeholder profile image
-            alt="User Profile"
-            className="rounded-circle me-2"
-            style={{ width: "40px", height: "40px", objectFit: "cover" }}
-          />
+          <MdAccountCircle size={32} className="cursor-pointer" />
         </div>
+
         {isEditing && (
           <div
             className="dropdown-menu show position-absolute end-0 mt-2 shadow rounded p-3 bg-white"
@@ -104,19 +97,6 @@ const Header = ({ role, userId }) => {
                   id="fullName"
                   name="fullName"
                   value={formData.fullName}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="mb-2">
-                <label htmlFor="email" className="form-label" style={{ fontSize: "12px" }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  className="form-control form-control-sm"
-                  id="email"
-                  name="email"
-                  value={formData.email}
                   onChange={handleChange}
                 />
               </div>

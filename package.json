@@ -14,6 +14,7 @@
     "@lottiefiles/dotlottie-react": "^0.12.3",
     "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
+    "@shadcn/ui": "^0.0.4",
     "axios": "^1.7.9",
     "bootstrap": "^5.3.3",
     "framer-motion": "^11.18.0",
@@ -29,6 +30,7 @@
     "react-scroll": "^1.9.0",
     "react-toastify": "^11.0.2",
     "react-typewriter-effect": "^1.1.0",
+    "recharts": "^2.15.1",
     "rollup": "^4.30.1",
     "scroll": "^3.0.1"
   },

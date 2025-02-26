@@ -6,12 +6,14 @@ import { useTheme } from '../context/ThemeContext';
 import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 import operation from "../assets/CarImg.jpg";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoEye, IoEyeOff } from "react-icons/io5";  
+
 const LoginModal = ({ onClose }) => {
   const [showSignup, setShowSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);  
   const { mylanguage } = useLanguage();
   const { myTheme } = useTheme();
   const navigate = useNavigate();
@@ -70,12 +72,10 @@ const LoginModal = ({ onClose }) => {
 
         {/* Right side form container */}
         <div className="form-container">
-          
-
           {error && <div className="alert alert-danger">{error}</div>}
 
           <form onSubmit={handleLogin}>
-            <button className="btn-close mb-5" onClick={onClose} ><IoClose size={30}/></button>
+            <button className="btn-close mb-5" onClick={onClose}><IoClose size={30} /></button>
             <h1 className="text-center mb-4">
               {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
             </h1>
@@ -86,22 +86,20 @@ const LoginModal = ({ onClose }) => {
               <input
                 type="email"
                 className="form-control"
-                
                 id="email"
                 placeholder={mylanguage === 'EN' ? 'Your email address' : 'የኢሜል አድራሻዎን ያስገቡ'}
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                
               />
             </div>
 
-            <div className="mb-3">
+            <div className="mb-3 position-relative">
               <label htmlFor="password" className="form-label">
                 {mylanguage === 'EN' ? 'Password' : 'ፓስወርድ'}
               </label>
               <input
-                type="password"
+                type={passwordVisible ? 'text' : 'password'}  // Toggle input type
                 className="form-control"
                 id="password"
                 placeholder={mylanguage === 'EN' ? 'Your password' : 'ፓስወርድዎን ያስገቡ'}
@@ -109,6 +107,13 @@ const LoginModal = ({ onClose }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <span
+                className="password-toggle"
+                onClick={() => setPasswordVisible(!passwordVisible)}  // Toggle visibility
+                style={{ position: 'absolute', top: '70%', right: '10px', cursor: 'pointer', transform: 'translateY(-50%)' }}
+              >
+                {passwordVisible ? <IoEyeOff size={20} /> : <IoEye size={20} />}  {/* Eye icon */}
+              </span>
             </div>
 
             <button type="submit" className="btn w-100 login-btn">

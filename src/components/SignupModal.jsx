@@ -4,7 +4,7 @@ import { useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import SignUpLogo from "../assets/Signup.jpg";
-import { IoClose } from "react-icons/io5";
+import { IoClose, IoEye, IoEyeOff } from "react-icons/io5";
 
 const SignupModal = ({ onClose }) => {
   const [formData, setFormData] = useState({
@@ -19,6 +19,8 @@ const SignupModal = ({ onClose }) => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { mylanguage } = useLanguage();
   const { myTheme } = useTheme();
@@ -27,7 +29,8 @@ const SignupModal = ({ onClose }) => {
     const fetchDepartments = async () => {
       try {
         const response = await axios.get("http://127.0.0.1:8000/departments/");
-        setDepartments(response.data);
+        console.log("Departments API Response:", response.data); // Debugging log
+        setDepartments(response.data.results); // Extract the results array
       } catch (error) {
         console.error("Error fetching departments:", error);
         setError("Failed to load departments.");
@@ -36,9 +39,11 @@ const SignupModal = ({ onClose }) => {
         setLoading(false);
       }
     };
-
+  
     fetchDepartments();
   }, []);
+  
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,45 +52,42 @@ const SignupModal = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (Object.values(formData).some((field) => !field)) {
       toast.error("Please fill in all fields.");
       return;
     }
-  
+
     if (formData.password !== formData.confirm_password) {
       toast.error("Passwords do not match.");
       return;
     }
-  
-    // Phone number validation: starts with 09 or 07 and must be 10 digits long
+
     const phoneRegex = /^(09|07)\d{8}$/;
     if (!phoneRegex.test(formData.phone_number)) {
       toast.error("Phone number should start with 09 or 07 and be 10 digits long.");
       return;
     }
-  
-    // Email validation: basic email format check
+
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email)) {
       toast.error("Please enter a valid email address.");
       return;
     }
-  
-    // Password validation: minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
+
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(formData.password)) {
       toast.error("Password must be at least 8 characters long and include an uppercase letter, a lowercase letter, a number, and a special character.");
       return;
     }
-  
+
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/register/",
-        { ...formData, role: 1 }, // Default role = Employee
+        { ...formData, role: 1 },
         { headers: { "Content-Type": "application/json" } }
       );
-  
+
       toast.success(response.data.message || "Registration successful!");
       setFormData({
         full_name: "",
@@ -95,34 +97,35 @@ const SignupModal = ({ onClose }) => {
         password: "",
         confirm_password: "",
       });
-  
+
       setTimeout(() => onClose(), 2000);
     } catch (err) {
       toast.error(err.response?.data?.detail || "There was an issue with registration.");
     }
   };
-  
 
   return (
     <div className="modal-overlay">
       <div
-        className={`card  shadow modal-card d-flex flex-row ${myTheme === "dark" ? "dark" : "light"}`}
+        className={`card shadow modal-card d-flex flex-row ${myTheme === "dark" ? "dark" : "light"}`}
         style={{ maxWidth: "45rem", position: "relative" }}
       >
         <button
           className="btn-close"
           style={{ position: "absolute", right: "30px" }}
           onClick={onClose}
-        ><IoClose size={30}/></button>
+        >
+          <IoClose size={30} />
+        </button>
 
         {/* Left Side - Image */}
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-start" }}>
-  <img
-    src={SignUpLogo}
-    alt="Sign Up"
-    style={{ maxWidth: "100%", borderRadius: "10px", height: "100%" }}
-  />
-</div>
+          <img
+            src={SignUpLogo}
+            alt="Sign Up"
+            style={{ maxWidth: "100%", borderRadius: "10px", height: "100%" }}
+          />
+        </div>
 
         {/* Right Side - Form */}
         <div style={{ flex: 1, padding: "20px" }}>
@@ -165,30 +168,32 @@ const SignupModal = ({ onClose }) => {
               />
             </div>
             <div className="mb-3">
-              <select
-                name="department"
-                className="form-control"
-                value={formData.department}
-                onChange={handleChange}
-                required
-              >
-                <option value="">
-                  {loading
-                    ? "Loading..."
-                    : mylanguage === "EN"
-                    ? "Select Department"
-                    : "ክፍል ይምረጡ"}
-                </option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
-              </select>
+            <select
+  name="department"
+  className="form-control"
+  value={formData.department}
+  onChange={handleChange}
+  required
+>
+  <option value="">
+    {loading
+      ? "Loading..."
+      : mylanguage === "EN"
+      ? "Select Department"
+      : "ክፍል ይምረጡ"}
+  </option>
+
+  {departments && departments.map((dept) => (
+    <option key={dept.id} value={dept.id}>
+      {dept.name}
+    </option>
+  ))}
+</select>
+
             </div>
-            <div className="mb-3">
+            <div className="mb-3 position-relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 className="form-control"
                 placeholder={mylanguage === "EN" ? "Password" : "ፕስወርድ"}
@@ -196,10 +201,18 @@ const SignupModal = ({ onClose }) => {
                 onChange={handleChange}
                 required
               />
+              <button
+                type="button"
+                className="btn position-absolute end-0 top-0"
+                style={{ background: "none", border: "none" }}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+              </button>
             </div>
-            <div className="mb-3">
+            <div className="mb-3 position-relative">
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 name="confirm_password"
                 className="form-control"
                 placeholder={mylanguage === "EN" ? "Confirm Password" : "ፕስወርድን ያረጋግጡ"}
@@ -207,6 +220,14 @@ const SignupModal = ({ onClose }) => {
                 onChange={handleChange}
                 required
               />
+              <button
+                type="button"
+                className="btn position-absolute end-0 top-0"
+                style={{ background: "none", border: "none" }}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
+              </button>
             </div>
             <button
               type="submit"

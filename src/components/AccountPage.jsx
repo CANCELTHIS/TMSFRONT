@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
+
 const AccountPage = () => {
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
   const [accounts, setAccounts] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [roleMappings, setRoleMappings] = useState({});
@@ -36,25 +37,46 @@ const AccountPage = () => {
       const response = await axios.get(`http://127.0.0.1:8000/approved-users/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+  
+      console.log("Fetched Users:", response.data); // Log fetched users
+  
       const filteredAccounts = response.data.filter(user => user.role !== 7);
       
+      // Sort by creation date or ID (newest first)
+      filteredAccounts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  
       setAccounts(filteredAccounts);
       setIsLoading(false);
     } catch (error) {
+      console.error("Error fetching users:", error);
       setError("Failed to load approved users.");
       setIsLoading(false);
     }
   };
   
-  
   const fetchDepartments = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setError("Unauthorized. Please log in.");
+      return;
+    }
+  
     try {
-      const response = await axios.get('http://127.0.0.1:8000/departments/');
-      setDepartments(response.data);
+      const response = await axios.get("http://127.0.0.1:8000/departments/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      console.log("Fetched Departments:", response.data); // Log fetched departments
+  
+      setDepartments(response.data.results);
     } catch (error) {
+      console.error("Error fetching departments:", error);
       setError("Failed to load departments.");
     }
   };
+  
+
+  
 
   const fetchRoles = async () => {
     const roleData = {
@@ -78,12 +100,12 @@ const AccountPage = () => {
     const endpoint = isActive
       ? `http://127.0.0.1:8000/deactivate/${id}/`
       : `http://127.0.0.1:8000/activate/${id}/`;
-  
+
     try {
       await axios.post(endpoint, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       // Update the UI without refetching the entire list
       setAccounts((prevAccounts) =>
         prevAccounts.map((acc) =>
@@ -94,7 +116,6 @@ const AccountPage = () => {
       setError("Failed to update status.");
     }
   };
-  
 
   const handleEdit = (account) => {
     setEditAccount(account);
@@ -109,27 +130,26 @@ const AccountPage = () => {
 
   const handleSaveEdit = async () => {
     const token = localStorage.getItem("authToken");
-  
+
     try {
       const response = await axios.patch(
         `http://127.0.0.1:8000/update-role/${editAccount.id}/`,
         { role: formValues.role },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-  
+
       const updatedAccounts = accounts.map((acc) =>
         acc.id === editAccount.id
           ? { ...acc, role: formValues.role } // Don't modify is_active
           : acc
       );
-  
+
       setAccounts(updatedAccounts);
       setEditAccount(null);
     } catch (error) {
       setError("Failed to update role.");
     }
   };
-  
 
   const handleCancelEdit = () => {
     setEditAccount(null); // Cancel the editing mode
@@ -205,7 +225,12 @@ const AccountPage = () => {
                                 roleMappings[acc.role]
                               )}
                             </td>
-                            <td>{departments.find(dep => dep.id === acc.department)?.name}</td>
+                            <td>
+  {departments.length > 0
+    ? departments.find(dep => dep.id === acc.department)?.name || "No Department"
+    : "Loading..."}
+</td>
+
                             <td>
                               <span className={`badge ${acc.is_active ? "bg-success" : "bg-secondary"}`}>
                                 {acc.is_active ? "Active" : "Inactive"}

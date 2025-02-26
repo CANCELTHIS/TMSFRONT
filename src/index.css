@@ -627,3 +627,24 @@ background-color:#0b455b !important;
 .dark .btn-close {
   color: white;
 }
+.sidebar-link {
+  color: #181E4B !important;  
+  text-decoration: none;
+}
+
+.sidebar-link:hover {
+  color: #ec931e !important; 
+}
+.loading-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.8); /* Optional: light overlay */
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+}

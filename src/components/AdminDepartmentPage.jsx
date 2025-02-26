@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Footer from "./Footer";
 import axios from "axios"; // For API requests
 
 const AdminDepartmentPage = () => {
@@ -28,44 +27,25 @@ const AdminDepartmentPage = () => {
   useEffect(() => {
     const fetchDepartmentsAndUsers = async () => {
       try {
-        // Fetch departments
         const departmentResponse = await axiosInstance.get("http://127.0.0.1:8000/departments/");
-        const userResponse = await axiosInstance.get("http://127.0.0.1:8000/users/"); // Endpoint for users
-        
-        // Check if the data is valid
-        if (Array.isArray(departmentResponse.data) && Array.isArray(userResponse.data)) {
-          const fetchedDepartments = departmentResponse.data;
-          const fetchedUsers = userResponse.data;
-
-          // Sort users by department and role to find the Department Manager
-          const sortedDepartments = fetchedDepartments.map(department => {
-            // Find the department manager by filtering users based on department and role
-            const departmentManager = fetchedUsers.find(
-              user => user.department === department.name && user.role === 2 // Role 2 is Department Manager
-            );
-
-            return {
-              ...department,
-              manager: departmentManager ? departmentManager.full_name : "", // Set manager name if exists
-            };
-          });
-
-          setDepartments(sortedDepartments);
-          setUsers(fetchedUsers);
-        } else {
-          console.error("API response is not an array", departmentResponse.data, userResponse.data);
-          setDepartments([]); // Default to empty array if response is not an array
-          setUsers([]);
-        }
+        const userResponse = await axiosInstance.get("http://127.0.0.1:8000/users/");
+  
+        // Ensure responses have results
+        const fetchedDepartments = departmentResponse.data.results || [];
+        const fetchedUsers = userResponse.data.results || [];
+  
+        setDepartments(fetchedDepartments);
+        setUsers(fetchedUsers);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setDepartments([]); // Default to empty array in case of error
+        setDepartments([]);
         setUsers([]);
       }
     };
-
+  
     fetchDepartmentsAndUsers();
   }, []);
+  
 
   const validateInput = () => {
     const errors = {};
@@ -143,22 +123,23 @@ const AdminDepartmentPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {departments.length > 0 ? (
-                      departments.map((dept, index) => (
-                        <tr key={dept.id}>
-                          <td>{index + 1}</td>
-                          <td>{dept.name}</td>
-                          <td>{dept.department_manager}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="3" className="text-center">
-                          No departments added yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
+  {departments.length > 0 ? (
+    departments.map((dept, index) => (
+      <tr key={dept.id}>
+        <td>{index + 1}</td>
+        <td>{dept.name}</td>
+        <td>{dept.department_manager ? dept.department_manager : "No Manager Assigned"}</td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="3" className="text-center">
+        No departments added yet.
+      </td>
+    </tr>
+  )}
+</tbody>
+
                 </table>
               </div>
             </div>

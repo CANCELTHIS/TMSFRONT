@@ -2,9 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import axios from "axios"; // Ensure axios is imported
+import Lottie from 'lottie-react';
+import animationData from "./Lottie Lego (1).json";
+import { IoCloseSharp } from "react-icons/io5";
 
 const AdminPage = () => {
   const [data, setData] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,34 +103,42 @@ const AdminPage = () => {
   };
 
   const handleApprove = async () => {
+    setShowApproveModal(false); // Close the modal immediately
+    setIsProcessing(true); // Start showing the animation
+    
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
         toast.error("You need to be logged in to approve users.");
         return;
       }
-
-      const response = await fetch(`http://127.0.0.1:8000/approve/${userToApprove.id}/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ action: "approve" }),
-      });
-
+  
+      const response = await fetch(
+        `http://127.0.0.1:8000/approve/${userToApprove.id}/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action: "approve" }),
+        }
+      );
+  
       if (response.ok) {
         toast.success("User approved successfully!");
-        setShowApproveModal(false);
-        fetchUsers();
+        fetchUsers(); // Refresh user list
       } else {
         const errorData = await response.json();
         toast.error(errorData.error || "Failed to approve user.");
       }
     } catch (error) {
       toast.error("An error occurred while approving the user.");
+    } finally {
+      setIsProcessing(false); // Stop animation after process completes
     }
   };
+  
 
   const getRoleLabel = (roleId) => {
     const role = ROLE_CHOICES.find((role) => role.value === roleId);
@@ -147,13 +159,14 @@ const AdminPage = () => {
   };
 
   const sendRejectionEmail = async (rejectionReason) => {
+    setIsProcessing(true); // Start animation
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
         toast.error("You need to be logged in to reject users.");
         return;
       }
-
+  
       const response = await fetch(
         `http://127.0.0.1:8000/approve/${selectedUserId}/`,
         {
@@ -168,7 +181,7 @@ const AdminPage = () => {
           }),
         }
       );
-
+  
       if (response.ok) {
         toast.success("User rejected successfully!");
         fetchUsers();
@@ -180,6 +193,8 @@ const AdminPage = () => {
       }
     } catch (error) {
       toast.error("An error occurred while rejecting the user.");
+    } finally {
+      setIsProcessing(false); // Stop animation
     }
   };
 
@@ -238,6 +253,12 @@ const AdminPage = () => {
           <div className="col-12 col-md-9 col-lg-10 admin-content p-4">
             {error && <p className="text-danger">{error}</p>}
             {isLoading && <p>Loading users...</p>}
+            {isProcessing && (
+  <div className="loading-overlay">
+    <Lottie animationData={animationData} loop autoPlay style={{ width: 300, height: 300 }} />
+  </div>
+)}
+
 
             <table className="table">
               <thead>
@@ -277,7 +298,8 @@ const AdminPage = () => {
                       <td>
                         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                           <button
-                            className="btn btn-sm btn-warning"
+                            className="btn btn-sm"
+                            style={{backgroundColor:"#0b455b",color:"white"}}
                             onClick={() => handleEdit(user)}
                           >
                             Edit
@@ -340,12 +362,20 @@ const AdminPage = () => {
               <div className="modal-header">
                 <h5 className="modal-title">Approve User</h5>
                 <button
-                  type="button"
-                  className="close"
-                  onClick={() => setShowApproveModal(false)}
-                >
-                  <span>&times;</span>
-                </button>
+  onClick={() => setShowApproveModal(false)} // Or setShowRejectModal(false)
+  style={{
+    position: "absolute",
+    top: "10px",
+    right: "10px",
+    background: "none",
+    border: "none",
+    fontSize: "20px",
+    cursor: "pointer"
+  }}
+>
+<IoCloseSharp/>
+</button>
+
               </div>
               <div className="modal-body">
                 <p>Are you sure you want to approve {userToApprove?.full_name}?</p>
@@ -382,8 +412,17 @@ const AdminPage = () => {
                   type="button"
                   className="close"
                   onClick={() => setShowRejectModal(false)}
+                  style={{
+                    position: "absolute",
+                    top: "10px",
+                    right: "10px",
+                    background: "none",
+                    border: "none",
+                    fontSize: "20px",
+                    cursor: "pointer"
+                  }}
                 >
-                  <span>&times;</span>
+                 <IoCloseSharp/>
                 </button>
               </div>
               <div className="modal-body">
