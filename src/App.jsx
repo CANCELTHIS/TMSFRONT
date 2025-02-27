@@ -169,7 +169,7 @@ const App = () => {
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
                   <div className="d-flex">
                     <Header role="employee" />
-                    <Sidebar role="employee" />
+                    
                     <div className="container">
                       <EmployeePage />
                     </div>

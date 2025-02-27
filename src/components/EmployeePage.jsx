@@ -173,8 +173,7 @@ const EmployeePage = () => {
   // Close detail modal
   const handleCloseDetail = () => {
     setSelectedRequest(null);
-  };
-
+  };  
   return (
     <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <button

@@ -1,190 +1,376 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Logo from "../assets/Logo.jpg";
+import { toast, ToastContainer } from "react-toastify"; // For toast messages
+import "react-toastify/dist/ReactToastify.css";
+import Logo from "../assets/Logo.jpg"; // Import the logo image
 
 const DepartementPage = () => {
-  const [showRefuelForm, setShowRefuelForm] = useState(false); // State for showing the modal
-  const [selectedRequest, setSelectedRequest] = useState(null); // State to store selected request details
-  const [showConfirmApproval, setShowConfirmApproval] = useState(false); // State for showing confirmation dialog
-  const [showRejectForm, setShowRejectForm] = useState(false); // State for showing the reject reason form
-  const [rejectionReason, setRejectionReason] = useState(""); // State to store rejection reason
+  const [showForm, setShowForm] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [users, setUsers] = useState([]); // State for employees
+  const [loading, setLoading] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
+  const [rejectionReason, setRejectionReason] = useState(""); // State for rejection reason
+  const [showRejectionModal, setShowRejectionModal] = useState(false); // State for rejection modal
+  const [showConfirmation, setShowConfirmation] = useState(false); // State for rejection confirmation dialog
+  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false); // State for approve confirmation dialog
 
-  const handleCloseForm = () => setShowRefuelForm(false);
-  const handleShowForm = (request) => {
-    setSelectedRequest(request);  // Set the selected request to show in the modal
-    setShowRefuelForm(true);
+  const accessToken = localStorage.getItem("authToken");
+
+  // Fetch requests and users when the component mounts
+  useEffect(() => {
+    fetchRequests();
+    fetchUsers(); // Fetch users
+  }, []);
+
+  const fetchRequests = async () => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("http://127.0.0.1:8000/transport-requests/list/", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch transport requests");
+
+      const data = await response.json();
+      setRequests(data.results || []); // Set fetched data to state
+    } catch (error) {
+      console.error("Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleApprove = () => {
-    setShowConfirmApproval(true); // Show confirmation dialog when approve button is clicked
+  const fetchUsers = async () => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/users-list/", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch users");
+
+      const data = await response.json();
+      setUsers(data.results || []); // Set users data
+    } catch (error) {
+      console.error("Fetch Users Error:", error);
+    }
+  };
+
+  // Get employee names from IDs
+  const getEmployeeNames = (employeeIds) => {
+    return employeeIds
+      .map((id) => {
+        const employee = users.find((user) => user.id === id);
+        return employee ? employee.full_name : "Unknown";
+      })
+      .join(", ");
+  };
+
+  const handleViewDetail = (request) => {
+    setSelectedRequest(request);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedRequest(null);
+    setRejectionReason(""); // Clear rejection reason
+    setShowRejectionModal(false); // Close rejection modal
+    setShowConfirmation(false); // Close rejection confirmation dialog
+    setShowApproveConfirmation(false); // Close approve confirmation dialog
+  };
+
+  const handleApprove = async (requestId) => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/transport-requests/${requestId}/action/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "forward", // Forward the request to the transport manager
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to forward transport request");
+
+      // Update the status locally after forwarding
+      setRequests((prevRequests) =>
+        prevRequests.map((req) =>
+          req.id === requestId ? { ...req, status: "forwarded" } : req
+        )
+      );
+
+      setSelectedRequest(null); // Close modal
+      toast.success("Request forwarded to transport manager successfully!"); // Show success toast
+    } catch (error) {
+      console.error("Approve Error:", error);
+      toast.error("Failed to forward request."); // Show error toast
+    }
+  };
+
+  const handleReject = async (requestId) => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    if (!rejectionReason) {
+      toast.error("Please provide a reason for rejection."); // Show error toast
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/transport-requests/${requestId}/action/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "reject",
+          rejection_message: rejectionReason, // Use the provided reason
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to reject transport request");
+
+      // Update the status locally after rejection
+      setRequests((prevRequests) =>
+        prevRequests.map((req) =>
+          req.id === requestId ? { ...req, status: "rejected" } : req
+        )
+      );
+
+      setSelectedRequest(null); // Close modal
+      setRejectionReason(""); // Clear rejection reason
+      setShowRejectionModal(false); // Close rejection modal
+      toast.success("Request rejected successfully!"); // Show success toast
+    } catch (error) {
+      console.error("Reject Error:", error);
+      toast.error("Failed to reject request."); // Show error toast
+    }
+  };
+
+  const handleRejectClick = () => {
+    setShowRejectionModal(true); // Show rejection modal
+  };
+
+  const handleConfirmReject = () => {
+    setShowConfirmation(true); // Show rejection confirmation dialog
+  };
+
+  const handleConfirmAction = () => {
+    handleReject(selectedRequest.id); // Call handleReject
+    setShowConfirmation(false); // Close rejection confirmation dialog
+  };
+
+  const handleApproveClick = () => {
+    setShowApproveConfirmation(true); // Show approve confirmation dialog
   };
 
   const handleConfirmApprove = () => {
-    alert(`Request from ${selectedRequest.name} has been approved.`);
-    setShowRefuelForm(false);
-    setShowConfirmApproval(false); // Close the modal and confirmation dialog
+    handleApprove(selectedRequest.id); // Call handleApprove
+    setShowApproveConfirmation(false); // Close approve confirmation dialog
   };
-
-  const handleReject = () => {
-    setShowRejectForm(true); // Show the rejection reason form
-  };
-
-  const handleRejectConfirm = () => {
-    alert(`Request from ${selectedRequest.name} has been rejected for the following reason: ${rejectionReason}`);
-    setShowRefuelForm(false);
-    setShowRejectForm(false); // Close the reject form and request modal
-    setRejectionReason(""); // Clear the rejection reason
-  };
-
-  const handleRejectCancel = () => {
-    setShowRejectForm(false); // Close the reject reason form without rejecting
-    setRejectionReason(""); // Clear the rejection reason if cancelled
-  };
-
-  const requests = Array(10).fill({
-    name: "John Doe",
-    email: "johndoe@example.com",
-    startDate: "20/03/2024",
-    startTime: "8:00 AM",
-    returnDate: "23/03/2024",
-    schedules: 5,
-  });
 
   return (
-    <div className="d-flex" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      {/* Main Content */}
-      <div className="flex-grow-1">
-        <div className="container py-4">
-          <h2 className="h5">Requests</h2>
-          {/* Table */}
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Start Date</th>
-                  <th>Start Time</th>
-                  <th>Return Date</th>
-                  <th>PO Schedules</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((request, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>
-                      <div className="d-flex align-items-center">
-                        <div>
-                          <div>{request.name}</div>
-                          <small className="text-muted">{request.email}</small>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{request.startDate}</td>
-                    <td>{request.startTime}</td>
-                    <td>{request.returnDate}</td>
-                    <td>{request.schedules}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#0B455B", color: "#fff" }}
-                        onClick={() => handleShowForm(request)} // Open modal on click
-                      >
-                        View More
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+      <ToastContainer /> {/* Toast container for notifications */}
+      {loading ? (
+        <div className="text-center mt-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
           </div>
+          <p>Loading data...</p>
+        </div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-bordered mt-4">
+            <thead className="table">
+              <tr>
+                <th>Start Day</th>
+                <th>Start Time</th>
+                <th>Return Day</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requests.map((request) => (
+                <tr key={request.id}>
+                  <td>{request.start_day}</td>
+                  <td>{request.start_time}</td>
+                  <td>{request.return_day}</td>
+                  <td>{request.destination}</td>
+                  <td>{request.status}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm"
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
+                      onClick={() => handleViewDetail(request)}
+                    >
+                      View Detail
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-          {/* Pagination */}
-          <div className="d-flex justify-content-between align-items-center mt-3">
-            <button className="btn btn-secondary btn-sm">Previous</button>
-            <small>Page 1 of 10</small>
-            <button className="btn btn-secondary btn-sm">Next</button>
+      {selectedRequest && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <h5 className="modal-title">Transport Request Details</h5>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
+                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
+                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleCloseDetail}>
+                  Close
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ backgroundColor: "#28a745", color: "white" }}
+                  onClick={handleApproveClick} // Show approve confirmation dialog
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ backgroundColor: "#dc3545", color: "white" }}
+                  onClick={handleRejectClick} // Show rejection modal
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Modal for displaying request details */}
-        {selectedRequest && (
-          <div className={`modal fade ${showRefuelForm ? "show" : ""}`} tabIndex="-1" style={{ display: showRefuelForm ? "block" : "none" }}>
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <img src={Logo} alt="Logo" className="img-fluid" style={{ maxWidth: "50px" }} />
-                  <h5 className="modal-title ms-2">Request Details</h5>
-                  <button type="button" className="btn-close" onClick={handleCloseForm}></button>
-                </div>
-                <div className="modal-body">
-                  <h6>Name: {selectedRequest.name}</h6>
-                  <p>Email: {selectedRequest.email}</p>
-                  <p>Start Date: {selectedRequest.startDate}</p>
-                  <p>Start Time: {selectedRequest.startTime}</p>
-                  <p>Return Date: {selectedRequest.returnDate}</p>
-                  <p>PO Schedules: {selectedRequest.schedules}</p>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-danger" onClick={handleReject}>Reject</button>
-                  <button type="button" className="btn btn-success" onClick={handleApprove}>Approve</button>
-                  <button type="button" className="btn btn-secondary" onClick={handleCloseForm}>Close</button>
-                </div>
+      {showRejectionModal && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Reject Request</h5>
+                <button type="button" className="btn-close" onClick={() => setShowRejectionModal(false)}></button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Confirmation Dialog for Approving */}
-        {showConfirmApproval && (
-          <div className="modal fade show" tabIndex="-1" style={{ display: "block" }}>
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Are you sure?</h5>
-                  <button type="button" className="btn-close" onClick={() => setShowConfirmApproval(false)}></button>
-                </div>
-                <div className="modal-body">
-                  <p>Are you sure you want to approve the request from {selectedRequest.name}?</p>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-danger" onClick={() => setShowConfirmApproval(false)}>No</button>
-                  <button type="button" className="btn btn-success" onClick={handleConfirmApprove}>Yes</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Reject Reason Form */}
-        {showRejectForm && (
-          <div className="modal fade show" tabIndex="-1" style={{ display: "block" }}>
-            <div className="modal-dialog">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Rejection Reason</h5>
-                  <button type="button" className="btn-close" onClick={handleRejectCancel}></button>
-                </div>
-                <div className="modal-body">
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="rejectionReason" className="form-label">
+                    Rejection Reason
+                  </label>
                   <textarea
+                    id="rejectionReason"
                     className="form-control"
-                    placeholder="Enter rejection reason"
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    rows="4"
+                    placeholder="Provide a reason for rejection"
+                    required
                   />
                 </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={handleRejectCancel}>Cancel</button>
-                  <button type="button" className="btn btn-danger" onClick={handleRejectConfirm}>Confirm Rejection</button>
-                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowRejectionModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleConfirmReject} // Show confirmation dialog
+                >
+                  Submit Rejection
+                </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {showConfirmation && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Rejection</h5>
+                <button type="button" className="btn-close" onClick={() => setShowConfirmation(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to reject this request?</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowConfirmation(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-danger" onClick={handleConfirmAction}>
+                  Confirm Rejection
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showApproveConfirmation && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Approval</h5>
+                <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to forward this request to the transport manager?</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowApproveConfirmation(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="btn btn-primary" onClick={handleConfirmApprove}>
+                  Confirm Approval
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

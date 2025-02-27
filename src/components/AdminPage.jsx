@@ -55,6 +55,7 @@ const AdminPage = () => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log(result,"Hello there!!!!!!!!!!!!!!!")
         setDepartments(result);
       } else {
         const errorData = await response.json();
@@ -87,6 +88,7 @@ const AdminPage = () => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log("{}{}{}{}",result)
         setData(result);
       } else {
         const errorData = await response.json();
@@ -293,7 +295,9 @@ const AdminPage = () => {
                           getRoleLabel(user.role)
                         )}
                       </td>
-                      <td>{user.department}</td>
+                      <td>
+  {departments.results && departments.results.find(dept => dept.id === user.department)?.name || "N/A"}
+</td>
                       <td>{user.is_active ? "Active" : "Pending"}</td>
                       <td>
                         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
