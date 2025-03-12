@@ -1,232 +1,356 @@
 import React, { useState, useEffect } from "react";
 import "../index.css";
+import axios from "axios";
+import { IoMdClose } from "react-icons/io";
+import { FaRegEdit } from "react-icons/fa";
 
 const VehicleManagement = () => {
-  const [vehicles, setVehicles] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState(null);
-  const [newVehicle, setNewVehicle] = useState({
-    name: "",
-    plateNumber: "",
-    driver: "",
-    phoneNumber: "",
-    capacity: "",
-    status: "Active",
-  });
-  const [errorMessage, setErrorMessage] = useState("");
+    const token = localStorage.getItem("authToken");
 
-  // If editing a vehicle, pre-fill the form
-  useEffect(() => {
-    if (editingVehicle) {
-      setNewVehicle(editingVehicle);
-    }
-  }, [editingVehicle]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const { name, plateNumber, driver, phoneNumber, capacity } = newVehicle;
-
-    // Check if all fields are filled
-    if (!name || !plateNumber || !driver || !phoneNumber || !capacity) {
-      setErrorMessage("Please fill in all fields.");
-      return;
-    }
-
-    // Check if capacity is a positive number
-    if (capacity <= 0) {
-      setErrorMessage("Capacity must be a positive number.");
-      return;
-    }
-
-    // Check if phone number is 10 digits and starts with 09 or 07
-    if (!/^(09|07)\d{8}$/.test(phoneNumber)) {
-      setErrorMessage("Phone number must be exactly 10 digits and start with 09 or 07.");
-      return;
-    }
-
-    // Clear error message if validation passes
-    setErrorMessage("");
-    if (editingVehicle) {
-      // Update vehicle if editing
-      setVehicles(
-        vehicles.map((v) =>
-          v.id === editingVehicle.id ? { ...newVehicle, id: editingVehicle.id } : v
-        )
-      );
-    } else {
-      // Add new vehicle
-      setVehicles([...vehicles, { ...newVehicle, id: vehicles.length + 1 }]);
-    }
-
-    setShowModal(false);
-    setEditingVehicle(null); // Reset editing state after saving
-    setNewVehicle({
-      name: "",
-      plateNumber: "",
-      driver: "",
-      phoneNumber: "",
-      capacity: "",
-      status: "Active",
+    const [vehicles, setVehicles] = useState([]);
+    const [drivers, setDrivers] = useState([]);
+    const [showModal, setShowModal] = useState(false);
+    const [editingVehicle, setEditingVehicle] = useState(null);
+    const [newVehicle, setNewVehicle] = useState({
+        license_plate: "",
+        model: "",
+        capacity: "",
+        source: "",
+        rental_company: "",
+        driver: "",
+        status: "available", // Add status field
     });
-  };
+    const [errorMessage, setErrorMessage] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
 
-  const handleStatusChange = (id, status) => {
-    setVehicles(
-      vehicles.map((vehicle) =>
-        vehicle.id === id ? { ...vehicle, status } : vehicle
-      )
-    );
-  };
+    const fetchUsers = async () => {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/users-list/", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            const usersData = await response.json();
+            return Array.isArray(usersData) ? usersData : usersData.results || [];
+        } catch (error) {
+            console.error("Error fetching users:", error);
+            return [];
+        }
+    };
 
-  const handleEdit = (id) => {
-    const vehicle = vehicles.find((v) => v.id === id);
-    setEditingVehicle(vehicle); // Set the vehicle to be edited
-    setShowModal(true); // Show the modal for editing
-  };
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const userData = await fetchUsers();
+                setDrivers(userData);
+                await fetchVehicles();
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-  return (
-    <div className="d-flex flex-column" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      <div className="d-flex flex-grow-1">
-        <div className="flex-grow-1 p-4">
-          <div className="container">
-            <h1 className="mb-4">Vehicle Management</h1>
+        fetchData();
+    }, [token]);
 
-            {/* Add Vehicle Button */}
-            <button
-              className="btn"
-              style={{ backgroundColor: "#14183E", color: "#fff" }}
-              onClick={() => setShowModal(true)}
-            >
-              + Add Vehicle
+    const getDriverNameById = (driverId) => {
+        const driver = drivers.find((driver) => driver.id === driverId);
+        return driver ? driver.full_name : "No Driver Assigned";
+    };
+
+    const fetchVehicles = async () => {
+        try {
+            const response = await axios.get("http://127.0.0.1:8000/vehicles/", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setVehicles(response.data.results || []);
+        } catch (error) {
+            console.error("Error fetching vehicles:", error);
+            setVehicles([]);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const { license_plate, model, capacity, source, rental_company, driver, status } = newVehicle;
+
+        // Validation
+        if (!license_plate || !model || !capacity || !source || !driver || !status) {
+            setErrorMessage("Please fill in all required fields with valid data.");
+            return;
+        }
+
+        if (capacity <= 0) {
+            setErrorMessage("Capacity must be a positive number.");
+            return;
+        }
+
+        if (source === "rented" && !rental_company) {
+            setErrorMessage("Please provide the rental company name.");
+            return;
+        }
+
+        setErrorMessage("");
+
+        const vehicleData = {
+            license_plate,
+            model,
+            capacity: Number(capacity),
+            source: source === "owned" ? "organization" : source,
+            rental_company: source === "owned" ? null : rental_company,
+            driver,
+            status, // Include status in the payload
+        };
+
+        try {
+            if (editingVehicle) {
+                await axios.put(`http://127.0.0.1:8000/vehicles/${editingVehicle.id}/`, vehicleData, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+            } else {
+                await axios.post("http://127.0.0.1:8000/vehicles/", vehicleData, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+            }
+
+            fetchVehicles();
+            setShowModal(false);
+            setEditingVehicle(null);
+            setNewVehicle({
+                license_plate: "",
+                model: "",
+                capacity: "",
+                source: "",
+                rental_company: "",
+                driver: "",
+                status: "available", // Reset status
+            });
+        } catch (error) {
+            setErrorMessage("An error occurred while saving the vehicle. Please try again.");
+        }
+    };
+
+    const handleSourceChange = (e) => {
+        const source = e.target.value;
+        setNewVehicle((prevState) => ({
+            ...prevState,
+            source,
+            rental_company: source === "owned" ? "" : prevState.rental_company,
+        }));
+    };
+
+    const handleEdit = (vehicle) => {
+        setEditingVehicle(vehicle);
+        setNewVehicle({
+            license_plate: vehicle.license_plate,
+            model: vehicle.model,
+            capacity: vehicle.capacity,
+            source: vehicle.source,
+            rental_company: vehicle.rental_company || "",
+            driver: vehicle.driver,
+            status: vehicle.status || "available", // Set status when editing
+        });
+        setShowModal(true);
+    };
+
+    const handleDeactivate = async (vehicleId) => {
+        if (window.confirm("Are you sure you want to deactivate this vehicle?")) {
+            try {
+                await axios.patch(`http://127.0.0.1:8000/vehicles/${vehicleId}/`, {
+                    is_available: false,
+                }, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                fetchVehicles();
+            } catch (error) {
+                console.error("Error deactivating vehicle:", error);
+                setErrorMessage("An error occurred while deactivating the vehicle.");
+            }
+        }
+    };
+
+    const openAddVehicleModal = () => {
+        setEditingVehicle(null);
+        setNewVehicle({
+            license_plate: "",
+            model: "",
+            capacity: "",
+            source: "",
+            rental_company: "",
+            driver: "",
+            status: "available", // Reset status
+        });
+        setShowModal(true);
+    };
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    return (
+        <div className="container mt-4">
+            <h1>Vehicle Management</h1>
+            <button className="btn" onClick={openAddVehicleModal} style={{backgroundColor:"#0b455b",color:"#fff"}}>
+                + Add Vehicle
             </button>
-
-            {/* Vehicle Table */}
-            <div className="card mt-4">
-              <div className="card-body">
-                <table className="table table-bordered">
-                  <thead>
+            <table className="table table-bordered mt-4">
+                <thead>
                     <tr>
-                      <th>Vehicle Name</th>
-                      <th>Plate Number</th>
-                      <th>Driver</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                        <th>Driver</th>
+                        <th>License Plate</th>
+                        <th>Model</th>
+                        <th>Capacity</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {vehicles.map((vehicle) => (
-                      <tr key={vehicle.id}>
-                        <td>{vehicle.name}</td>
-                        <td>{vehicle.plateNumber}</td>
-                        <td>{vehicle.driver}</td>
-                        <td>{vehicle.status}</td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-warning"
-                            onClick={() => handleEdit(vehicle.id)}
-                          >
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+                </thead>
+                <tbody>
+                    {Array.isArray(vehicles) && vehicles.length > 0 ? (
+                        vehicles.map((vehicle) => (
+                            <tr key={vehicle.id}>
+                                <td>{getDriverNameById(vehicle.driver)}</td>
+                                <td>{vehicle.license_plate}</td>
+                                <td>{vehicle.model}</td>
+                                <td>{vehicle.capacity}</td>
+                                <td>{vehicle.status}</td>
+                                <td>
+                                    <button
+                                        className="btn  btn-sm me-2"
+                                        onClick={() => handleEdit(vehicle)}
+                                        style={{backgroundColor:"#0b455b",color:"#fff"}}
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() => handleDeactivate(vehicle.id)}
+                                    >
+                                        Deactivate
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan="6">No vehicles available</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+
+            {showModal && (
+                <div className="modal show" style={{ display: "block" }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5>{editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}</h5>
+                                <button type="button" className="btn-close" onClick={() => setShowModal(false)}>
+                                    <IoMdClose size={30} />
+                                </button>
+                            </div>
+                            <div className="modal-body">
+                                {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+                                <form onSubmit={handleSubmit}>
+                                    <div className="row mb-3">
+                                        <div className="col-md-6">
+                                            <label>Driver</label>
+                                            <select
+                                                className="form-control"
+                                                value={newVehicle.driver}
+                                                onChange={(e) => setNewVehicle({ ...newVehicle, driver: e.target.value })}
+                                            >
+                                                <option value="">Select Driver</option>
+                                                {drivers.map((driver) => (
+                                                    <option key={driver.id} value={driver.id}>
+                                                        {driver.full_name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label>License Plate</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={newVehicle.license_plate}
+                                                onChange={(e) => setNewVehicle({ ...newVehicle, license_plate: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="row mb-3">
+                                        <div className="col-md-6">
+                                            <label>Model</label>
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                value={newVehicle.model}
+                                                onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="col-md-6">
+                                            <label>Capacity</label>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                value={newVehicle.capacity}
+                                                onChange={(e) => setNewVehicle({ ...newVehicle, capacity: e.target.value })}
+                                                min="1"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="row mb-3">
+                                        <div className="col-md-6">
+                                            <label>Source</label>
+                                            <select
+                                                className="form-control"
+                                                value={newVehicle.source}
+                                                onChange={handleSourceChange}
+                                            >
+                                                <option value="">Select Source</option>
+                                                <option value="owned">Owned</option>
+                                                <option value="rented">Rented</option>
+                                            </select>
+                                        </div>
+                                        {newVehicle.source === "rented" && (
+                                            <div className="col-md-6">
+                                                <label>Rental Company</label>
+                                                <input
+                                                    type="text"
+                                                    className="form-control"
+                                                    value={newVehicle.rental_company}
+                                                    onChange={(e) => setNewVehicle({ ...newVehicle, rental_company: e.target.value })}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="row mb-3">
+                                        <div className="col-md-6">
+                                            <label>Status</label>
+                                            <select
+                                                className="form-control"
+                                                value={newVehicle.status}
+                                                onChange={(e) => setNewVehicle({ ...newVehicle, status: e.target.value })}
+                                            >
+                                                <option value="available">Available</option>
+                                                
+                                                <option value="service">Service</option>
+                                                <option value="maintenance">Maintenance</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button type="submit" className="btn btn-primary w-100">
+                                        {editingVehicle ? "Update" : "Save"}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-      </div>
-
-      {/* Modal for Add/Edit Vehicle Form */}
-      {showModal && (
-        <div className="modal show" tabIndex="-1" style={{ display: "block" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <h3 className="mb-4 text-center">{editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}</h3>
-
-                {/* Error Message */}
-                {errorMessage && <div className="alert alert-danger text-center">{errorMessage}</div>}
-
-                <form onSubmit={handleSubmit} className="border p-4 rounded shadow-sm bg-white">
-                  <div className="mb-3">
-                    <label htmlFor="vehicleName" className="form-label">Vehicle Name</label>
-                    <input
-                      type="text"
-                      id="vehicleName"
-                      className="form-control"
-                      value={newVehicle.name}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="plateNumber" className="form-label">Plate Number</label>
-                    <input
-                      type="text"
-                      id="plateNumber"
-                      className="form-control"
-                      value={newVehicle.plateNumber}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, plateNumber: e.target.value })}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="driver" className="form-label">Driver</label>
-                    <input
-                      type="text"
-                      id="driver"
-                      className="form-control"
-                      value={newVehicle.driver}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, driver: e.target.value })}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="phoneNumber" className="form-label">Driver's Phone Number</label>
-                    <input
-                      type="text"
-                      id="phoneNumber"
-                      className="form-control"
-                      value={newVehicle.phoneNumber}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, phoneNumber: e.target.value })}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label htmlFor="capacity" className="form-label">Capacity</label>
-                    <input
-                      type="number"
-                      id="capacity"
-                      className="form-control"
-                      value={newVehicle.capacity}
-                      onChange={(e) => setNewVehicle({ ...newVehicle, capacity: e.target.value })}
-                      min="1"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <button
-                      type="submit"
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#14183E", color: "#fff" }}
-                    >
-                      {editingVehicle ? "Update" : "Save"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="TransFooter"></div>
-    </div>
-  );
+    );
 };
 
 export default VehicleManagement;

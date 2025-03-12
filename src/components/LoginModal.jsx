@@ -39,15 +39,15 @@ const LoginModal = ({ onClose }) => {
       if (decodedToken.role === 1) {
         navigate('/employee');
       } else if (decodedToken.role === 2) {
-        navigate('/department-manager');
+        navigate('/department-manager/vehicle-request');
       } else if (decodedToken.role === 3) {
-        navigate('/finance-manager');
+        navigate('/finance-manager/vehicle-request');
       } else if (decodedToken.role === 4) {
-        navigate('/transport-manager');
+        navigate('/transport-manager/transport-dashbord');
       } else if (decodedToken.role === 5) {
-        navigate('/ceo');
+        navigate('/ceo/vehicle-request');
       } else if (decodedToken.role === 6) {
-        navigate('/driver');
+        navigate('/driver/driver-schedule');
       } else if (decodedToken.role === 7) {
         navigate('/admin/admin');
       } else {
@@ -93,6 +93,7 @@ const LoginModal = ({ onClose }) => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
 
             <div className="mb-3 position-relative">
               <label htmlFor="password" className="form-label">

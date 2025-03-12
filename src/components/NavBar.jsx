@@ -1,23 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Logo from '../assets/Logo.jpg';
 import { useLanguage } from '../context/LanguageContext';
-import { FaLanguage } from 'react-icons/fa6';
+import { useTheme } from "../context/ThemeContext";
 import { motion } from 'framer-motion';
 import LoginModal from './LoginModal';
+import { 
+  FaHome, 
+  FaTools, 
+  FaInfoCircle, 
+  FaEnvelope,
+  FaLanguage,
+  FaCog
+} from 'react-icons/fa';
+import { IoIosLogIn } from "react-icons/io";
 import { GiHamburgerMenu } from "react-icons/gi";
-import { useTheme } from "../context/ThemeContext";
 import { MdDarkMode } from "react-icons/md";
 import { LuSunMedium } from "react-icons/lu";
+import '../index.css';
 
 const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
   const { mylanguage, toggleLanguage } = useLanguage();
-  const [showLogin, setShowLogin] = useState(false);
   const { myTheme, toggleTheme } = useTheme();
-  const [activeSection, setActiveSection] = useState('home'); // Track active section
+  const [showLogin, setShowLogin] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+  const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef(null);
+
+  // Handle click outside settings menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target)) {
+        setShowSettings(false);
+      }
+    }
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [settingsRef]);
 
   const scrollToSection = (sectionRef, section) => {
     sectionRef.current.scrollIntoView({ behavior: 'smooth' });
-    setActiveSection(section); // Update active section
+    setActiveSection(section);
   };
 
   const logoVariants = {
@@ -30,20 +55,28 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
     visible: { opacity: 1, x: 0, transition: { duration: 0.3 } },
   };
 
+  // Map sections to their respective icons and translations
+  const navLinks = [
+    { section: 'home', ref: homeRef, icon: <FaHome />, amharic: 'መግቢያ' },
+    { section: 'services', ref: servicesRef, icon: <FaTools />, amharic: 'አገልግሎቶች' },
+    { section: 'about', ref: whyTMSRef, icon: <FaInfoCircle />, amharic: 'ስለ እኛ' },
+    { section: 'contact', ref: emailFormRef, icon: <FaEnvelope />, amharic: 'እኛን እንደምን ደርሶ' },
+  ];
+
   return (
     <div className={`mynav ${myTheme === "dark" ? "dark" : "light"}`}>
-      <nav className={`navbar navbar-expand-lg navbar-light fixed-top ${myTheme === "dark" ? "dark" : "light"}`}>
-        <div className="container-fluid d-flex gap-6">
-          <a className="navbar-brand" href="/">
-            <motion.img
-              id="logo"
-              src={Logo}
-              alt="Logo"
-              initial="hidden"
-              animate="visible"
-              variants={logoVariants}
-            />
-          </a>
+      <nav className={`navbar navbar-expand-lg fixed-top ${myTheme === "dark" ? "dark" : "light"}`}>
+        <div className="container-fluid d-flex">
+          <motion.a 
+            className="navbar-brand" 
+            href="/"
+            initial="hidden"
+            animate="visible"
+            variants={logoVariants}
+          >
+            <img src={Logo} alt="Logo" />
+          </motion.a>
+          
           <button
             className="navbar-toggler"
             type="button"
@@ -53,87 +86,93 @@ const NavBar = ({ homeRef, servicesRef, whyTMSRef, emailFormRef }) => {
             aria-expanded="false"
             aria-label="Toggle navigation"
           >
-            <GiHamburgerMenu color='#F09F33'/>
+            <GiHamburgerMenu color='#F09F33' />
           </button>
+          
           <div className="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex gap-4">
+            <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
               <section className="navs">
-                {[
-                  { section: 'home', ref: homeRef },
-                  { section: 'services', ref: servicesRef },
-                  { section: 'about', ref: whyTMSRef },
-                  { section: 'contact', ref: emailFormRef },
-                ].map(({ section, ref }, index) => (
+                {navLinks.map(({ section, ref, icon, amharic }, index) => (
                   <motion.li
                     key={section}
                     className="nav-item"
                     initial="hidden"
                     animate="visible"
                     variants={linkVariants}
-                    transition={{ delay: index * 0.5 }}
-                    style={{ marginRight: "20px" }}
+                    transition={{ delay: index * 0.2 }}
                   >
                     <a
-                      className="nav-link"
+                      className={`nav-link ${activeSection === section ? 'active' : ''}`}
                       href="#"
                       onClick={() => scrollToSection(ref, section)}
                       style={{
                         color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                        fontSize: "20px",
-                        textDecoration: activeSection === section ? 'underline' : 'none',
-                        fontWeight: activeSection === section ? 'bold' : 'normal',
                       }}
                     >
+                      {icon}
                       {mylanguage === 'EN'
                         ? section.charAt(0).toUpperCase() + section.slice(1)
-                        : section === 'home'
-                        ? 'መግቢያ'
-                        : section === 'services'
-                        ? 'አገልግሎቶች'
-                        : section === 'about'
-                        ? 'ስለ እኛ'
-                        : 'እኛን እንደምን ደርሶ'}
+                        : amharic}
                     </a>
                   </motion.li>
                 ))}
-                <motion.li className="nav-item" initial="hidden" animate="visible" variants={linkVariants}>
-                  <a
-                    className="nav-link"
-                    href="#"
-                    onClick={toggleLanguage}
+                
+                {/* Settings Dropdown */}
+                <motion.li
+                  className="nav-item settings-dropdown"
+                  initial="hidden"
+                  animate="visible"
+                  variants={linkVariants}
+                  ref={settingsRef}
+                >
+                  <button 
+                    className="settings-icon"
+                    onClick={() => setShowSettings(!showSettings)}
                     style={{
                       color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
                     }}
                   >
-                    {mylanguage === 'EN' ? 'EN' : 'አማ'} <FaLanguage size={20} />
-                  </a>
+                    <FaCog size={18} />
+                  </button>
+                  
+                  <div 
+                    className={`settings-menu ${myTheme === 'dark' ? 'dark' : 'light'} ${showSettings ? 'show' : ''}`}
+                  >
+                    <div 
+                      className={`settings-item ${myTheme === 'dark' ? 'dark' : 'light'}`}
+                      onClick={toggleLanguage}
+                      style={{
+                        color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
+                      }}
+                    >
+                      <FaLanguage size={16} />
+                      {mylanguage === 'EN' ? 'አማርኛ' : 'English'}
+                    </div>
+                    
+                    <div 
+                      className={`settings-item ${myTheme === 'dark' ? 'dark' : 'light'}`}
+                      onClick={toggleTheme}
+                      style={{
+                        color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
+                      }}
+                    >
+                      {myTheme === 'dark' ? <LuSunMedium size={16} /> : <MdDarkMode size={16} />}
+                      {myTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </div>
+                  </div>
                 </motion.li>
-                <motion.div
-                  className="theme-icon mt-2"
-                  onClick={toggleTheme}
-                  style={{
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    color: myTheme === 'dark' ? '#B3A2F0' : '#106374',
-                  }}
-                >
-                  {myTheme === 'dark' ? <LuSunMedium size={20} /> : <MdDarkMode size={20} />}
-                </motion.div>
               </section>
             </ul>
+            
             <motion.button
-              className="btn"
-              style={{
-                backgroundColor: '#F09F33',
-                color: 'white',
-                marginTop: '-5px',
-              }}
+              className="login-btn"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ duration: 0.3 }}
               onClick={() => setShowLogin(true)}
             >
               {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
+              
             </motion.button>
           </div>
         </div>

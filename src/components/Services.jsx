@@ -5,18 +5,16 @@ import { useTheme } from '../context/ThemeContext';
 import "../index.css";
 
 const Services = ({ servicesRef }) => {
-  const { mylanguage } = useLanguage(); // Access the current language context
+  const { mylanguage } = useLanguage();
   const { myTheme } = useTheme();
 
   return (
-    <div ref={servicesRef} id="services" className={`${myTheme === "dark" ? "dark" : "light"}`}>
-      <h2 
-        className="d-flex justify-content-center" 
-        id="texthero2"
-        style={{
-          color: myTheme === "dark" ? "#B3A2F0" : "#106374", // Apply the color for dark mode
-        }}
-      >
+    <div 
+      ref={servicesRef} 
+      id="services" 
+      className={`services-container ${myTheme === "dark" ? "dark" : ""}`}
+    >
+      <h2 className="services-title">
         {mylanguage === 'EN' 
           ? 'We Offer Best Services' 
           : 'እኛ ምርጥ አገልግሎቶችን እናቀርባለን'}

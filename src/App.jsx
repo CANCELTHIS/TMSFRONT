@@ -27,7 +27,8 @@ import DriverSchedule from './components/DriverSchedule';
 import RefuelingPage from './components/RefuelingPage';
 import TransportManagerDashbord from './components/TransportManagerDashbord';
 import ReportPage from './components/ReportPage';
-
+import TransportRequest from "./components/TransportRequest";
+import { NotificationProvider } from './context/NotificationContext';
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
@@ -137,6 +138,7 @@ const App = () => {
   };
 
   return (
+    <NotificationProvider>
     <ThemeProvider>
       <LanguageProvider>
         <div className={`app ${modalType ? 'blurred' : ''}`}>
@@ -280,7 +282,7 @@ const App = () => {
                       <Routes>
                         <Route path="vehicle-management" element={<VehicleManagement />} />
                         <Route path="maintenance-table" element={<MaintenanceTable />} />
-                        <Route path="vehicle-request" element={<VehicleRequest />} />
+                        <Route path="vehicle-request" element={<TransportRequest />} />
                         <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
                         <Route path="report" element={<ReportPage/>} />
                       </Routes>
@@ -313,6 +315,7 @@ const App = () => {
         </div>
       </LanguageProvider>
     </ThemeProvider>
+    </NotificationProvider>
   );
 };
 

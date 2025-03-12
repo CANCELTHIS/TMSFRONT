@@ -25,7 +25,7 @@ const Sidebar = ({ role }) => {
     { path: "/transport-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/transport-manager/vehicle-management", icon: <MdLocalShipping />, label: "Vehicle Management" },
     { path: "/transport-manager/maintenance-table", icon: <FaTools />, label: "Maintenance Table" },
-    { path: "/transport-manager/report", icon: <FaTools />, label: "Maintenance Table" },
+    { path: "/transport-manager/report", icon: <FaTools />, label: "Report" },
   ];
 
   const driverMenus = [

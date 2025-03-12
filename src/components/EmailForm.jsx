@@ -6,8 +6,6 @@ import { useLanguage } from '../context/LanguageContext'; // Importing context
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import Toastify styles
 import { useTheme } from '../context/ThemeContext';
-import Lottie from 'lottie-react';
-import animationData from "./Animation - 1738760489760.json";
 const EmailForm = () => {
   const { mylanguage } = useLanguage(); 
   const {myTheme} = useTheme(); // Access the current language from context
@@ -39,10 +37,7 @@ const EmailForm = () => {
 
   return (
     <div className={`container-fluid py-4 ${myTheme === "dark"?"dark":"light"} full`}>
-      <Lottie
-  animationData={animationData}
-  style={{ width: 200, height: 200 }} // Adjust the size here
-/>
+    
 
       {/* Header Section */}
       <h2 className="text-center mb-3">

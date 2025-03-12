@@ -1,37 +1,34 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from "recharts";
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
+import { useSpring, animated } from '@react-spring/web'; // Import react-spring
 
 const Dashboard = () => {
   const barData = [
-    { month: "Jan", lastYear: 30, thisYear: 50 },
-    { month: "Feb", lastYear: 40, thisYear: 60 },
-    { month: "Mar", lastYear: 50, thisYear: 70 },
-    { month: "Apr", lastYear: 20, thisYear: 40 },
-    { month: "May", lastYear: 60, thisYear: 80 },
-    { month: "Jun", lastYear: 30, thisYear: 60 },
-    { month: "Jul", lastYear: 70, thisYear: 90 },
-    { month: "Aug", lastYear: 80, thisYear: 100 },
-    { month: "Sep", lastYear: 60, thisYear: 90 },
-    { month: "Oct", lastYear: 70, thisYear: 100 },
-    { month: "Nov", lastYear: 50, thisYear: 80 },
-    { month: "Dec", lastYear: 60, thisYear: 90 },
+    { month: 'Jan', lastYear: 30, thisYear: 50 },
+    { month: 'Feb', lastYear: 40, thisYear: 60 },
+    { month: 'Mar', lastYear: 50, thisYear: 70 },
+    { month: 'Apr', lastYear: 20, thisYear: 40 },
+    { month: 'May', lastYear: 60, thisYear: 80 },
+    { month: 'Jun', lastYear: 30, thisYear: 60 },
+    { month: 'Jul', lastYear: 70, thisYear: 90 },
+    { month: 'Aug', lastYear: 80, thisYear: 100 },
+    { month: 'Sep', lastYear: 60, thisYear: 90 },
+    { month: 'Oct', lastYear: 70, thisYear: 100 },
+    { month: 'Nov', lastYear: 50, thisYear: 80 },
+    { month: 'Dec', lastYear: 60, thisYear: 90 },
   ];
 
   const pieData = [
-    { name: "Total Service Costs", value: 14 },
-    { name: "Refueling Costs", value: 50 },
-    { name: "Maintenance Costs", value: 22 },
+    { name: 'Total Service Costs', value: 14 },
+    { name: 'Refueling Costs', value: 80 },
+    { name: 'Maintenance Costs', value: 22 },
   ];
 
-  const COLORS = ["#FF6384", "#36A2EB", "#FFCE56"]; // Different colors for PieChart
+  const COLORS = ['#FF6384', '#36A2EB', '#FFCE56'];
 
-  // Calculate total value to determine percentage
-  const totalValue = pieData.reduce((acc, curr) => acc + curr.value, 0);
-
-  // Custom label function to display percentages inside the pie chart
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.6; // Position text inside the pie
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -42,13 +39,23 @@ const Dashboard = () => {
     );
   };
 
+  // Animated progress bar function using react-spring
+  const ProgressBar = ({ value }) => {
+    const props = useSpring({
+      width: `${value}%`,
+      from: { width: '0%' },
+      config: { tension: 200, friction: 20 },
+    });
+
+    return <animated.div className="progress-bar" role="progressbar" style={props} aria-valuenow={value} aria-valuemin="0" aria-valuemax="100">{value}%</animated.div>;
+  };
+
   return (
     <div className="container mt-5">
       <h2 className="text-center mb-4">Dashboard Overview</h2>
 
-      {/* Summary Cards */}
       <div className="row text-center">
-        {["Total Requests", "Total Active Vehicles", "Total Vehicles Under Maintenance", "Total Vehicles Under Service"].map((title, index) => (
+        {['Total Requests', 'Total Active Vehicles', 'Total Vehicles Under Maintenance', 'Total Vehicles Under Service'].map((title, index) => (
           <div className="col-md-3 mb-3" key={index}>
             <div className="card shadow-sm border-0">
               <div className="card-body">
@@ -60,7 +67,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Usage Reports */}
       <div className="card shadow-sm border-0 mt-4">
         <div className="card-body">
           <h5 className="card-title">Usage Reports</h5>
@@ -77,18 +83,23 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Additional Details */}
       <div className="row mt-4">
         <div className="col-md-6">
           <div className="card shadow-sm border-0">
             <div className="card-body">
               <h5 className="card-title">Total Vehicle Use by Department</h5>
-              <p>IT Infrastructure - 30%</p>
-              <p>Cloud Computing - 50%</p>
-              <p>Computer Networking - 20%</p>
+              {[{ name: 'IT Infrastructure', value: 30 }, { name: 'Cloud Computing', value: 50 }, { name: 'Computer Networking', value: 20 }].map((dept, index) => (
+                <div key={index} className="mb-2">
+                  <p className="mb-1">{dept.name} - {dept.value}%</p>
+                  <div className="progress">
+                    <ProgressBar value={dept.value} />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+
 
         <div className="col-md-6">
           <div className="card shadow-sm border-0">
@@ -96,13 +107,7 @@ const Dashboard = () => {
               <h5 className="card-title">Cost Breakdown</h5>
               <div className="d-flex justify-content-center">
                 <PieChart width={300} height={300}>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    outerRadius={100}
-                    labelLine={false} // Removes lines connecting labels
-                    label={renderCustomizedLabel} // Uses the custom function
-                  >
+                  <Pie data={pieData} dataKey="value" outerRadius={100} labelLine={false} label={renderCustomizedLabel}>
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
