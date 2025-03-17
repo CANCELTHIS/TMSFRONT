@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
+import { ENDPOINTS } from '../utilities/endpoints';
 const RejectUserModal = ({ userId, closeModal, reloadData }) => {
     const [rejectionMessage, setRejectionMessage] = useState("");
     const [loading, setLoading] = useState(false);
@@ -18,7 +18,7 @@ const RejectUserModal = ({ userId, closeModal, reloadData }) => {
         setError("");
 
         try {
-            const response = await axios.post(`/approve/${userId}/`, {
+            const response = await axios.post(ENDPOINTS.APPROVE_USER, {
                 action: "reject",
                 rejection_message: rejectionMessage,
             });

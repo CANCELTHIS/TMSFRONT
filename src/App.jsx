@@ -28,7 +28,7 @@ import RefuelingPage from './components/RefuelingPage';
 import TransportManagerDashbord from './components/TransportManagerDashbord';
 import ReportPage from './components/ReportPage';
 import TransportRequest from "./components/TransportRequest";
-import { NotificationProvider } from './context/NotificationContext';
+import { ENDPOINTS } from './utilities/endpoints';
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
@@ -61,7 +61,7 @@ const App = () => {
 
   const checkUserRole = async (token) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/users/me', {
+      const response = await fetch(ENDPOINTS.CURRENT_USER, {
         method: 'GET',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -78,7 +78,7 @@ const App = () => {
 
   const handleLogin = async (email, password) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/token/', {
+      const response = await fetch(ENDPOINTS.LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -91,7 +91,7 @@ const App = () => {
         setAuthToken(data.access);
         setModalType(null);
 
-        const userResponse = await fetch('http://127.0.0.1:8000/users/me', {
+        const userResponse = await fetch(ENDPOINTS.CURRENT_USER, {
           method: 'GET',
           headers: { Authorization: `Bearer ${data.access}` },
         });
@@ -138,7 +138,7 @@ const App = () => {
   };
 
   return (
-    <NotificationProvider>
+
     <ThemeProvider>
       <LanguageProvider>
         <div className={`app ${modalType ? 'blurred' : ''}`}>
@@ -315,7 +315,7 @@ const App = () => {
         </div>
       </LanguageProvider>
     </ThemeProvider>
-    </NotificationProvider>
+    
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios"; // For API requests
-
+import { ENDPOINTS } from "../utilities/endpoints";
 const AdminDepartmentPage = () => {
   const [departments, setDepartments] = useState([]);  // Ensure it's always an array
   const [users, setUsers] = useState([]); // State for users
@@ -27,11 +27,11 @@ const AdminDepartmentPage = () => {
   useEffect(() => {
     const fetchDepartmentsAndUsers = async () => {
       try {
-        const departmentResponse = await axiosInstance.get("http://127.0.0.1:8000/departments/");
-        const userResponse = await axiosInstance.get("http://127.0.0.1:8000/users/");
+        const departmentResponse = await axiosInstance.get(ENDPOINTS.DEPARTMENT_LIST);
+        const userResponse = await axiosInstance.get(ENDPOINTS.USERS);
   
         // Ensure responses have results
-        const fetchedDepartments = departmentResponse.data.results || [];
+        const fetchedDepartments = departmentResponse.data|| [];
         const fetchedUsers = userResponse.data.results || [];
   
         setDepartments(fetchedDepartments);
@@ -62,7 +62,7 @@ const AdminDepartmentPage = () => {
       if (currentDepartment) {
         // Edit existing department
         response = await axiosInstance.put(
-          `http://127.0.0.1:8000/departments/${currentDepartment.id}/`,
+          ENDPOINTS.DEPARTMENT_DETAIL(currentDepartment.id),
           formValues
         );
         setDepartments((prev) =>
@@ -73,7 +73,7 @@ const AdminDepartmentPage = () => {
       } else {
         // Add new department
         response = await axiosInstance.post(
-          "http://127.0.0.1:8000/departments/",
+          ENDPOINTS.DEPARTMENT_LIST, 
           formValues
         );
         setDepartments((prev) => [...prev, response.data]);

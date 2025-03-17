@@ -4,10 +4,8 @@ import { toast, ToastContainer } from "react-toastify"; // For toast messages
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { IoMdClose } from "react-icons/io";
-import { useNotification } from "../context/NotificationContext"; // Adjust the path as needed
+import { ENDPOINTS } from "../utilities/endpoints";
 const DepartementPage = () => {
-  const [showForm, setShowForm] = useState(false);
-  const { decrementUnreadCount } = useNotification();
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]); // State for employees
   const [loading, setLoading] = useState(false);
@@ -33,7 +31,7 @@ const DepartementPage = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/transport-requests/list/", {
+      const response = await fetch(ENDPOINTS.REQUEST_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -58,7 +56,7 @@ const DepartementPage = () => {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/users-list/", {
+      const response = await fetch(ENDPOINTS.USER_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -101,33 +99,32 @@ const DepartementPage = () => {
       console.error("No access token found.");
       return;
     }
-  
+
     try {
-      const response = await fetch(`http://127.0.0.1:8000/transport-requests/${requestId}/action/`, {
+      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          
         },
         body: JSON.stringify({
           action: "forward", // Forward the request to the transport manager
         }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to forward transport request");
-  
+
+
       // Update the status locally after forwarding
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.id === requestId ? { ...req, status: "forwarded" } : req
         )
       );
-  
+
       setSelectedRequest(null); // Close modal
       toast.success("Request forwarded to transport manager successfully!"); // Show success toast
-  
-      // Decrease the notification count
-      decrementUnreadCount();
     } catch (error) {
       console.error("Approve Error:", error);
       toast.error("Failed to forward request."); // Show error toast
@@ -139,14 +136,14 @@ const DepartementPage = () => {
       console.error("No access token found.");
       return;
     }
-  
+
     if (!rejectionReason) {
       toast.error("Please provide a reason for rejection."); // Show error toast
       return;
     }
-  
+
     try {
-      const response = await fetch(`http://127.0.0.1:8000/transport-requests/${requestId}/action/`, {
+      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -157,23 +154,20 @@ const DepartementPage = () => {
           rejection_message: rejectionReason, // Use the provided reason
         }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to reject transport request");
-  
+
       // Update the status locally after rejection
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.id === requestId ? { ...req, status: "rejected" } : req
         )
       );
-  
+
       setSelectedRequest(null); // Close modal
       setRejectionReason(""); // Clear rejection reason
       setShowRejectionModal(false); // Close rejection modal
       toast.success("Request rejected successfully!"); // Show success toast
-  
-      // Decrease the notification count
-      decrementUnreadCount();
     } catch (error) {
       console.error("Reject Error:", error);
       toast.error("Failed to reject request."); // Show error toast
@@ -181,26 +175,27 @@ const DepartementPage = () => {
   };
 
   const handleRejectClick = () => {
-    setShowRejectionModal(true); // Show rejection modal
+    setShowRejectionModal(true); 
   };
 
   const handleConfirmReject = () => {
-    setShowConfirmation(true); // Show rejection confirmation dialog
+    setShowConfirmation(true); 
   };
 
   const handleConfirmAction = () => {
-    handleReject(selectedRequest.id); // Call handleReject
-    setShowConfirmation(false); // Close rejection confirmation dialog
+    handleReject(selectedRequest.id);
+    setShowConfirmation(false); 
   };
 
   const handleApproveClick = () => {
-    setShowApproveConfirmation(true); // Show approve confirmation dialog
+    setShowApproveConfirmation(true); 
   };
 
   const handleConfirmApprove = () => {
     handleApprove(selectedRequest.id); // Call handleApprove
     setShowApproveConfirmation(false); // Close approve confirmation dialog
   };
+
 
   return (
     <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
@@ -291,6 +286,7 @@ const DepartementPage = () => {
           </div>
         </div>
       )}
+
 
       {showRejectionModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>

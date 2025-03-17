@@ -6,9 +6,9 @@ import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { IoMdClose } from "react-icons/io";
 import axios from "axios";
 import { IoClose } from "react-icons/io5";
-import { useNotification } from "../context/NotificationContext"; // Adjust the path as needed
+import { ENDPOINTS } from "../utilities/endpoints";
+
 const TransportRequest = () => {
-  const { decrementUnreadCount } = useNotification(); // Use the decrementUnreadCount function from the context
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]); // State for employees
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ const TransportRequest = () => {
 
     setLoading(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/transport-requests/list/", {
+      const response = await fetch(ENDPOINTS.REQUEST_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -62,7 +62,7 @@ const TransportRequest = () => {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/users-list/", {
+      const response = await fetch(ENDPOINTS.USER_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -80,7 +80,7 @@ const TransportRequest = () => {
 
 const fetchDrivers = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8000/available-drivers/", {
+    const response = await axios.get(ENDPOINTS.AVAILABLE_DRIVERS, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     console.log("Drivers data:", response.data);
@@ -98,23 +98,13 @@ const fetchVehicles = async () => {
   }
 
   try {
-    const response = await axios.get("http://127.0.0.1:8000/vehicles/", {
+    const response = await axios.get(ENDPOINTS.AVAILABLE_VEHICLES, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-
     const vehiclesData = response.data.results || [];
     console.log("Vehicles data::::::::::::::::::::::::::::::", vehiclesData);
-    const availableVehicles = vehiclesData.filter(vehicle => vehicle.status !== "in_use"); // Filter out vehicles that are in use
-
-    const vehiclesWithDriverNames = availableVehicles.map((vehicle) => {
-      const driver = drivers.find(driver => driver.id === vehicle.driver); // Find driver by ID
-      return {
-        ...vehicle,
-        driver_name: driver ? driver.full_name : "No Driver Assigned", // Assign driver name or "No Driver Assigned"
-      };
-    });
-
-    setVehicles(vehiclesWithDriverNames); // Update state with available vehicles and driver names
+    const availableVehicles = vehiclesData.filter(vehicle => vehicle.status !== "in_use"); 
+    setVehicles(availableVehicles); // Update state with available vehicles and driver names
   } catch (error) {
     console.error("Error fetching vehicles:", error.response?.data || error.message);
     setVehicles([]); // Reset vehicles on error
@@ -191,58 +181,32 @@ useEffect(() => {
 
 
   const handleConfirmApprove = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-  
     if (!selectedDriver || !selectedVehicle) {
       toast.error("Please select a driver and vehicle before approving.");
       return;
     }
   
     try {
-      await axios.patch(
-        `http://127.0.0.1:8000/vehicles/${selectedVehicle.id}/`,
-        { status: "in_use" },
+      const response = await axios.post(
+       `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+        {
+          action: "approve",
+          vehicle_id: selectedVehicle.id,
+          driver_id: selectedDriver.id,
+        },
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
   
-      const response = await fetch(`http://127.0.0.1:8000/transport-requests/${requestId}/action/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "forward",
-          driver: selectedDriver.id,
-          vehicle: selectedVehicle.id,
-        }),
-      });
-  
-      if (!response.ok) throw new Error("Failed to approve transport request");
-  
-      // Update the status locally after approval
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "approved", driver: selectedDriver, vehicle: selectedVehicle } : req
-        )
-      );
-  
-      setSelectedRequest(null); // Close modal
-      setSelectedDriver(null); // Clear selected driver
-      setSelectedVehicle(null); // Clear selected vehicle
-      setShowApproveConfirmation(false); // Close approval modal
-      toast.success("Request approved successfully!"); // Show success toast
-  
-      // Decrease the notification count
-      decrementUnreadCount();
+      if (response.status === 200) {
+        toast.success("Request approved successfully!");
+        setShowApproveConfirmation(false);
+        fetchRequests(); // Refresh the list of requests
+      }
     } catch (error) {
       console.error("Approve Error:", error);
-      toast.error("Failed to approve request."); // Show error toast
+      toast.error("Failed to approve request.");
     }
   };
 
@@ -250,8 +214,33 @@ useEffect(() => {
     setShowRejectionModal(true); // Show rejection modal
   };
 
-  const handleConfirmReject = () => {
-    setShowConfirmation(true); // Show rejection confirmation dialog
+  const handleConfirmReject = async (requestId) => {
+    if (!rejectionReason) {
+      toast.error("Please provide a reason for rejection.");
+      return;
+    }
+  
+    try {
+      const response = await axios.post(
+        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+        {
+          action: "reject",
+          rejection_message: rejectionReason,
+        },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+  
+      if (response.status === 200) {
+        toast.success("Request rejected successfully!");
+        setShowRejectionModal(false);
+        fetchRequests(); // Refresh the list of requests
+      }
+    } catch (error) {
+      console.error("Reject Error:", error);
+      toast.error("Failed to reject request.");
+    }
   };
 
   const handleConfirmAction = () => {
@@ -271,7 +260,7 @@ useEffect(() => {
     }
   
     try {
-      const response = await fetch(`http://127.0.0.1:8000/transport-requests/${requestId}/action/`, {
+      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -350,7 +339,6 @@ useEffect(() => {
           </table>
         </div>
       )}
-
       {selectedRequest && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="modal-dialog">
@@ -426,7 +414,7 @@ useEffect(() => {
                 <button
                   type="button"
                   className="btn btn-danger"
-                  onClick={handleConfirmReject} // Show confirmation dialog
+                  onClick={handleConfirmReject} 
                 > 
                   Submit Rejection
                 </button>
@@ -488,7 +476,7 @@ useEffect(() => {
   <option value="">Select a vehicle</option>
   {vehicles.map((vehicle) => (
     <option key={vehicle.id} value={vehicle.id}>
-      {`Plate Number-${vehicle.license_plate}, Driver-${vehicle.driver || "No Driver Assigned"}, Capacity-${vehicle.capacity}`}
+      {`Plate Number-${vehicle.license_plate}, Driver-${vehicle.driver_name || "No Driver Assigned"}, Capacity-${vehicle.capacity}`}
     </option>
   ))}
 </select>

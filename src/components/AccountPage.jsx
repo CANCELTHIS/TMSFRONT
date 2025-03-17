@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import { ENDPOINTS } from "../utilities/endpoints";
 const AccountPage = () => {
   const itemsPerPage = 8;
   const [accounts, setAccounts] = useState([]);
@@ -34,7 +34,7 @@ const AccountPage = () => {
     }
   
     try {
-      const response = await axios.get(`http://127.0.0.1:8000/approved-users/`, {
+      const response = await axios.get(ENDPOINTS.APPROVED_USERS, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
@@ -62,13 +62,13 @@ const AccountPage = () => {
     }
   
     try {
-      const response = await axios.get("http://127.0.0.1:8000/departments/", {
+      const response = await axios.get(ENDPOINTS.DEPARTMENT_LIST, {
         headers: { Authorization: `Bearer ${token}` },
       });
   
       console.log("Fetched Departments:", response.data); // Log fetched departments
   
-      setDepartments(response.data.results);
+      setDepartments(response.data);
     } catch (error) {
       console.error("Error fetching departments:", error);
       setError("Failed to load departments.");
@@ -98,8 +98,8 @@ const AccountPage = () => {
   const handleToggleStatus = async (id, isActive) => {
     const token = localStorage.getItem('authToken');
     const endpoint = isActive
-      ? `http://127.0.0.1:8000/deactivate/${id}/`
-      : `http://127.0.0.1:8000/activate/${id}/`;
+      ? ENDPOINTS.DEACTIVATE_USER(id)
+      : ENDPOINTS.ACTIVATE_USER(id);
 
     try {
       await axios.post(endpoint, {}, {
@@ -133,14 +133,14 @@ const AccountPage = () => {
 
     try {
       const response = await axios.patch(
-        `http://127.0.0.1:8000/update-role/${editAccount.id}/`,
+        ENDPOINTS.UPDATE_ROLE(editAccount.id),
         { role: formValues.role },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const updatedAccounts = accounts.map((acc) =>
         acc.id === editAccount.id
-          ? { ...acc, role: formValues.role } // Don't modify is_active
+          ? { ...acc, role: formValues.role } 
           : acc
       );
 

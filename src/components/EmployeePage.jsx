@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Logo from "../assets/Logo.jpg"; // Import the logo image
-
+import { ENDPOINTS } from "../utilities/endpoints";
 const EmployeePage = () => {
   const [showForm, setShowForm] = useState(false);
   const [requests, setRequests] = useState([]);
@@ -17,11 +17,10 @@ const EmployeePage = () => {
     destination: "",
     reason: "",
   });
-  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
+  const [selectedRequest, setSelectedRequest] = useState(null); 
 
   const accessToken = localStorage.getItem("authToken");
 
-  // Fetch data when the component mounts
   useEffect(() => {
     fetchRequests();
     fetchUsers(); // Fetch users
@@ -35,7 +34,7 @@ const EmployeePage = () => {
 
     setLoading(true); // Show loading state
     try {
-      const response = await fetch("http://127.0.0.1:8000/transport-requests/list/", {
+      const response = await fetch(ENDPOINTS.REQUEST_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -60,19 +59,19 @@ const EmployeePage = () => {
     }
   
     try {
-      const response = await fetch("http://127.0.0.1:8000/users-list/", {
+      const response = await fetch(ENDPOINTS.USER_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch users");
   
       const data = await response.json();
-      console.log("Users:", data); // Log the response structure
+      console.log("Users:", data); 
   
-      setUsers(data.results || []); // Ensure only the results array is stored
+      setUsers(data.results || []); 
     } catch (error) {
       console.error("Fetch Users Error:", error);
     }
@@ -104,24 +103,24 @@ const EmployeePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-
+  
     const payload = {
       start_day: formData.startDay,
-      start_time: formData.startTime,
       return_day: formData.returnDay,
-      employees: formData.employees, // Send employee IDs (numbers)
+      start_time: `${formData.startTime}:00`,  // Ensure time is formatted correctly
       destination: formData.destination,
       reason: formData.reason,
+      employees: formData.employees.map(id => Number(id)), // Ensure employees are numbers
     };
-
+  
     setSubmitting(true);
     try {
-      const response = await fetch("http://127.0.0.1:8000/transport-requests/create/", {
+      const response = await fetch(ENDPOINTS.CREATE_REQUEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -129,30 +128,53 @@ const EmployeePage = () => {
         },
         body: JSON.stringify(payload),
       });
-
+  
       if (!response.ok) throw new Error("Failed to create transport request");
-
+  
       const responseData = await response.json();
       setRequests((prevRequests) => [responseData, ...prevRequests]);
-
+  
+      toast.success("Request submitted! Department manager notified.");
+  
+      fetchNotifications(); // Fetch updated notifications to reflect the new request
+  
       setFormData({
         startDay: "",
-        startTime: "",
         returnDay: "",
+        startTime: "",
         employees: [],
         employeeName: "",
         destination: "",
         reason: "",
       });
-
+  
       setShowForm(false);
     } catch (error) {
       console.error("Submit Error:", error);
+      toast.error("Failed to submit request.");
     } finally {
       setSubmitting(false);
     }
   };
-
+  
+  // Fetch notifications after submission
+  const fetchNotifications = async () => {
+    try {
+      const response = await fetch(ENDPOINTS.REQUEST_NOTIFICATIONS, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!response.ok) throw new Error("Failed to fetch notifications");
+      
+      const data = await response.json();
+      console.log("Updated notifications:", data.results);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+  
+  
+  
+  
   const today = new Date().toISOString().split("T")[0];
 
   // Get employee names from IDs

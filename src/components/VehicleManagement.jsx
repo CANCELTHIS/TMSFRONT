@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import "../index.css";
 import axios from "axios";
 import { IoMdClose } from "react-icons/io";
-import { FaRegEdit } from "react-icons/fa";
-
 const VehicleManagement = () => {
     const token = localStorage.getItem("authToken");
 
@@ -25,52 +23,55 @@ const VehicleManagement = () => {
 
     const fetchUsers = async () => {
         try {
-            const response = await fetch("http://127.0.0.1:8000/users-list/", {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
-            const usersData = await response.json();
-            return Array.isArray(usersData) ? usersData : usersData.results || [];
+          const response = await fetch("https://tms-api-23gs.onrender.com/available-drivers/", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          });
+      
+          const usersData = await response.json();
+          console.log("Drivers fetched:", usersData); // Debugging: Log the fetched drivers
+          return Array.isArray(usersData) ? usersData : usersData || [];
         } catch (error) {
-            console.error("Error fetching users:", error);
-            return [];
+          console.error("Error fetching users:", error);
+          return [];
         }
-    };
-
-    useEffect(() => {
+      };
+      useEffect(() => {
         const fetchData = async () => {
-            try {
-                const userData = await fetchUsers();
-                setDrivers(userData);
-                await fetchVehicles();
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            } finally {
-                setIsLoading(false);
-            }
+          try {
+            const userData = await fetchUsers();
+            console.log("Drivers state:", userData); // Debugging: Log the drivers state
+            setDrivers(userData);
+            await fetchVehicles();
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          } finally {
+            setIsLoading(false);
+          }
         };
-
+      
         fetchData();
-    }, [token]);
+      }, [token]);
 
     const getDriverNameById = (driverId) => {
         const driver = drivers.find((driver) => driver.id === driverId);
         return driver ? driver.full_name : "No Driver Assigned";
-    };
+      };
 
-    const fetchVehicles = async () => {
+      const fetchVehicles = async () => {
         try {
-            const response = await axios.get("http://127.0.0.1:8000/vehicles/", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setVehicles(response.data.results || []);
+          const response = await axios.get("https://tms-api-23gs.onrender.com/vehicles/", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          console.log("Vehicles fetched:", response.data.results); // Debugging: Log the vehicles data
+          setVehicles(response.data.results || []);
         } catch (error) {
-            console.error("Error fetching vehicles:", error);
-            setVehicles([]);
+          console.error("Error fetching vehicles:", error);
+          setVehicles([]);
         }
-    };
+      };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -106,11 +107,11 @@ const VehicleManagement = () => {
 
         try {
             if (editingVehicle) {
-                await axios.put(`http://127.0.0.1:8000/vehicles/${editingVehicle.id}/`, vehicleData, {
+                await axios.put(`https://tms-api-23gs.onrender.com/vehicles/${editingVehicle.id}/`, vehicleData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             } else {
-                await axios.post("http://127.0.0.1:8000/vehicles/", vehicleData, {
+                await axios.post("https://tms-api-23gs.onrender.com/vehicles/", vehicleData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
@@ -125,7 +126,7 @@ const VehicleManagement = () => {
                 source: "",
                 rental_company: "",
                 driver: "",
-                status: "available", // Reset status
+                status: "available", 
             });
         } catch (error) {
             setErrorMessage("An error occurred while saving the vehicle. Please try again.");
@@ -158,7 +159,7 @@ const VehicleManagement = () => {
     const handleDeactivate = async (vehicleId) => {
         if (window.confirm("Are you sure you want to deactivate this vehicle?")) {
             try {
-                await axios.patch(`http://127.0.0.1:8000/vehicles/${vehicleId}/`, {
+                await axios.patch(`https://tms-api-23gs.onrender.com/vehicles/${vehicleId}/`, {
                     is_available: false,
                 }, {
                     headers: { Authorization: `Bearer ${token}` },
@@ -180,7 +181,7 @@ const VehicleManagement = () => {
             source: "",
             rental_company: "",
             driver: "",
-            status: "available", // Reset status
+            status: "available", 
         });
         setShowModal(true);
     };
@@ -207,37 +208,37 @@ const VehicleManagement = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {Array.isArray(vehicles) && vehicles.length > 0 ? (
-                        vehicles.map((vehicle) => (
-                            <tr key={vehicle.id}>
-                                <td>{getDriverNameById(vehicle.driver)}</td>
-                                <td>{vehicle.license_plate}</td>
-                                <td>{vehicle.model}</td>
-                                <td>{vehicle.capacity}</td>
-                                <td>{vehicle.status}</td>
-                                <td>
-                                    <button
-                                        className="btn  btn-sm me-2"
-                                        onClick={() => handleEdit(vehicle)}
-                                        style={{backgroundColor:"#0b455b",color:"#fff"}}
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() => handleDeactivate(vehicle.id)}
-                                    >
-                                        Deactivate
-                                    </button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="6">No vehicles available</td>
-                        </tr>
-                    )}
-                </tbody>
+  {Array.isArray(vehicles) && vehicles.length > 0 ? (
+    vehicles.map((vehicle) => (
+      <tr key={vehicle.id}>
+        <td>{getDriverNameById(vehicle.driver)}</td>
+        <td>{vehicle.license_plate}</td>
+        <td>{vehicle.model}</td>
+        <td>{vehicle.capacity}</td>
+        <td>{vehicle.status}</td>
+        <td>
+          <button
+            className="btn btn-sm me-2"
+            onClick={() => handleEdit(vehicle)}
+            style={{ backgroundColor: "#0b455b", color: "#fff" }}
+          >
+            Edit
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => handleDeactivate(vehicle.id)}
+          >
+            Deactivate
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6">No vehicles available</td>
+    </tr>
+  )}
+</tbody>
             </table>
 
             {showModal && (
@@ -257,17 +258,17 @@ const VehicleManagement = () => {
                                         <div className="col-md-6">
                                             <label>Driver</label>
                                             <select
-                                                className="form-control"
-                                                value={newVehicle.driver}
-                                                onChange={(e) => setNewVehicle({ ...newVehicle, driver: e.target.value })}
-                                            >
-                                                <option value="">Select Driver</option>
-                                                {drivers.map((driver) => (
-                                                    <option key={driver.id} value={driver.id}>
-                                                        {driver.full_name}
-                                                    </option>
-                                                ))}
-                                            </select>
+  className="form-control"
+  value={newVehicle.driver}
+  onChange={(e) => setNewVehicle({ ...newVehicle, driver: e.target.value })}
+>
+  <option value="">Select Driver</option>
+  {drivers.map((driver) => (
+    <option key={driver.id} value={driver.id}>
+      {driver.full_name}
+    </option>
+  ))}
+</select>
                                         </div>
                                         <div className="col-md-6">
                                             <label>License Plate</label>
@@ -334,11 +335,12 @@ const VehicleManagement = () => {
                                                 onChange={(e) => setNewVehicle({ ...newVehicle, status: e.target.value })}
                                             >
                                                 <option value="available">Available</option>
-                                                
+                                                <option value="in_use">In Use</option>
                                                 <option value="service">Service</option>
                                                 <option value="maintenance">Maintenance</option>
                                             </select>
                                         </div>
+                                        
                                     </div>
                                     <button type="submit" className="btn btn-primary w-100">
                                         {editingVehicle ? "Update" : "Save"}

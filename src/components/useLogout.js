@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-const API_BASE_URL = "http://127.0.0.1:8000/api"; // Change this to your backend URL
+import { ENDPOINTS } from "../utilities/endpoints";// Change this to your backend URL
 
 const useLogout = () => {
   const navigate = useNavigate();
@@ -11,7 +10,7 @@ const useLogout = () => {
       const refreshToken = localStorage.getItem("refresh_token");
 
       if (refreshToken) {
-        await axios.post(`${API_BASE_URL}/logout/`, { refresh: refreshToken });
+        await axios.post(ENDPOINTS.LOGOUT, { refresh: refreshToken });
       }
 
       // Remove tokens from localStorage

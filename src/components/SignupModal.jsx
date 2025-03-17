@@ -5,7 +5,7 @@ import { useTheme } from "../context/ThemeContext";
 import { toast } from "react-toastify";
 import SignUpLogo from "../assets/Signup.jpg";
 import { IoClose, IoEye, IoEyeOff } from "react-icons/io5";
-
+import { ENDPOINTS } from "../utilities/endpoints";
 const SignupModal = ({ onClose }) => {
   const [formData, setFormData] = useState({
     full_name: "",
@@ -28,9 +28,9 @@ const SignupModal = ({ onClose }) => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/departments/");
+        const response = await axios.get(ENDPOINTS.DEPARTMENT_LIST);
         console.log("Departments API Response:", response.data); // Debugging log
-        setDepartments(response.data.results); // Extract the results array
+        setDepartments(response.data); // Extract the results array
       } catch (error) {
         console.error("Error fetching departments:", error);
         setError("Failed to load departments.");
@@ -83,7 +83,7 @@ const SignupModal = ({ onClose }) => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/register/",
+        ENDPOINTS.REGISTER,
         { ...formData, role: 1 },
         { headers: { "Content-Type": "application/json" } }
       );

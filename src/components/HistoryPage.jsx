@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../index.css'; 
-
+import { ENDPOINTS } from '../utilities/endpoints';
 const HistoryPage = () => {
   const itemsPerPage = 8;
   const [history, setHistory] = useState([]);
@@ -24,7 +24,7 @@ const HistoryPage = () => {
       console.log('Using token:', token);  // Log the token for debugging
     
       try {
-        const response = await axios.get('http://127.0.0.1:8000/status-history/', {
+        const response = await axios.get(ENDPOINTS.STATUS_HISTORY_LIST, {
           headers: { Authorization: `Bearer ${token}` },
         });
     

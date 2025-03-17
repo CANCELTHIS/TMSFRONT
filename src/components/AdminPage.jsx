@@ -5,7 +5,7 @@ import axios from "axios"; // Ensure axios is imported
 import Lottie from 'lottie-react';
 import animationData from "./Lottie Lego (1).json";
 import { IoCloseSharp } from "react-icons/io5";
-
+import { ENDPOINTS } from "../utilities/endpoints";
 const AdminPage = () => {
   const [data, setData] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -45,7 +45,7 @@ const AdminPage = () => {
         throw new Error("Token is missing. Please log in again.");
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/departments/`, {
+      const response = await fetch(ENDPOINTS.DEPARTMENT_LIST, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -76,7 +76,7 @@ const AdminPage = () => {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/users/?page=${currentPage}`,
+        ENDPOINTS.USERS,
         {
           method: "GET",
           headers: {
@@ -116,7 +116,7 @@ const AdminPage = () => {
       }
   
       const response = await fetch(
-        `http://127.0.0.1:8000/approve/${userToApprove.id}/`,
+        ENDPOINTS.APPROVE_USER(userToApprove.id),
         {
           method: "POST",
           headers: {
@@ -170,7 +170,7 @@ const AdminPage = () => {
       }
   
       const response = await fetch(
-        `http://127.0.0.1:8000/approve/${selectedUserId}/`,
+        ENDPOINTS.APPROVE_USER(selectedUserId),
         {
           method: "POST",
           headers: {
@@ -226,7 +226,7 @@ const AdminPage = () => {
 
     try {
       await axios.patch(
-        `http://127.0.0.1:8000/update-role/${editAccount.id}/`,
+        ENDPOINTS.UPDATE_ROLE(editAccount.id),
         { role: formValues.role },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -296,7 +296,7 @@ const AdminPage = () => {
                         )}
                       </td>
                       <td>
-  {departments.results && departments.results.find(dept => dept.id === user.department)?.name || "N/A"}
+  {departments && departments.find(dept => dept.id === user.department)?.name || "N/A"}
 </td>
                       <td>{user.is_active ? "Active" : "Pending"}</td>
                       <td>

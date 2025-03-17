@@ -5,7 +5,7 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
+import { ENDPOINTS } from "../utilities/endpoints";
 const Header = ({ role, userId }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -35,19 +35,21 @@ const Header = ({ role, userId }) => {
   }, [userId]);
 
   const fetchNotifications = () => {
-    axios.get("http://127.0.0.1:8000/transport-requests/notifications/", { 
-      params: { user_id: userId, unread_only: true },
+    axios.get(ENDPOINTS.REQUEST_NOTIFICATIONS, { 
+      params: { unread_only: false }, // Get all notifications
       headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
     })
-      .then(response => {
-        console.log("Notifications fetched:", response.data);
-        setNotifications(response.data.results); 
-      })
-      .catch(error => console.error("Error fetching notifications:", error));
+    .then(response => {
+      console.log("Notifications fetched:", response.data);
+      setNotifications(response.data.results); // Store notifications
+      setUnreadCount(response.data.unread_count); // Store unread count
+    })
+    .catch(error => console.error("Error fetching notifications:", error));
   };
+  
 
   const fetchUnreadCount = () => {
-    axios.get("http://127.0.0.1:8000/transport-requests/notifications/unread-count/", { 
+    axios.get(ENDPOINTS.UNREADOUNT, { 
       params: { user_id: userId },
       headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` }
     })
@@ -66,21 +68,20 @@ const Header = ({ role, userId }) => {
   };
 
   const markAllNotificationsAsRead = () => {
-    axios.post("http://127.0.0.1:8000/transport-requests/notifications/mark-all-read/", {}, {
+    axios.post(ENDPOINTS.MARKALL_READ, {}, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("authToken")}`,
       },
     })
       .then(() => {
-        setUnreadCount(0); 
-        fetchNotifications(); 
+        setUnreadCount(0); // Reset unread count
+        fetchNotifications(); // Refresh notifications
       })
       .catch(error => console.error("Error marking notifications as read:", error));
   };
-
   const handleCloseNotifications = () => {
-    markAllNotificationsAsRead(); 
-    setShowNotifications(false); 
+    markAllNotificationsAsRead(); // Mark all notifications as read
+    setShowNotifications(false); // Close the notifications popup
   };
 
   const handleResubmit = (requestId) => {
@@ -91,7 +92,7 @@ const Header = ({ role, userId }) => {
     try {
       const refreshToken = localStorage.getItem("refresh_token");
       if (refreshToken) {
-        await axios.post("http://127.0.0.1:8000/logout/", { refresh: refreshToken });
+        await axios.post(ENDPOINTS.LOGOUT, { refresh: refreshToken });
       }
     } catch (error) {
       console.error("Logout error:", error);
@@ -109,7 +110,7 @@ const Header = ({ role, userId }) => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    axios.put(`http://127.0.0.1:8000/users/${userId}/`, formData)
+    axios.put(ENDPOINTS.USER_DETAIL, formData)
       .then(() => {
         console.log("Profile updated successfully");
         setIsEditing(false);
@@ -135,52 +136,50 @@ const Header = ({ role, userId }) => {
           )}
         </div>
 
-        {/* Notifications Popup */}
         {showNotifications && (
-          <div className="dropdown-menu show position-absolute end-0 mt-2 shadow rounded p-3 bg-white"
-            style={{ zIndex: 1050, top: "100%", width: "350px" }}>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="mb-0">Notifications</h5>
-              <FaTimes 
-                size={20} 
-                className="cursor-pointer" 
-                onClick={handleCloseNotifications}
-                style={{ cursor: "pointer" }}
-              />
+  <div className="dropdown-menu show position-absolute end-0 mt-2 shadow rounded p-3 bg-white"
+    style={{ zIndex: 1050, top: "100%", width: "350px" }}>
+    <div className="d-flex justify-content-between align-items-center mb-3">
+      <h5 className="mb-0">Notifications</h5>
+      <FaTimes 
+        size={20} 
+        className="cursor-pointer" 
+        onClick={handleCloseNotifications}
+        style={{ cursor: "pointer" }}
+      />
+    </div>
+    {notifications.length > 0 ? (
+      notifications.map(notification => (
+        <div key={notification.id} className="mb-3 p-2 border-bottom">
+          <h6 className="mb-1">{notification.title}</h6>
+          <p className="mb-1">{notification.message}</p>
+          <small className="text-muted">
+            {new Date(notification.created_at).toLocaleString()}
+          </small>
+          {notification.metadata && (
+            <div className="mt-2">
+              <small>
+                <strong>Request ID:</strong> {notification.metadata.request_id}<br />
+                <strong>Destination:</strong> {notification.metadata.destination}<br />
+                <strong>Requester ID:</strong> {notification.metadata.requester_id}
+              </small>
             </div>
-            {notifications.length > 0 ? (
-              notifications.map(notification => (
-                <div key={notification.id} className="mb-3 p-2 border-bottom">
-                  <h6 className="mb-1">{notification.title}</h6>
-                  <p className="mb-1">{notification.message}</p>
-                  <small className="text-muted">
-                    {new Date(notification.created_at).toLocaleString()}
-                  </small>
-                  {notification.metadata && (
-                    <div className="mt-2">
-                      <small>
-                        <strong>Request ID:</strong> {notification.metadata.request_id}<br />
-                        <strong>Destination:</strong> {notification.metadata.destination}<br />
-                        <strong>Requester ID:</strong> {notification.metadata.requester_id}
-                      </small>
-                    </div>
-                  )}
-                  {notification.notification_type === 'rejected' && (
-                    <button 
-                      className="btn btn-primary btn-sm mt-2"
-                      onClick={() => handleResubmit(notification.metadata.request_id)}
-                    >
-                      Resubmit
-                    </button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No new notifications</p>
-            )}
-          </div>
-        )}
-
+          )}
+          {notification.notification_type === 'rejected' && (
+            <button 
+              className="btn btn-primary btn-sm mt-2"
+              onClick={() => handleResubmit(notification.metadata.request_id)}
+            >
+              Resubmit
+            </button>
+          )}
+        </div>
+      ))
+    ) : (
+      <p>No new notifications</p>
+    )}
+  </div>
+)}
         {/* Profile Icon */}
         <div className="user-menu" onClick={() => setIsEditing(!isEditing)}>
           <MdAccountCircle size={32} style={{ cursor: "pointer" }} />

@@ -7,7 +7,7 @@ import axios from 'axios';
 import { jwtDecode } from "jwt-decode";
 import operation from "../assets/CarImg.jpg";
 import { IoClose, IoEye, IoEyeOff } from "react-icons/io5";  
-
+import { ENDPOINTS } from '../utilities/endpoints';
 const LoginModal = ({ onClose }) => {
   const [showSignup, setShowSignup] = useState(false);
   const [email, setEmail] = useState('');
@@ -25,7 +25,7 @@ const LoginModal = ({ onClose }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/token/', {
+      const response = await axios.post(ENDPOINTS.LOGIN, {
         email,
         password,
       });
@@ -117,7 +117,7 @@ const LoginModal = ({ onClose }) => {
               </span>
             </div>
 
-            <button type="submit" className="btn w-100 login-btn">
+            <button type="submit" className="btn w-100 login-btn" style={{ backgroundColor: '#F09F33', color: 'white' }}>
               {mylanguage === 'EN' ? 'Login' : 'ይግቡ'}
             </button>
           </form>
