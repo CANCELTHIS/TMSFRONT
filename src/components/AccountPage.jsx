@@ -188,7 +188,7 @@ const AccountPage = () => {
           <div className="container py-4">
             <div className="card shadow-sm">
               <div className="card-body">
-                <div className="table-responsive">
+              <div className="table-responsive">
                   <table className="table table-hover align-middle">
                     <thead className="table-light">
                       <tr>

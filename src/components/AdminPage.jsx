@@ -262,7 +262,8 @@ const AdminPage = () => {
 )}
 
 
-            <table className="table">
+<div className="table-responsive">
+<table className="table table-hover align-middle">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -354,11 +355,10 @@ const AdminPage = () => {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Approve Modal */}
       {showApproveModal && (
         <div className="modal show" style={{ display: "block" }} tabIndex="-1">
           <div className="modal-dialog">

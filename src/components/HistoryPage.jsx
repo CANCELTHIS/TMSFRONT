@@ -87,8 +87,8 @@ const HistoryPage = () => {
 
       <div className="card shadow-sm">
         <div className="card-body">
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
+        <div className="table-responsive">
+        <table className="table table-hover align-middle">
               <thead className="table-light">
                 <tr>
                   <th>#</th>

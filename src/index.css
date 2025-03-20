@@ -4,6 +4,7 @@
 body{
   padding-top: 30px;
 }
+
 #logo {
   width: 80px;
 }
@@ -64,13 +65,23 @@ nav {
   font-size: 18px;
   text-decoration: none;
 }
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Ensures smooth scrolling on iOS devices */
+  white-space: nowrap;
+}
 
-/* On Small Screens (Mobile) */
+@media (max-width: 768px) {
+  .table-responsive {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
 @media (max-width: 767px) {
   .navbar-collapse {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center the items in the collapsible navbar */
+    align-items: center;
   }
 
   .navbar-nav {
@@ -1111,28 +1122,10 @@ background-color:#0b455b !important;
   color: #9CA3AF;
 }
 
-/* Animations */
-@keyframes titleFloat {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+button{
+  margin-top: 10px;
+  width:100px;
 }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .services-container {
-    padding: 3rem 1rem;
-  }
-  
-  .services-title {
-    font-size: 2rem;
-  }
-  
-  .cards-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
+.addve,.request{
+  width: 100px;
 }

@@ -1,24 +1,31 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { MdDashboard, MdLocalShipping, MdHistory, MdRequestQuote } from "react-icons/md";
-import { IoIosPeople } from "react-icons/io";
-import { FaUserShield, FaClipboardList, FaGasPump, FaTools } from "react-icons/fa";
-import { IoCarSport } from "react-icons/io5";
-import Logo from "../assets/Logo.jpg";
-import "bootstrap/dist/css/bootstrap.min.css";
-import '../index.css';  
+"use client"
+
+import { useState } from "react"
+import { Link, useLocation } from "react-router-dom"
+import { MdDashboard, MdLocalShipping, MdHistory, MdRequestQuote, MdMenu } from "react-icons/md"
+import { IoIosPeople } from "react-icons/io"
+import { FaUserShield, FaGasPump, FaTools } from "react-icons/fa"
+import Logo from "../assets/Logo.jpg"
+import "bootstrap/dist/css/bootstrap.min.css"
+import { IoClose } from "react-icons/io5"
+import "../index.css"
 
 const Sidebar = ({ role }) => {
-  const location = useLocation();
+  const location = useLocation()
+  const [isOpen, setIsOpen] = useState(false)
 
-  const getActiveClass = (path) => location.pathname === path ? "active text-primary fw-bold" : "text-dark";
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen)
+  }
+
+  const getActiveClass = (path) => (location.pathname === path ? "active text-primary fw-bold" : "text-dark")
 
   const adminMenus = [
     { path: "/admin/admin", icon: <MdDashboard />, label: "Dashboard" },
     { path: "/admin/admin-department", icon: <IoIosPeople />, label: "Departments" },
     { path: "/admin/account-page", icon: <FaUserShield />, label: "Accounts" },
     { path: "/admin/history", icon: <MdHistory />, label: "History" },
-  ];
+  ]
 
   const transportMenus = [
     { path: "/transport-manager/transport-dashbord", icon: <MdDashboard />, label: "Dashboard" },
@@ -26,27 +33,27 @@ const Sidebar = ({ role }) => {
     { path: "/transport-manager/vehicle-management", icon: <MdLocalShipping />, label: "Vehicle Management" },
     { path: "/transport-manager/maintenance-table", icon: <FaTools />, label: "Maintenance Table" },
     { path: "/transport-manager/report", icon: <FaTools />, label: "Report" },
-  ];
+  ]
 
   const driverMenus = [
     { path: "/driver/driver-schedule", icon: <MdDashboard />, label: "Driver Schedule" },
     { path: "/driver/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
-  ];
+  ]
 
   const departmentManagerMenus = [
     { path: "/department-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/department-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
-  ];
+  ]
 
   const financeManagerMenus = [
     { path: "/finance-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/finance-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
-  ];
+  ]
 
   const ceoMenus = [
     { path: "/ceo/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
-  ];
+  ]
 
   const menuMappings = {
     "/admin": adminMenus,
@@ -55,28 +62,81 @@ const Sidebar = ({ role }) => {
     "/department-manager": departmentManagerMenus,
     "/finance-manager": financeManagerMenus,
     "/ceo": ceoMenus,
-  };
+  }
 
-  const activeMenu = Object.keys(menuMappings).find((key) => location.pathname.startsWith(key));
-  const menus = activeMenu ? menuMappings[activeMenu] : [];
+  const activeMenu = Object.keys(menuMappings).find((key) => location.pathname.startsWith(key))
+  const menus = activeMenu ? menuMappings[activeMenu] : []
 
   return (
-    <div className="d-flex flex-column bg-light px-3 py-4" style={{ width: "220px", height: "100vh" }}>
-      <div className="text-center">
-        <img src={Logo} alt="Logo" className="img-fluid mb-3" style={{ maxWidth: "100px" }} />
-      </div>
-      <ul className="nav flex-column">
-        {menus.map((menu, index) => (
-          <li className="nav-item" key={index}>
-            <Link to={menu.path} className={`nav-link d-flex align-items-center ${getActiveClass(menu.path)} sidebar-link`}>
-              {menu.icon}
-              <span className="ms-2">{menu.label}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
+    <>
+      {/* Toggle Button - Always visible */}
+      <button
+  className={`btn btn-light position-fixed d-flex align-items-center justify-content-center ${isOpen ? "d-none" : ""}`}
+  onClick={toggleSidebar}
+  style={{
+    top: "1px",
+    left: "20px",
+    zIndex: 1030,
+    width: "40px",
+    height: "40px",
+  }}
+>
+  <MdMenu size={24} />
+</button>
 
-export default Sidebar;
+      
+
+      {/* Sidebar */}
+      <div
+        className={`d-flex flex-column bg-light px-3 py-4 position-fixed top-0 bottom-0 ${isOpen ? "show-sidebar" : "hide-sidebar"}`}
+        style={{
+          width: "250px",
+          height: "100vh",
+          left: 0,
+          zIndex: 1020,
+          transition: "transform 0.3s ease-in-out",
+          transform: isOpen ? "translateX(0)" : "translateX(-100%)",
+          boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
+        }}
+      >
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <div className="text-center">
+            <img src={Logo || "/placeholder.svg"} alt="Logo" className="img-fluid" style={{ maxWidth: "80px" }} />
+          </div>
+          <button className="btn " onClick={toggleSidebar} aria-label="Close sidebar">
+           <IoClose size={24} />
+          </button>
+        </div>
+
+        <ul className="nav flex-column">
+          {menus.map((menu, index) => (
+            <li className="nav-item" key={index}>
+              <Link
+                to={menu.path}
+                className={`nav-link d-flex align-items-center ${getActiveClass(menu.path)} sidebar-link`}
+                onClick={() => setIsOpen(false)} // Close sidebar when a link is clicked
+              >
+                {menu.icon}
+                <span className="ms-2">{menu.label}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Overlay when sidebar is open on mobile */}
+      {isOpen && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100"
+          style={{
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 1010,
+          }}
+          onClick={toggleSidebar}
+        />
+      )}
+    </>
+  )
+}
+
+export default Sidebar

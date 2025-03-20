@@ -193,10 +193,11 @@ const VehicleManagement = () => {
     return (
         <div className="container mt-4">
             <h1>Vehicle Management</h1>
-            <button className="btn" onClick={openAddVehicleModal} style={{backgroundColor:"#0b455b",color:"#fff"}}>
+            <button className="btn addve" onClick={openAddVehicleModal} style={{backgroundColor:"#0b455b",color:"#fff",width:"150px"}}>
                 + Add Vehicle
             </button>
-            <table className="table table-bordered mt-4">
+            <div className="table-responsive">
+                  <table className="table table-hover align-middle">
                 <thead>
                     <tr>
                         <th>Driver</th>
@@ -240,7 +241,7 @@ const VehicleManagement = () => {
   )}
 </tbody>
             </table>
-
+</div>
             {showModal && (
                 <div className="modal show" style={{ display: "block" }}>
                     <div className="modal-dialog modal-dialog-centered">

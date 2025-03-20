@@ -208,8 +208,10 @@ const DepartementPage = () => {
           <p>Loading data...</p>
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered mt-4">
+<div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
+<div style={{ overflowX: "auto" }}>
+<div className="table-responsive">
+                  <table className="table table-hover align-middle">
             <thead className="table">
               <tr>
                 <th>Start Day</th>
@@ -241,6 +243,8 @@ const DepartementPage = () => {
               ))}
             </tbody>
           </table>
+          </div>
+        </div>
         </div>
       )}
 
@@ -289,7 +293,7 @@ const DepartementPage = () => {
 
 
       {showRejectionModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(184, 113, 113, 0.5)" }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">

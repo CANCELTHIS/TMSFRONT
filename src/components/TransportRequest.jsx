@@ -305,7 +305,7 @@ useEffect(() => {
         </div>
       ) : (
         <div className="table-responsive">
-          <table className="table table-bordered mt-4">
+                  <table className="table table-hover align-middle">
             <thead className="table">
               <tr>
                 <th>Start Day</th>
