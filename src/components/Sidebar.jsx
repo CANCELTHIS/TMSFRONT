@@ -9,6 +9,7 @@ import Logo from "../assets/Logo.jpg"
 import "bootstrap/dist/css/bootstrap.min.css"
 import { IoClose } from "react-icons/io5"
 import "../index.css"
+import { path } from "framer-motion/client"
 
 const Sidebar = ({ role }) => {
   const location = useLocation()
@@ -32,7 +33,8 @@ const Sidebar = ({ role }) => {
     { path: "/transport-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/transport-manager/vehicle-management", icon: <MdLocalShipping />, label: "Vehicle Management" },
     { path: "/transport-manager/maintenance-table", icon: <FaTools />, label: "Maintenance Table" },
-    { path: "/transport-manager/report", icon: <FaTools />, label: "Report" },
+    { path: "/transport-manager/report", icon: <MdHistory />, label: "Report" },
+    { path: "/transport-manager/history", icon: <MdHistory />, label: "History" },
   ]
 
   const driverMenus = [
@@ -43,6 +45,7 @@ const Sidebar = ({ role }) => {
   const departmentManagerMenus = [
     { path: "/department-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/department-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/department-manager/history", icon: <MdHistory />, label: "History" },
   ]
 
   const financeManagerMenus = [
@@ -71,20 +74,18 @@ const Sidebar = ({ role }) => {
     <>
       {/* Toggle Button - Always visible */}
       <button
-  className={`btn btn-light position-fixed d-flex align-items-center justify-content-center ${isOpen ? "d-none" : ""}`}
-  onClick={toggleSidebar}
-  style={{
-    top: "1px",
-    left: "20px",
-    zIndex: 1030,
-    width: "40px",
-    height: "40px",
-  }}
->
-  <MdMenu size={24} />
-</button>
-
-      
+        className={`btn btn-light position-fixed d-flex align-items-center justify-content-center ${isOpen ? "d-none" : ""}`}
+        onClick={toggleSidebar}
+        style={{
+          top: "1px",
+          left: "20px",
+          zIndex: 1030,
+          width: "40px",
+          height: "40px",
+        }}
+      >
+        <MdMenu size={24} />
+      </button>
 
       {/* Sidebar */}
       <div
@@ -104,7 +105,7 @@ const Sidebar = ({ role }) => {
             <img src={Logo || "/placeholder.svg"} alt="Logo" className="img-fluid" style={{ maxWidth: "80px" }} />
           </div>
           <button className="btn " onClick={toggleSidebar} aria-label="Close sidebar">
-           <IoClose size={24} />
+            <IoClose size={24} />
           </button>
         </div>
 

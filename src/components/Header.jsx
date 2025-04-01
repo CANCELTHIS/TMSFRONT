@@ -47,7 +47,6 @@ const Header = ({ role, userId }) => {
     .catch(error => console.error("Error fetching notifications:", error));
   };
   
-
   const fetchUnreadCount = () => {
     axios.get(ENDPOINTS.UNREADOUNT, { 
       params: { user_id: userId },
@@ -162,6 +161,7 @@ const Header = ({ role, userId }) => {
                 <strong>Request ID:</strong> {notification.metadata.request_id}<br />
                 <strong>Destination:</strong> {notification.metadata.destination}<br />
                 <strong>Requester ID:</strong> {notification.metadata.requester_id}
+                <strong>Passengers:</strong> {notification.metadata.passengers}
               </small>
             </div>
           )}

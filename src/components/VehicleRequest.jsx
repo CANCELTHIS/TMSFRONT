@@ -199,7 +199,7 @@ const DepartementPage = () => {
 
   return (
     <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      <ToastContainer /> {/* Toast container for notifications */}
+      <ToastContainer /> 
       {loading ? (
         <div className="text-center mt-4">
           <div className="spinner-border text-primary" role="status">

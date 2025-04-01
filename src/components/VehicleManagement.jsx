@@ -9,6 +9,7 @@ const VehicleManagement = () => {
     const [drivers, setDrivers] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [editingVehicle, setEditingVehicle] = useState(null);
+    const [statusFilter, setStatusFilter] = useState("all");
     const [newVehicle, setNewVehicle] = useState({
         license_plate: "",
         model: "",
@@ -65,7 +66,8 @@ const VehicleManagement = () => {
           const response = await axios.get("https://tms-api-23gs.onrender.com/vehicles/", {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log("Vehicles fetched:", response.data.results); // Debugging: Log the vehicles data
+          console.log("Vehicles", response.data.results);
+           // Debugging: Log the vehicles data
           setVehicles(response.data.results || []);
         } catch (error) {
           console.error("Error fetching vehicles:", error);
@@ -115,7 +117,6 @@ const VehicleManagement = () => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
-
             fetchVehicles();
             setShowModal(false);
             setEditingVehicle(null);
@@ -189,7 +190,6 @@ const VehicleManagement = () => {
     if (isLoading) {
         return <div>Loading...</div>;
     }
-
     return (
         <div className="container mt-4">
             <h1>Vehicle Management</h1>
@@ -197,6 +197,28 @@ const VehicleManagement = () => {
                 + Add Vehicle
             </button>
             <div className="table-responsive">
+            <div className="d-flex justify-content-end mb-3 p-2">
+  <span 
+    style={{ fontWeight: statusFilter === "all" ? "bold" : "normal", cursor: "pointer", marginRight: "10px" }} 
+    onClick={() => setStatusFilter("all")}
+  >
+    All
+  </span>
+  <span 
+    style={{ fontWeight: statusFilter === "available" ? "bold" : "normal", cursor: "pointer", marginRight: "10px" }} 
+    onClick={() => setStatusFilter("available")}
+  >
+    Available
+  </span>
+  <span 
+    style={{ fontWeight: statusFilter === "in_use" ? "bold" : "normal", cursor: "pointer" }} 
+    onClick={() => setStatusFilter("in_use")}
+  >
+    In Use
+  </span>
+</div>
+
+
                   <table className="table table-hover align-middle">
                 <thead>
                     <tr>
@@ -209,36 +231,34 @@ const VehicleManagement = () => {
                     </tr>
                 </thead>
                 <tbody>
-  {Array.isArray(vehicles) && vehicles.length > 0 ? (
-    vehicles.map((vehicle) => (
-      <tr key={vehicle.id}>
-        <td>{getDriverNameById(vehicle.driver)}</td>
-        <td>{vehicle.license_plate}</td>
-        <td>{vehicle.model}</td>
-        <td>{vehicle.capacity}</td>
-        <td>{vehicle.status}</td>
-        <td>
-          <button
-            className="btn btn-sm me-2"
-            onClick={() => handleEdit(vehicle)}
-            style={{ backgroundColor: "#0b455b", color: "#fff" }}
-          >
-            Edit
-          </button>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => handleDeactivate(vehicle.id)}
-          >
-            Deactivate
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="6">No vehicles available</td>
+                {vehicles
+  .filter((vehicle) => statusFilter === "all" || vehicle.status === statusFilter)
+  .map((vehicle) => (
+    <tr key={vehicle.id}>
+      <td>{vehicle.driver_name}</td>
+      <td>{vehicle.license_plate}</td>
+      <td>{vehicle.model}</td>
+      <td>{vehicle.capacity}</td>
+      <td>{vehicle.status}</td>
+      <td>
+        <button
+          className="btn btn-sm me-2"
+          onClick={() => handleEdit(vehicle)}
+          style={{ backgroundColor: "#0b455b", color: "#fff" }}
+        >
+          Edit
+        </button>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={() => handleDeactivate(vehicle.id)}
+        >
+          Deactivate
+        </button>
+      </td>
     </tr>
-  )}
+))}
+
+
 </tbody>
             </table>
 </div>
@@ -337,8 +357,7 @@ const VehicleManagement = () => {
                                             >
                                                 <option value="available">Available</option>
                                                 <option value="in_use">In Use</option>
-                                                <option value="service">Service</option>
-                                                <option value="maintenance">Maintenance</option>
+                                                
                                             </select>
                                         </div>
                                         

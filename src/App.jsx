@@ -28,6 +28,8 @@ import RefuelingPage from './components/RefuelingPage';
 import TransportManagerDashbord from './components/TransportManagerDashbord';
 import ReportPage from './components/ReportPage';
 import TransportRequest from "./components/TransportRequest";
+import TransportHistory from "./components/TransportHistory";
+import DepartmentHistory from './components/DepartmentHistory';
 import { ENDPOINTS } from './utilities/endpoints';
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
@@ -191,6 +193,7 @@ const App = () => {
                       <Routes>
                         <Route path="vehicle-request" element={<VehicleRequest />} />
                         <Route path="refueling" element={<RefuelingPage />} />
+                        <Route path="history" element={<DepartmentHistory />} />
                       </Routes>
                     </div>
                   </div>
@@ -285,6 +288,7 @@ const App = () => {
                         <Route path="vehicle-request" element={<TransportRequest />} />
                         <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
                         <Route path="report" element={<ReportPage/>} />
+                        <Route path="history" element={<TransportHistory/>} />
                       </Routes>
                     </div>
                   </div>

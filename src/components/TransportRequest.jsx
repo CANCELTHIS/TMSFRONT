@@ -187,8 +187,11 @@ useEffect(() => {
     }
   
     try {
+      // Optimistically update the UI by removing the request
+      setRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
+      
       const response = await axios.post(
-       `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
         {
           action: "approve",
           vehicle_id: selectedVehicle.id,
@@ -202,11 +205,43 @@ useEffect(() => {
       if (response.status === 200) {
         toast.success("Request approved successfully!");
         setShowApproveConfirmation(false);
-        fetchRequests(); // Refresh the list of requests
+        // No need to fetchRequests() since we already updated the UI
       }
     } catch (error) {
       console.error("Approve Error:", error);
       toast.error("Failed to approve request.");
+      // If there's an error, refetch the requests to restore the correct state
+      fetchRequests();
+    }
+  };
+  
+
+  
+  // Add a new handler for forwarding requests
+  const handleForwardRequest = async (requestId) => {
+    try {
+      // Optimistically update the UI by removing the request
+      setRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
+      
+      const response = await axios.post(
+        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+        {
+          action: "forward",
+        },
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+  
+      if (response.status === 200) {
+        toast.success("Request forwarded successfully!");
+        handleCloseDetail();
+      }
+    } catch (error) {
+      console.error("Forward Error:", error);
+      toast.error("Failed to forward request.");
+      // If there's an error, refetch the requests to restore the correct state
+      fetchRequests();
     }
   };
 
@@ -374,13 +409,14 @@ useEffect(() => {
                   Reject
                 </button>
                 <button
-                  type="button"
-                  className="btn"
-                  style={{ backgroundColor: "#0b455b", color: "white" }}
-                  onClick={console.log("forward")} // Show rejection modal
-                >
-                  Forward
-                </button>
+  type="button"
+  className="btn"
+  style={{ backgroundColor: "#0b455b", color: "white" }}
+  onClick={() => handleForwardRequest(selectedRequest.id)} // Updated to use the new handler
+>
+  Forward
+</button>
+               
               </div>
             </div>
           </div>
