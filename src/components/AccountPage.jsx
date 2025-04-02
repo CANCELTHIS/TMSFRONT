@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 const AccountPage = () => {
-  const itemsPerPage = 8;
+  const itemsPerPage = 10;
   const [accounts, setAccounts] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [roleMappings, setRoleMappings] = useState({});
@@ -38,11 +37,9 @@ const AccountPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      console.log("Fetched Users:", response.data); // Log fetched users
+      console.log("Fetched Users:", response.data);
   
       const filteredAccounts = response.data.filter(user => user.role !== 7);
-      
-      // Sort by creation date or ID (newest first)
       filteredAccounts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   
       setAccounts(filteredAccounts);
@@ -66,7 +63,7 @@ const AccountPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
   
-      console.log("Fetched Departments:", response.data); // Log fetched departments
+      console.log("Fetched Departments:", response.data); 
   
       setDepartments(response.data);
     } catch (error) {
@@ -74,10 +71,6 @@ const AccountPage = () => {
       setError("Failed to load departments.");
     }
   };
-  
-
-  
-
   const fetchRoles = async () => {
     const roleData = {
       1: "Employee",

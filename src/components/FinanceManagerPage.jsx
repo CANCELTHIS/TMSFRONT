@@ -41,8 +41,6 @@ const FinanceManagerPage = () => {
       if (!response.ok) throw new Error("Failed to fetch transport requests");
 
       const data = await response.json();
-      
-      // Filter requests to match backend logic for Finance Manager
       const financeManagerRequests = data.results.filter(request => 
         request.status === "forwarded" && 
         request.current_approver_role === "CEO"

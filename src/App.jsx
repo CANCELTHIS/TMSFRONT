@@ -31,6 +31,7 @@ import TransportRequest from "./components/TransportRequest";
 import TransportHistory from "./components/TransportHistory";
 import DepartmentHistory from './components/DepartmentHistory';
 import { ENDPOINTS } from './utilities/endpoints';
+import { NotificationProvider } from './context/NotificationContext';
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
@@ -140,7 +141,7 @@ const App = () => {
   };
 
   return (
-
+<NotificationProvider>
     <ThemeProvider>
       <LanguageProvider>
         <div className={`app ${modalType ? 'blurred' : ''}`}>
@@ -319,7 +320,7 @@ const App = () => {
         </div>
       </LanguageProvider>
     </ThemeProvider>
-    
+    </NotificationProvider>
   );
 };
 

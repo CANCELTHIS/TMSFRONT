@@ -2,12 +2,15 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { ENDPOINTS } from "../utilities/endpoints";
+import { IoClose } from "react-icons/io5";
 const EmployeePage = () => {
+  const [currentUser, setCurrentUser] = useState(null); // State to store the current user
   const [showForm, setShowForm] = useState(false);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [users, setUsers] = useState([]); // State for user list
+  const [users, setUsers] = useState([]);
+  const [visiblity,setVisiblity] = useState("block") // State for user list
   const [formData, setFormData] = useState({
     startDay: "",
     startTime: "",
@@ -22,6 +25,7 @@ const EmployeePage = () => {
   const accessToken = localStorage.getItem("authToken");
 
   useEffect(() => {
+    fetchCurrentUser(); // Fetch current user data
     fetchRequests();
     fetchUsers(); // Fetch users
   }, []);
@@ -32,7 +36,7 @@ const EmployeePage = () => {
       return;
     }
 
-    setLoading(true); // Show loading state
+    setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.REQUEST_LIST, {
         headers: {
@@ -67,11 +71,12 @@ const EmployeePage = () => {
       });
 
       if (!response.ok) throw new Error("Failed to fetch users");
-  
+      console.log("EMPLOYEES:", response);
+      
       const data = await response.json();
-      console.log("Users:", data); 
-  
-      setUsers(data.results || []); 
+      const filteredUsers = data.results.filter(
+        (user) => user.id !== currentUser?.id
+      );      setUsers(filteredUsers || []); 
     } catch (error) {
       console.error("Fetch Users Error:", error);
     }
@@ -94,11 +99,8 @@ const EmployeePage = () => {
     }
   };
 
-  const handleRemoveEmployee = (employeeId) => {
-    setFormData((prev) => ({
-      ...prev,
-      employees: prev.employees.filter((id) => id !== employeeId), // Remove employee ID
-    }));
+  const handleRemoveEmployee = () => {
+setVisiblity("none")
   };
 
   const handleSubmit = async (e) => {
@@ -117,7 +119,7 @@ const EmployeePage = () => {
       reason: formData.reason,
       employees: formData.employees.map(id => Number(id)), // Ensure employees are numbers
     };
-  
+    console.log("Submitting payload:", JSON.stringify(payload, null, 2));
     setSubmitting(true);
     try {
       const response = await fetch(ENDPOINTS.CREATE_REQUEST, {
@@ -136,7 +138,7 @@ const EmployeePage = () => {
   
       toast.success("Request submitted! Department manager notified.");
   
-      fetchNotifications(); // Fetch updated notifications to reflect the new request
+      fetchNotifications(); 
   
       setFormData({
         startDay: "",
@@ -156,8 +158,32 @@ const EmployeePage = () => {
       setSubmitting(false);
     }
   };
-  
-  // Fetch notifications after submission
+
+
+  const fetchCurrentUser = async () => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(ENDPOINTS.CURRENT_USER, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch current user");
+
+      const data = await response.json();
+      setCurrentUser(data);
+      console.log("This is the current logged user data:", data);
+    } catch (error) {
+      console.error("Fetch Current User Error:", error);
+    }
+  }
+
   const fetchNotifications = async () => {
     try {
       const response = await fetch(ENDPOINTS.REQUEST_NOTIFICATIONS, {
@@ -187,12 +213,9 @@ const EmployeePage = () => {
       .join(", ");
   };
 
-  // Handle view detail click
   const handleViewDetail = (request) => {
     setSelectedRequest(request);
   };
-
-  // Close detail modal
   const handleCloseDetail = () => {
     setSelectedRequest(null);
   };  
@@ -213,7 +236,7 @@ const EmployeePage = () => {
             <div className="modal-content" style={{width:"550px"}}>
               <div className="modal-header d-flex justify-content-center align-items-center">
                 <h5 className="modal-title d-flex">Transport Request Form</h5>
-                <button type="button" className="btn-close" onClick={() => setShowForm(false)}></button>
+                <button type="button" className="btn-close m-2" onClick={() => setShowForm(false)}><IoClose size={28}/></button>
               </div>
               <div className="modal-body">
                 <form onSubmit={handleSubmit} style={{marginBottom:"-40px",marginTop:"-15px"}}>
@@ -275,7 +298,7 @@ const EmployeePage = () => {
                       value={formData.employeeName}
                       onChange={handleInputChange}
                       className="form-control"
-                      required
+                      
                     >
                       <option value="">Select an employee</option>
                       {users.map((user) => (
@@ -288,20 +311,38 @@ const EmployeePage = () => {
                       Add
                     </button>
                     <div className="mt-2 d-flex flex-wrap gap-2">
-                      {formData.employees.map((employeeId) => {
-                        const employee = users.find((user) => user.id === employeeId);
-                        return (
-                          <div key={employeeId} className="badge bg-primary d-flex align-items-center">
-                            <span>{employee ? employee.full_name : "Unknown"}</span>
-                            <button
-                              type="button"
-                              className="btn-close btn-close-white ms-2"
-                              aria-label="Close"
-                              onClick={() => handleRemoveEmployee(employeeId)}
-                            ></button>
-                          </div>
-                        );
-                      })}
+                    {formData.employees.map((employeeId) => {
+    const employee = users.find((user) => user.id === employeeId);
+    return (
+      <div
+        key={employeeId}
+        className="badge bg-primary d-flex align-items-center"
+        style={{position: "relative", padding: "10px", minWidth: "100px",display:{visiblity} }}
+      >
+        <button
+          type="button"
+          className="btn-close"
+          aria-label="Close"
+          onClick={() => handleRemoveEmployee()}
+          style={{
+            
+            position: "absolute",
+            top: "-15px",
+            left: "75px",
+            backgroundColor: "transparent",
+            border: "none",
+            color: "red", // Set the color to red
+            fontSize: "20px",
+            fontWeight: "bold",
+            cursor: "pointer",
+          }}
+        >
+          &times;
+        </button>
+        <span>{employee ? employee.full_name : "Unknown"}</span>
+      </div>
+    );
+  })}
                     </div>
                   </div>
                   
@@ -320,8 +361,9 @@ const EmployeePage = () => {
                     <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>
                       Cancel
                     </button>
-                    <button type="submit" className="btn" style={{ backgroundColor: "#181E4B", color: "#fff" }} disabled={submitting}>
+                    <button onClick={handleCloseDetail} type="submit" className="btn" style={{ backgroundColor: "#181E4B", color: "#fff" }} disabled={submitting}>
                       {submitting ? "Submitting..." : "Submit"}
+
                     </button>
                   </div>
                 </form>
@@ -384,9 +426,10 @@ const EmployeePage = () => {
               <div className="modal-header">
                 <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
                 <h5 className="modal-title">Transport Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}></button>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}><IoClose/></button>
               </div>
               <div className="modal-body">
+              <p><strong>Requester:</strong>{currentUser.full_name}</p>
                 <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
                 <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
                 <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
