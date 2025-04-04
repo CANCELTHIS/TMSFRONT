@@ -47,7 +47,7 @@ const TransportRequest = () => {
       if (!response.ok) throw new Error("Failed to fetch transport requests");
 
       const data = await response.json();
-      setRequests(data.results || []); // Set fetched data to state
+      setRequests(data.results || []); 
     } catch (error) {
       console.error("Fetch Error:", error);
     } finally {

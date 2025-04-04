@@ -1,203 +1,282 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Logo from "../assets/Logo.jpg";
-import { Modal, Button, Image, Form } from "react-bootstrap";
+import { ENDPOINTS } from "../utilities/endpoints";
+import { IoClose } from "react-icons/io5";
 
 const MaintenanceTable = () => {
-  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [formData, setFormData] = useState({
-    date: "2024-08-20",
-    paidTo: "",
-    purpose: "",
-    amount: "",
-    sourceOfBudget: "",
-    budgetApprovedBy: "",
-    budgetRequestedBy: "",
-    certifiedBy: "",
-    approvedBy: "",
-    authorizedBy: "",
-  });
-  const [errors, setErrors] = useState({});
+  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
+  const [actionLoading, setActionLoading] = useState(false); // State for approve/reject actions
+  const [rejectionMessage, setRejectionMessage] = useState(""); // State for rejection message
+  const [showConfirmModal, setShowConfirmModal] = useState(false); // State for confirmation modal
+  const [showRejectModal, setShowRejectModal] = useState(false); // State for rejection modal
+  const [pendingAction, setPendingAction] = useState(null); // State for pending action
 
-  // Open Maintenance Details Modal
-  const handleShowDetails = (maintenance) => {
-    setSelectedMaintenance(maintenance);
-    setShowDetailsModal(true);
-  };
+  // Fetch maintenance requests
+  const fetchMaintenanceRequests = async () => {
+    const accessToken = localStorage.getItem("authToken");
 
-  // Close Maintenance Details Modal
-  const handleCloseDetailsModal = () => {
-    setShowDetailsModal(false);
-    setSelectedMaintenance(null);
-  };
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
 
-  // Open Cush Request Modal (and close details modal first)
-  const handleShowRequestModal = () => {
-    setShowDetailsModal(false); // Close Maintenance Details modal
-    setTimeout(() => {
-      setShowRequestModal(true);
-    }, 300); // Small delay to ensure smooth transition
-  };
+    try {
+      const response = await fetch(ENDPOINTS.MENTENANCE_REQUEST_LIST, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-  // Close Cush Request Modal
-  const handleCloseRequestModal = () => {
-    setShowRequestModal(false);
-    setFormData({
-      date: "2024-08-20",
-      paidTo: "",
-      purpose: "",
-      amount: "",
-      sourceOfBudget: "",
-      budgetApprovedBy: "",
-      budgetRequestedBy: "",
-      certifiedBy: "",
-      approvedBy: "",
-      authorizedBy: "",
-    });
-  };
-
-  // Handle form data change
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // Validate form
-  const validateForm = () => {
-    let newErrors = {};
-    Object.keys(formData).forEach((key) => {
-      if (!formData[key]) {
-        newErrors[key] = "This field is required";
+      if (!response.ok) {
+        throw new Error("Failed to fetch maintenance requests");
       }
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
-  // Handle form submission
-  const handleSubmitRequest = () => {
-    if (validateForm()) {
-      alert("Cush request submitted successfully!");
-      handleCloseRequestModal();
+      const data = await response.json();
+      console.log("Fetched Maintenance Requests:", data); // Log the data to the console
+      setMaintenanceRequests(data.results || []); // Update state with fetched data
+    } catch (error) {
+      console.error("Error fetching maintenance requests:", error);
+    } finally {
+      setLoading(false); // Stop loading spinner
     }
   };
 
-  const maintenanceRecords = Array(10).fill({
-    driverName: "John Doe",
-    vehicleName: "Toyota Corolla",
-    plateNumber: "ABC-1234",
-    issue: "Brake pad replacement needed",
-    dateReported: "2025-02-21",
-  });
+  // Handle actions (forward, reject)
+  const handleAction = async (id, action) => {
+    const accessToken = localStorage.getItem("authToken");
+
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      const body = { action };
+      if (action === "reject") {
+        body.rejection_message = rejectionMessage; // Include rejection message for rejection action
+      }
+
+      const response = await fetch(ENDPOINTS.APPREJ_MENTENANCE_REQUEST(id), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body), // Send the correct payload
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to ${action} the maintenance request`);
+      }
+
+      console.log(`Maintenance request ${action}d successfully`);
+      fetchMaintenanceRequests(); // Refresh the list after action
+      setSelectedRequest(null); // Close the detail view
+    } catch (error) {
+      console.error(`Error performing ${action} action:`, error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmAction = () => {
+    if (pendingAction && selectedRequest) {
+      handleAction(selectedRequest.id, pendingAction);
+    }
+    setShowConfirmModal(false);
+  };
+
+  const handleRejectAction = () => {
+    if (rejectionMessage.trim() && selectedRequest) {
+      handleAction(selectedRequest.id, "reject"); // Use the correct `id` from the selected request
+      setShowRejectModal(false);
+    } else {
+      alert("Rejection message cannot be empty.");
+    }
+  };
+
+  // Fetch data when the component mounts
+  useEffect(() => {
+    fetchMaintenanceRequests();
+  }, []);
 
   return (
-    <div className="d-flex" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      <div className="flex-grow-1">
-        <div className="container py-4">
-          <h2 className="h5">Maintenance Records</h2>
-          <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Driver Name</th>
-                  <th>Vehicle Name</th>
-                  <th>Plate Number</th>
-                  <th>Action</th>
+    <div className="container mt-5">
+      <h2 className="text-center mb-4">Maintenance Requests</h2>
+
+      {loading ? (
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p>Loading maintenance requests...</p>
+        </div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-bordered table-striped">
+            <thead className="thead-dark">
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Requester Name</th>
+                <th>Requester's Car</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {maintenanceRequests.map((request, index) => (
+                <tr key={request.id}>
+                  <td>{index + 1}</td>
+                  <td>{new Date(request.date).toLocaleDateString()}</td>
+                  <td>{request.requester_name || "N/A"}</td>
+                  <td>{request.requesters_car_name || "N/A"}</td>
+                  <td>{request.status || "N/A"}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm"
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
+                      onClick={() => setSelectedRequest(request)}
+                    >
+                      View Detail
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {maintenanceRecords.map((record, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{record.driverName}</td>
-                    <td>{record.vehicleName}</td>
-                    <td>{record.plateNumber}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#0B455B", color: "#fff" }}
-                        onClick={() => handleShowDetails(record)}
-                      >
-                        View More
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal for Viewing Details */}
+      {selectedRequest && (
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Maintenance Request Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedRequest(null)}
+                ><IoClose/></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
+                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
+                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn"
+                  style={{ backgroundColor: "#181E4B", color: "white" }}
+                  onClick={() => {
+                    setPendingAction("forward");
+                    setShowConfirmModal(true);
+                  }}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Processing..." : "Forward"}
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => setShowRejectModal(true)}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Processing..." : "Reject"}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedRequest(null)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Maintenance Details Modal */}
-      <Modal show={showDetailsModal} onHide={handleCloseDetailsModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <Image src={Logo} alt="Logo" fluid style={{ width: "50px", marginRight: "10px" }} />
-            Maintenance Details
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedMaintenance && (
-            <div>
-              <p><strong>Driver Name:</strong> {selectedMaintenance.driverName}</p>
-              <p><strong>Vehicle Name:</strong> {selectedMaintenance.vehicleName}</p>
-              <p><strong>Plate Number:</strong> {selectedMaintenance.plateNumber}</p>
-              <p><strong>Issue:</strong> {selectedMaintenance.issue}</p>
-              <p><strong>Date Reported:</strong> {selectedMaintenance.dateReported}</p>
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Confirm Action</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowConfirmModal(false)}
+                ><IoClose/></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to forward this request?</p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowConfirmModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleConfirmAction}
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseDetailsModal}>Close</Button>
-          <Button variant="primary" onClick={handleShowRequestModal}>Cush Request</Button>
-        </Modal.Footer>
-      </Modal>
+          </div>
+        </div>
+      )}
 
-      {/* Cush Request Form Modal */}
-      <Modal show={showRequestModal} onHide={handleCloseRequestModal} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Cush Request Form</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Date</Form.Label>
-              <Form.Control type="text" value={formData.date} readOnly />
-            </Form.Group>
-            {[
-              { label: "Paid To", name: "paidTo" },
-              { label: "Purpose Of Payment", name: "purpose" },
-              { label: "Amount", name: "amount", type: "number" },
-              { label: "Source Of Budget", name: "sourceOfBudget" },
-              { label: "Budget Approved By", name: "budgetApprovedBy" },
-              { label: "Budget Requested By", name: "budgetRequestedBy" },
-              { label: "Certified By", name: "certifiedBy" },
-              { label: "Approved By", name: "approvedBy" },
-              { label: "Authorized By", name: "authorizedBy" },
-            ].map(({ label, name, type = "text" }) => (
-              <Form.Group className="mb-3" key={name}>
-                <Form.Label>{label}</Form.Label>
-                <Form.Control
-                  type={type}
-                  name={name}
-                  value={formData[name]}
-                  onChange={handleChange}
-                  placeholder={`Enter ${label}`}
-                  isInvalid={!!errors[name]}
+      {/* Rejection Modal */}
+      {showRejectModal && (
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Reject Request</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowRejectModal(false)}
+                ><IoClose/></button>
+              </div>
+              <div className="modal-body">
+                <textarea
+                  className="form-control"
+                  placeholder="Enter rejection reason"
+                  value={rejectionMessage}
+                  onChange={(e) => setRejectionMessage(e.target.value)}
                 />
-                <Form.Control.Feedback type="invalid">{errors[name]}</Form.Control.Feedback>
-              </Form.Group>
-            ))}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseRequestModal}>Cancel</Button>
-          <Button variant="success" onClick={handleSubmitRequest}>Submit Request</Button>
-        </Modal.Footer>
-      </Modal>
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowRejectModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={handleRejectAction}
+                >
+                  Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

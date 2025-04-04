@@ -50,4 +50,8 @@ export const ENDPOINTS = {
   VEHICLE_DETAIL: (pk) => `${BASE_URL}vehicles/${pk}/`,
   EDIT_VEHICLE: (pk) => `${BASE_URL}vehicles/${editingVehicle.id}/`,
   VEHICLE_DETAIL_FORMAT: (pk, format) => `${BASE_URL}vehicles/${pk}.${format}/`,
+  CREATE_MENTENANCE_REQUEST: `${BASE_URL}maintenance-requests/create/`,
+  MENTENANCE_REQUEST_LIST: `${BASE_URL}maintenance-requests/list/`,
+  APPREJ_MENTENANCE_REQUEST: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`,
+  CURRENT_USER_VEHICLES: `${BASE_URL}my-vehicle/`,
 };

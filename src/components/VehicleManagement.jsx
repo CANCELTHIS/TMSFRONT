@@ -66,7 +66,7 @@ const VehicleManagement = () => {
           const response = await axios.get("https://tms-api-23gs.onrender.com/vehicles/", {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log("Vehicles", response.data.results);
+          console.log("Vehicles this******************", response.data.results);
            // Debugging: Log the vehicles data
           setVehicles(response.data.results || []);
         } catch (error) {
