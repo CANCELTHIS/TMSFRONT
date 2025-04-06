@@ -9,7 +9,6 @@ import Logo from "../assets/Logo.jpg"
 import "bootstrap/dist/css/bootstrap.min.css"
 import { IoClose } from "react-icons/io5"
 import "../index.css"
-import { path } from "framer-motion/client"
 
 const Sidebar = ({ role }) => {
   const location = useLocation()
@@ -51,11 +50,15 @@ const Sidebar = ({ role }) => {
   const financeManagerMenus = [
     { path: "/finance-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/finance-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/finance-manager/financemaintenance-table", icon: <FaTools />, label: "Maintenance Table" },
+
   ]
 
   const ceoMenus = [
     { path: "/ceo/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/ceo/ceomaintenance-table", icon: <FaTools />, label: "Maintenance Table" },
+
   ]
 
   const menuMappings = {

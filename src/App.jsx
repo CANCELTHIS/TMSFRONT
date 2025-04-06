@@ -32,6 +32,8 @@ import TransportHistory from "./components/TransportHistory";
 import DepartmentHistory from './components/DepartmentHistory';
 import { ENDPOINTS } from './utilities/endpoints';
 import { NotificationProvider } from './context/NotificationContext';
+import CEOMaintenanceTable from './components/CEOMaintenanceTable';
+import FinanceMaintenanceTable from './components/FinanceMaintenanceTable';
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
@@ -212,6 +214,8 @@ const App = () => {
                     <div className="container">
                       <Routes>
                         <Route path="vehicle-request" element={<VehicleRequest />} />
+                        <Route path="financemaintenance-table" element={<FinanceMaintenanceTable />} />
+
                       </Routes>
                     </div>
                   </div>
@@ -229,6 +233,7 @@ const App = () => {
                     <div className="container">
                       <Routes>
                         <Route path="vehicle-request" element={<VehicleRequest />} />
+                        <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
                       </Routes>
                     </div>
                   </div>
@@ -245,7 +250,7 @@ const App = () => {
                     <Sidebar role="driver" />
                     <div className="container">
                       <Routes>
-                        <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
                         <Route path="driver-schedule" element={<DriverSchedule />} />
                       </Routes>
                     </div>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
+import { IoClose } from "react-icons/io5";
 
 const MaintenanceRequest = () => {
   const [requests, setRequests] = useState([]);
-  const [formData, setFormData] = useState({
-    date: "",
-    reason: "",
-  });
-  const [showForm, setShowForm] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
+  const [showForm, setShowForm] = useState(false); // State for showing the form
+  const [formData, setFormData] = useState({ date: "", reason: "" }); // Form data state
 
   // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
@@ -33,15 +33,22 @@ const MaintenanceRequest = () => {
       }
 
       const data = await response.json();
-      console.log("Maintenance Requests:", data);
       setRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Create a new maintenance request
-  const createMaintenanceRequest = async (e) => {
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const accessToken = localStorage.getItem("authToken");
 
@@ -65,12 +72,7 @@ const MaintenanceRequest = () => {
       }
 
       const newRequest = await response.json();
-      console.log("New Maintenance Request:", newRequest);
-
-      // Add the new request to the list
       setRequests((prevRequests) => [newRequest, ...prevRequests]);
-
-      // Reset the form and close it
       setFormData({ date: "", reason: "" });
       setShowForm(false);
     } catch (error) {
@@ -78,29 +80,22 @@ const MaintenanceRequest = () => {
     }
   };
 
-  // Fetch maintenance requests when the component mounts
+  // Fetch data when the component mounts
   useEffect(() => {
     fetchMaintenanceRequests();
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleShowForm = () => {
-    setShowForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-  };
-
   return (
     <div className="container mt-5">
       <h2 className="text-center mb-4">Maintenance Requests</h2>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <button className="btn btn-primary" onClick={handleShowForm}>
+
+      {/* New Maintenance Request Button */}
+      <div className="d-flex mb-4">
+        <button
+          className="btn"
+          style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
+          onClick={() => setShowForm(true)}
+        >
           New Maintenance Request
         </button>
       </div>
@@ -112,10 +107,14 @@ const MaintenanceRequest = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">New Maintenance Request</h5>
-                <button type="button" className="btn-close" onClick={handleCloseForm}></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowForm(false)}
+                ><IoClose /></button>
               </div>
               <div className="modal-body">
-                <form onSubmit={createMaintenanceRequest}>
+                <form onSubmit={handleSubmit}>
                   <div className="mb-3">
                     <label htmlFor="date" className="form-label">
                       Date
@@ -144,7 +143,7 @@ const MaintenanceRequest = () => {
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary w-100">
+                  <button type="submit" style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }} className="btn">
                     Submit
                   </button>
                 </form>
@@ -154,17 +153,25 @@ const MaintenanceRequest = () => {
         </div>
       )}
 
-      {/* Table to Display Maintenance Requests */}
-      {requests.length > 0 && (
-        <div className="mt-4">
-          <h4 className="mb-3">Submitted Maintenance Requests</h4>
+      {/* Maintenance Requests Table */}
+      {loading ? (
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p>Loading maintenance requests...</p>
+        </div>
+      ) : (
+        <div className="table-responsive">
           <table className="table table-bordered table-striped">
             <thead className="thead-dark">
               <tr>
                 <th>#</th>
                 <th>Date</th>
-                <th>Reason</th>
+                
+                <th>Requester's Car</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -172,12 +179,49 @@ const MaintenanceRequest = () => {
                 <tr key={request.id}>
                   <td>{index + 1}</td>
                   <td>{new Date(request.date).toLocaleDateString()}</td>
-                  <td>{request.reason}</td>
-                  <td>{request.status}</td>
+                  
+                  <td>{request.requesters_car_name || "N/A"}</td>
+                  <td>{request.status || "N/A"}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm"
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
+                      onClick={() => setSelectedRequest(request)}
+                    >
+                      View Detail
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Modal for Viewing Details */}
+      {selectedRequest && (
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Maintenance Request Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedRequest(null)}
+                >
+                  <IoClose />
+                </button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
+                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
+                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+                <p><strong>Status:</strong> {selectedRequest.status}</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
