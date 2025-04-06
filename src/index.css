@@ -634,13 +634,30 @@ background-color:#0b455b !important;
 .dark .btn-close {
   color: white;
 }
+/* Sidebar Link Styles */
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #181E4B !important;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border-bottom: "none"
+}
+
+.sidebar-link.active {
+  background-color: #181E4B !important;
+  color: white !important;
+  font-weight: 700;
+}
+
+
 .sidebar-link {
   color: #181E4B !important;  
   text-decoration: none;
-}
-
-.sidebar-link:hover {
-  color: #ec931e !important; 
 }
 .loading-overlay {
   position: fixed;

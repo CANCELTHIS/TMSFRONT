@@ -44,6 +44,11 @@ export const ENDPOINTS = {
   REQUEST_NOTIFICATIONS: `${BASE_URL}transport-requests/notifications/`,
   UNREADOUNT: `${BASE_URL}transport-requests/notifications/unread-count/`,
   MARKALL_READ: `${BASE_URL}transport-requests/notifications/mark-all-read/`,
+  REFUELING_REQUESTS: `${BASE_URL}refueling_requests/`,
+  CREATE_REFUELING_REQUEST: `${BASE_URL}refueling_requests/create/`,
+  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`,
+  APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`,
+
   // Vehicle endpoints
   VEHICLE_LIST: `${BASE_URL}vehicles/`,
   VEHICLE_LIST_FORMAT: `${BASE_URL}vehicles.{format}/`,

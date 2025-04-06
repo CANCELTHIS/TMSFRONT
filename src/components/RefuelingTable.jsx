@@ -3,18 +3,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 
-const CEOMaintenanceTable = () => {
-  const [maintenanceRequests, setMaintenanceRequests] = useState([]);
+const RefuelingTable = () => {
+  const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
-  const [actionLoading, setActionLoading] = useState(false); // State for approve/reject actions
-  const [rejectionMessage, setRejectionMessage] = useState(""); // State for rejection message
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // State for confirmation modal
-  const [showRejectModal, setShowRejectModal] = useState(false); // State for rejection modal
-  const [pendingAction, setPendingAction] = useState(null); // State for pending action
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false); 
+  const [rejectionMessage, setRejectionMessage] = useState(""); 
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
-  // Fetch maintenance requests
-  const fetchMaintenanceRequests = async () => {
+  const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
@@ -23,7 +20,7 @@ const CEOMaintenanceTable = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.MENTENANCE_REQUEST_LIST, {
+      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -32,20 +29,20 @@ const CEOMaintenanceTable = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch maintenance requests");
+        throw new Error("Failed to fetch refueling requests");
       }
 
       const data = await response.json();
-      console.log("Fetched Maintenance Requests:", data); // Log the data to the console
-      setMaintenanceRequests(data.results || []); // Update state with fetched data
+      console.log("Fetched Refueling Requests:", data); // Log fetched data
+      setRefuelingRequests(data.results || []);
     } catch (error) {
-      console.error("Error fetching maintenance requests:", error);
+      console.error("Error fetching refueling requests:", error);
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 
-  // Handle actions (forward, reject)
+  // Handle actions (approve, reject, forward)
   const handleAction = async (id, action) => {
     const accessToken = localStorage.getItem("authToken");
 
@@ -58,24 +55,24 @@ const CEOMaintenanceTable = () => {
     try {
       const body = { action };
       if (action === "reject") {
-        body.rejection_message = rejectionMessage; // Include rejection message for rejection action
+        body.rejection_message = rejectionMessage;
       }
 
-      const response = await fetch(ENDPOINTS.APPREJ_MENTENANCE_REQUEST(id), {
+      const response = await fetch(ENDPOINTS.APPREJ_REFUELING_REQUEST(id), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body), // Send the correct payload
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to ${action} the maintenance request`);
+        throw new Error(`Failed to ${action} the refueling request`);
       }
 
-      console.log(`Maintenance request ${action}d successfully`);
-      fetchMaintenanceRequests(); // Refresh the list after action
+      console.log(`Refueling request ${action}d successfully`);
+      fetchRefuelingRequests(); // Refresh the list after action
       setSelectedRequest(null); // Close the detail view
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
@@ -84,16 +81,9 @@ const CEOMaintenanceTable = () => {
     }
   };
 
-  const handleConfirmAction = () => {
-    if (pendingAction && selectedRequest) {
-      handleAction(selectedRequest.id, pendingAction);
-    }
-    setShowConfirmModal(false);
-  };
-
   const handleRejectAction = () => {
     if (rejectionMessage.trim() && selectedRequest) {
-      handleAction(selectedRequest.id, "reject"); // Use the correct `id` from the selected request
+      handleAction(selectedRequest.id, "reject");
       setShowRejectModal(false);
     } else {
       alert("Rejection message cannot be empty.");
@@ -102,19 +92,19 @@ const CEOMaintenanceTable = () => {
 
   // Fetch data when the component mounts
   useEffect(() => {
-    fetchMaintenanceRequests();
+    fetchRefuelingRequests();
   }, []);
 
   return (
     <div className="container mt-5">
-      <h2 className="text-center mb-4">Maintenance Requests</h2>
+      <h2 className="text-center mb-4">Refueling Requests</h2>
 
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p>Loading maintenance requests...</p>
+          <p>Loading refueling requests...</p>
         </div>
       ) : (
         <div className="table-responsive">
@@ -123,19 +113,20 @@ const CEOMaintenanceTable = () => {
               <tr>
                 <th>#</th>
                 <th>Date</th>
-                <th>Requester Name</th>
-                <th>Requester's Car</th>
+                <th>Destination</th>
+                <th>Driver</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {maintenanceRequests.map((request, index) => (
+              {refuelingRequests.map((request, index) => (
                 <tr key={request.id}>
                   <td>{index + 1}</td>
-                  <td>{new Date(request.date).toLocaleDateString()}</td>
-                  <td>{request.requester_name || "N/A"}</td>
-                  <td>{request.requesters_car_name || "N/A"}</td>
+                  <td>{new Date(request.created_at).toLocaleDateString()}</td>
+                  <td>{request.destination || "N/A"}</td>
+                  <th>{request.requester_name || "N/A"}</th>
+                  
                   <td>{request.status || "N/A"}</td>
                   <td>
                     <button
@@ -159,27 +150,25 @@ const CEOMaintenanceTable = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Maintenance Request Details</h5>
+                <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+                <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p>
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                <p><strong>Status:</strong> {selectedRequest.status}</p>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => {
-                    setPendingAction("forward");
-                    setShowConfirmModal(true);
-                  }}
+                  onClick={() => handleAction(selectedRequest.id, "forward")}
                   disabled={actionLoading}
                 >
                   {actionLoading ? "Processing..." : "Forward"}
@@ -203,35 +192,6 @@ const CEOMaintenanceTable = () => {
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Action</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowConfirmModal(false)}
-                ><IoClose/></button>
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to forward this request?</p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-primary"
-                  onClick={handleConfirmAction}
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Rejection Modal */}
       {showRejectModal && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
@@ -243,7 +203,9 @@ const CEOMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowRejectModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <textarea
@@ -257,8 +219,9 @@ const CEOMaintenanceTable = () => {
                 <button
                   className="btn btn-danger"
                   onClick={handleRejectAction}
+                  disabled={actionLoading}
                 >
-                  Reject
+                  {actionLoading ? "Processing..." : "Reject"}
                 </button>
               </div>
             </div>
@@ -269,4 +232,4 @@ const CEOMaintenanceTable = () => {
   );
 };
 
-export default CEOMaintenanceTable;
+export default RefuelingTable;

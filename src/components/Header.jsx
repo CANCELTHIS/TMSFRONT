@@ -154,28 +154,28 @@ const Header = ({ role, userId }) => {
     return (
       <div key={notification.id} className={notificationClass}>
         <h6 className="fw-bold mb-1">{notification.title}</h6>
-        <p className="mb-1">{notification.message}</p>
+        
         {notification.metadata && (
           <div className="small text-muted">
             {notification.metadata.requester && (
-              <div>
-                <strong>Requester:</strong> {notification.metadata.requester}
+              <div className="d-flex justify-content-between">
+                <strong>Requester:</strong> <span>{notification.metadata.requester}</span>
               </div>
             )}
             {notification.metadata.destination && (
-              <div>
-                <strong>Destination:</strong> {notification.metadata.destination}
+              <div className="d-flex justify-content-between">
+                <strong>Destination:</strong> <span>{notification.metadata.destination}</span>
               </div>
             )}
             {notification.metadata.passengers && (
-              <div>
-                <strong>Passengers:</strong> {notification.metadata.passengers}
+              <div className="d-flex justify-content-between">
+                <strong>Passengers:</strong> <span>{notification.metadata.passengers}</span>
               </div>
             )}
             {notification.notification_type === "rejected" &&
               notification.metadata.rejection_reason && (
-                <div>
-                  <strong>Reason:</strong> {notification.metadata.rejection_reason}
+                <div className="d-flex justify-content-between">
+                  <strong>Reason:</strong> <span>{notification.metadata.rejection_reason}</span>
                 </div>
               )}
           </div>

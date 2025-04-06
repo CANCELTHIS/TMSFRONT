@@ -3,15 +3,15 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 
-const MaintenanceRequest = () => {
+const RefuelingRequest = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
   const [showForm, setShowForm] = useState(false); // State for showing the form
-  const [formData, setFormData] = useState({ date: "", reason: "" }); // Form data state
+  const [formData, setFormData] = useState({ date: "", destination: "" }); // Updated form data state
 
-  // Fetch maintenance requests
-  const fetchMaintenanceRequests = async () => {
+  // Fetch refueling requests
+  const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
@@ -20,7 +20,7 @@ const MaintenanceRequest = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.MENTENANCE_REQUEST_LIST, {
+      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -29,13 +29,14 @@ const MaintenanceRequest = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch maintenance requests");
+        throw new Error("Failed to fetch refueling requests");
       }
 
       const data = await response.json();
+      console.log("Fetched Refueling Requests:", data); // Log fetched data
       setRequests(data.results || []);
     } catch (error) {
-      console.error("Error fetching maintenance requests:", error);
+      console.error("Error fetching refueling requests:", error);
     } finally {
       setLoading(false);
     }
@@ -58,55 +59,63 @@ const MaintenanceRequest = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.CREATE_MENTENANCE_REQUEST, {
+      console.log("Payload Sent:", formData); // Log the payload being sent
+      const response = await fetch(ENDPOINTS.CREATE_REFUELING_REQUEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData), // Send the correct payload
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create maintenance request");
+        throw new Error("Failed to create refueling request");
       }
 
       const newRequest = await response.json();
       setRequests((prevRequests) => [newRequest, ...prevRequests]);
-      setFormData({ date: "", reason: "" });
+      setFormData({ date: "", destination: "" }); // Reset form data
       setShowForm(false);
     } catch (error) {
-      console.error("Error creating maintenance request:", error);
+      console.error("Error creating refueling request:", error);
     }
   };
 
   // Fetch data when the component mounts
   useEffect(() => {
-    fetchMaintenanceRequests();
+    fetchRefuelingRequests();
   }, []);
 
   return (
     <div className="container mt-5">
-      <h2 className="text-center mb-4">Maintenance Requests</h2>
+      <h2 className="text-center mb-4">Refueling Requests</h2>
 
-      {/* New Maintenance Request Button */}
+      {/* New Refueling Request Button */}
       <div className="d-flex mb-4">
         <button
           className="btn"
           style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
           onClick={() => setShowForm(true)}
         >
-          New Maintenance Request
+          New Refueling Request
         </button>
       </div>
 
-      {/* Maintenance Request Form */}
+      {/* Refueling Request Form */}
       {showForm && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">New Maintenance Request</h5>
+                <h5 className="modal-title">New Refueling Request</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowForm(false)}
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <form onSubmit={handleSubmit}>
@@ -125,20 +134,25 @@ const MaintenanceRequest = () => {
                     />
                   </div>
                   <div className="mb-3">
-                    <label htmlFor="reason" className="form-label">
-                      Reason
+                    <label htmlFor="destination" className="form-label">
+                      Destination
                     </label>
-                    <textarea
+                    <input
+                      type="text"
                       className="form-control"
-                      id="reason"
-                      name="reason"
-                      value={formData.reason}
+                      id="destination"
+                      name="destination"
+                      value={formData.destination}
                       onChange={handleInputChange}
-                      placeholder="Enter the reason for maintenance"
+                      placeholder="Enter the destination"
                       required
                     />
                   </div>
-                  <button type="submit" style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }} className="btn">
+                  <button
+                    type="submit"
+                    style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
+                    className="btn"
+                  >
                     Submit
                   </button>
                 </form>
@@ -148,13 +162,13 @@ const MaintenanceRequest = () => {
         </div>
       )}
 
-      {/* Maintenance Requests Table */}
+      {/* Refueling Requests Table */}
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p>Loading maintenance requests...</p>
+          <p>Loading refueling requests...</p>
         </div>
       ) : (
         <div className="table-responsive">
@@ -163,8 +177,7 @@ const MaintenanceRequest = () => {
               <tr>
                 <th>#</th>
                 <th>Date</th>
-                
-                <th>Requester's Car</th>
+                <th>Destination</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -173,9 +186,8 @@ const MaintenanceRequest = () => {
               {requests.map((request, index) => (
                 <tr key={request.id}>
                   <td>{index + 1}</td>
-                  <td>{new Date(request.date).toLocaleDateString()}</td>
-                  
-                  <td>{request.requesters_car_name || "N/A"}</td>
+                  <td>{new Date(request.created_at).toLocaleDateString()}</td> {/* Use created_at */}
+                  <td>{request.destination || "N/A"}</td>
                   <td>{request.status || "N/A"}</td>
                   <td>
                     <button
@@ -199,7 +211,7 @@ const MaintenanceRequest = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Maintenance Request Details</h5>
+                <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -209,10 +221,8 @@ const MaintenanceRequest = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+                <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p> {/* Use created_at */}
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
                 <p><strong>Status:</strong> {selectedRequest.status}</p>
               </div>
             </div>
@@ -223,4 +233,4 @@ const MaintenanceRequest = () => {
   );
 };
 
-export default MaintenanceRequest;
+export default RefuelingRequest;

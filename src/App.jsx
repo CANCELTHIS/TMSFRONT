@@ -24,7 +24,9 @@ import MaintenanceRequest from './components/MaintenanceRequest';
 import MaintenanceTable from './components/MaintenanceTable';
 import VehicleRequest from './components/VehicleRequest';
 import DriverSchedule from './components/DriverSchedule';
-import RefuelingPage from './components/RefuelingPage';
+import RefuelingRequest from './components/RefuelingRequest';
+import FMRefuelingTable from './components/FMRefuelingTable'; 
+import RefuelingTable from './components/FMRefuelingTable';
 import TransportManagerDashbord from './components/TransportManagerDashbord';
 import ReportPage from './components/ReportPage';
 import TransportRequest from "./components/TransportRequest";
@@ -191,12 +193,13 @@ const App = () => {
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
                   <div className="d-flex">
                     <Header role="department_manager" />
-                    <Sidebar role="department_manager" />
+                    <Sidebar role="department_manager"/>
                     <div className="container">
                       <Routes>
                         <Route path="vehicle-request" element={<VehicleRequest />} />
-                        <Route path="refueling" element={<RefuelingPage />} />
+                        <Route path="refueling-request" element={<RefuelingRequest/>} />
                         <Route path="history" element={<DepartmentHistory />} />
+                        <Route path="maintenance-request" element={<MaintenanceRequest />} />
                       </Routes>
                     </div>
                   </div>
@@ -215,7 +218,7 @@ const App = () => {
                       <Routes>
                         <Route path="vehicle-request" element={<VehicleRequest />} />
                         <Route path="financemaintenance-table" element={<FinanceMaintenanceTable />} />
-
+                        <Route path="refueling" element={<FMRefuelingTable />} />
                       </Routes>
                     </div>
                   </div>
@@ -232,8 +235,10 @@ const App = () => {
                     <Sidebar role="ceo" />
                     <div className="container">
                       <Routes>
+                        
                         <Route path="vehicle-request" element={<VehicleRequest />} />
                         <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
+                        <Route path="refueling" element={<RefuelingTable />} />
                       </Routes>
                     </div>
                   </div>
@@ -250,6 +255,7 @@ const App = () => {
                     <Sidebar role="driver" />
                     <div className="container">
                       <Routes>
+                      <Route path="refueling-request" element={<RefuelingRequest/>} />
                         <Route path="maintenance-request" element={<MaintenanceRequest/>} />
                         <Route path="driver-schedule" element={<DriverSchedule />} />
                       </Routes>
@@ -293,6 +299,7 @@ const App = () => {
                         <Route path="maintenance-table" element={<MaintenanceTable />} />
                         <Route path="vehicle-request" element={<TransportRequest />} />
                         <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
+                        <Route path="refueling" element={<RefuelingTable />} />
                         <Route path="report" element={<ReportPage/>} />
                         <Route path="history" element={<TransportHistory/>} />
                       </Routes>

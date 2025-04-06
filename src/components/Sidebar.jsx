@@ -2,13 +2,15 @@
 
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { MdDashboard, MdLocalShipping, MdHistory, MdRequestQuote, MdMenu } from "react-icons/md"
-import { IoIosPeople } from "react-icons/io"
-import { FaUserShield, FaGasPump, FaTools } from "react-icons/fa"
+import { MdMenu } from "react-icons/md"
+import { IoClose } from "react-icons/io5"
 import Logo from "../assets/Logo.jpg"
 import "bootstrap/dist/css/bootstrap.min.css"
-import { IoClose } from "react-icons/io5"
 import "../index.css"
+import { MdOutlineDashboard, MdOutlineHistory, MdOutlineRequestPage } from "react-icons/md"
+import { IoBusiness } from "react-icons/io5"
+import { FaUserCog, FaTools, FaGasPump } from "react-icons/fa"
+import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai"
 
 const Sidebar = ({ role }) => {
   const location = useLocation()
@@ -21,44 +23,46 @@ const Sidebar = ({ role }) => {
   const getActiveClass = (path) => (location.pathname === path ? "active text-primary fw-bold" : "text-dark")
 
   const adminMenus = [
-    { path: "/admin/admin", icon: <MdDashboard />, label: "Dashboard" },
-    { path: "/admin/admin-department", icon: <IoIosPeople />, label: "Departments" },
-    { path: "/admin/account-page", icon: <FaUserShield />, label: "Accounts" },
-    { path: "/admin/history", icon: <MdHistory />, label: "History" },
+    { path: "/admin/admin", icon: <MdOutlineDashboard />, label: "Dashboard" },
+    { path: "/admin/admin-department", icon: <IoBusiness />, label: "Departments" },
+    { path: "/admin/account-page", icon: <FaUserCog />, label: "Accounts" },
+    { path: "/admin/history", icon: <MdOutlineHistory />, label: "History" },
   ]
 
   const transportMenus = [
-    { path: "/transport-manager/transport-dashbord", icon: <MdDashboard />, label: "Dashboard" },
-    { path: "/transport-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
-    { path: "/transport-manager/vehicle-management", icon: <MdLocalShipping />, label: "Vehicle Management" },
-    { path: "/transport-manager/maintenance-table", icon: <FaTools />, label: "Maintenance Table" },
-    { path: "/transport-manager/report", icon: <MdHistory />, label: "Report" },
-    { path: "/transport-manager/history", icon: <MdHistory />, label: "History" },
+    { path: "/transport-manager/transport-dashbord", icon: <MdOutlineDashboard />, label: "Dashboard" },
+    { path: "/transport-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
+    { path: "/transport-manager/vehicle-management", icon: <AiOutlineCar />, label: "Vehicle Management" },
+    { path: "/transport-manager/maintenance-table", icon: <FaTools />, label: "Maintenance" },
+    { path: "/transport-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/transport-manager/report", icon: <AiOutlineFileText />, label: "Report" },
+    { path: "/transport-manager/history", icon: <MdOutlineHistory />, label: "History" },
   ]
 
   const driverMenus = [
-    { path: "/driver/driver-schedule", icon: <MdDashboard />, label: "Driver Schedule" },
+    { path: "/driver/driver-schedule", icon: <MdOutlineDashboard />, label: "Driver Schedule" },
     { path: "/driver/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
+    { path: "/driver/refueling-request", icon: <FaGasPump />, label: "Refueling Request" },
   ]
 
   const departmentManagerMenus = [
-    { path: "/department-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
-    { path: "/department-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
-    { path: "/department-manager/history", icon: <MdHistory />, label: "History" },
+    { path: "/department-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
+    { path: "/department-manager/refueling-request", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/department-manager/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
+    { path: "/department-manager/history", icon: <MdOutlineHistory />, label: "History" },
   ]
 
   const financeManagerMenus = [
-    { path: "/finance-manager/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
+    { path: "/finance-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
+    { path: "/finance-manager/financemaintenance-table", icon: <FaTools />, label: "Maintenance Request" },
     { path: "/finance-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
-    { path: "/finance-manager/financemaintenance-table", icon: <FaTools />, label: "Maintenance Table" },
-
   ]
 
   const ceoMenus = [
-    { path: "/ceo/vehicle-request", icon: <MdRequestQuote />, label: "Vehicle Request" },
+    { path: "/ceo/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
-    { path: "/ceo/ceomaintenance-table", icon: <FaTools />, label: "Maintenance Table" },
-
+    { path: "/ceo/ceomaintenance-table", icon: <FaTools />, label: "Maintenance" },
+    { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
   ]
 
   const menuMappings = {
@@ -94,13 +98,14 @@ const Sidebar = ({ role }) => {
       <div
         className={`d-flex flex-column bg-light px-3 py-4 position-fixed top-0 bottom-0 ${isOpen ? "show-sidebar" : "hide-sidebar"}`}
         style={{
-          width: "250px",
+          width: "300px", 
           height: "100vh",
           left: 0,
           zIndex: 1020,
           transition: "transform 0.3s ease-in-out",
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
+          
         }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">
