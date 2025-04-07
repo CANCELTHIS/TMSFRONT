@@ -641,15 +641,15 @@ background-color:#0b455b !important;
   padding: 0.75rem 1rem;
   font-size: 1rem;
   font-weight: 500;
-  color: #181E4B !important;
+  color: #074159 !important;
   text-decoration: none;
   border-radius: 8px;
   transition: all 0.3s ease;
-  border-bottom: "none"
+  
 }
 
 .sidebar-link.active {
-  background-color: #181E4B !important;
+  background-color: #074159 !important;
   color: white !important;
   font-weight: 700;
 }
@@ -752,17 +752,7 @@ background-color:#0b455b !important;
   font-weight: 700;
 }
 
-.nav-link.active::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 3px;
-  background-color: #F09F33;
-  border-radius: 3px;
-}
+
 
 /* Login Button */
 .login-btn {

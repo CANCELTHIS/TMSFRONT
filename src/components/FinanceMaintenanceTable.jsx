@@ -164,7 +164,9 @@ const FinanceMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
@@ -177,12 +179,12 @@ const FinanceMaintenanceTable = () => {
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white" }}
                   onClick={() => {
-                    setPendingAction("forward");
+                    setPendingAction("approve");
                     setShowConfirmModal(true);
                   }}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Forward"}
+                  {actionLoading ? "Processing..." : "Approve"}
                 </button>
                 <button
                   className="btn btn-danger"
@@ -214,10 +216,12 @@ const FinanceMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowConfirmModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to forward this request?</p>
+                <p>Are you sure you want to approve this request?</p>
               </div>
               <div className="modal-footer">
                 <button

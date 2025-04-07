@@ -33,7 +33,6 @@ export const ENDPOINTS = {
   UPDATE_ROLE: (user_id) => `${BASE_URL}update-role/${user_id}/`,
   APPROVED_USERS: `${BASE_URL}approved-users/`,
 
-  // Transport requests and resources
   REQUEST_LIST: `${BASE_URL}transport-requests/list/`,
 
   AVAILABLE_DRIVERS: `${BASE_URL}available-drivers/`,
@@ -49,7 +48,6 @@ export const ENDPOINTS = {
   REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`,
   APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`,
 
-  // Vehicle endpoints
   VEHICLE_LIST: `${BASE_URL}vehicles/`,
   VEHICLE_LIST_FORMAT: `${BASE_URL}vehicles.{format}/`,
   VEHICLE_DETAIL: (pk) => `${BASE_URL}vehicles/${pk}/`,

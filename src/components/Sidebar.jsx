@@ -96,16 +96,18 @@ const Sidebar = ({ role }) => {
 
       {/* Sidebar */}
       <div
-        className={`d-flex flex-column bg-light px-3 py-4 position-fixed top-0 bottom-0 ${isOpen ? "show-sidebar" : "hide-sidebar"}`}
+        className={`d-flex flex-column px-3 py-4 position-fixed top-0 bottom-0 ${isOpen ? "show-sidebar" : "hide-sidebar"}`}
         style={{
-          width: "300px", 
+          width: "300px",
           height: "100vh",
           left: 0,
           zIndex: 1020,
           transition: "transform 0.3s ease-in-out",
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
-          
+          borderBottom: "none",
+          backgroundColor: "rgba(219, 219, 219, 0.01)", // Transparent white background
+          backdropFilter: "blur(10px)", // Optional: Adds a blur effect
         }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">

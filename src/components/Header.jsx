@@ -7,7 +7,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../utilities/endpoints";
 
-const Header = ({ role, userId }) => {
+const Header = ({ role, userId, onResubmit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -94,7 +94,8 @@ const Header = ({ role, userId }) => {
   };
 
   const handleResubmit = (requestId) => {
-    navigate(`/resubmit-request/${requestId}`);
+    onResubmit(requestId); // Call the parent's resubmit function
+    setShowNotifications(false); // Close notifications
   };
 
   const handleLogout = async () => {
@@ -180,9 +181,19 @@ const Header = ({ role, userId }) => {
               )}
           </div>
         )}
-        <small className="text-muted">
-          {formattedDate} at {formattedTime}
-        </small>
+        <div className="d-flex justify-content-between align-items-center mt-2">
+          <small className="text-muted">
+            {formattedDate} at {formattedTime}
+          </small>
+          {notification.notification_type === "rejected" && notification.metadata.request_id && (
+            <button 
+              className="btn btn-sm btn-outline-primary"
+              onClick={() => handleResubmit(notification.metadata.request_id)}
+            >
+              Resubmit
+            </button>
+          )}
+        </div>
       </div>
     );
   };
