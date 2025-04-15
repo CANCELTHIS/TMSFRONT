@@ -36,6 +36,9 @@ import { ENDPOINTS } from './utilities/endpoints';
 import { NotificationProvider } from './context/NotificationContext';
 import CEOMaintenanceTable from './components/CEOMaintenanceTable';
 import FinanceMaintenanceTable from './components/FinanceMaintenanceTable';
+import TMRefuelingTable  from './components/TMRefuelingTable';
+import HightCost from './components/HightCost';
+import CeoVehicleRequest from './components/CeoVehicleRequest';
 // Protected Route Component
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
@@ -200,6 +203,7 @@ const App = () => {
                         <Route path="refueling-request" element={<RefuelingRequest/>} />
                         <Route path="history" element={<DepartmentHistory />} />
                         <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        <Route path="hight-cost" element={<HightCost />} />
                       </Routes>
                     </div>
                   </div>
@@ -236,7 +240,8 @@ const App = () => {
                     <div className="container">
                       <Routes>
                         
-                        <Route path="vehicle-request" element={<VehicleRequest />} />
+                        <Route path="vehicle-request" element={<CeoVehicleRequest />} />
+                        {/* <Route path="highcost_vehicle-request" element={<CeoHighcostVehicleRequest />} /> */}
                         <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
                         <Route path="refueling" element={<RefuelingTable />} />
                       </Routes>
@@ -277,7 +282,7 @@ const App = () => {
                       <Routes>
                         <Route path="admin" element={<AdminPage />} />
                         <Route path="admin-department" element={<AdminDepartmentPage />} />
-                        <Route path="account-page" element={<AccountPage />} />
+                      <Route path="account-page" element={<AccountPage />} />
                         <Route path="history" element={<HistoryPage />} />
                       </Routes>
                     </div>
@@ -299,9 +304,47 @@ const App = () => {
                         <Route path="maintenance-table" element={<MaintenanceTable />} />
                         <Route path="vehicle-request" element={<TransportRequest />} />
                         <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
-                        <Route path="refueling" element={<RefuelingTable />} />
+                        <Route path="refueling" element={<TMRefuelingTable />} />
                         <Route path="report" element={<ReportPage/>} />
                         <Route path="history" element={<TransportHistory/>} />
+                      </Routes>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/Budget Manager/*"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <div className="d-flex">
+                    <Header role="budget_manager" />
+                    <Sidebar role="budget_manager" />
+                    <div className="container">
+                      <Routes>
+                        
+                        <Route path="refueling" element={<RefuelingTable />} />
+                        <Route path="report" element={<ReportPage />} />
+                      </Routes>
+                    </div>
+                  </div>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/general-system-executer/*"
+              element={
+                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <div className="d-flex">
+                    <Header role="budget_officer" />
+                    <Sidebar role="budget_officer" />
+                    <div className="container">
+                      <Routes>
+                      <Route path="requests" element={<CeoVehicleRequest />} />
+                        <Route path="refueling" element={<RefuelingTable />} />
+                        <Route path="report" element={<ReportPage />} />
                       </Routes>
                     </div>
                   </div>

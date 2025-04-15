@@ -6,11 +6,13 @@ import Lottie from 'lottie-react';
 import animationData from "./Lottie Lego (1).json";
 import { IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
+import CustomPagination from './CustomPagination';
 const AdminPage = () => {
   const [data, setData] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Number of items per page
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -35,7 +37,9 @@ const AdminPage = () => {
     { value: 4, label: 'Transport Manager' },
     { value: 5, label: 'CEO' },
     { value: 6, label: 'Driver' },
-    { value: 7, label: 'System Admin' }
+    { value: 7, label: 'System Admin' },
+    { value: 8, label: 'General System Excuter' }, // Added Budget Manager
+    { value: 9, label: 'Budget Manager' }, // Added Budget Officer
   ];
 
   const fetchDepartments = async () => {
@@ -248,6 +252,10 @@ const AdminPage = () => {
     setFormValues({ ...formValues, role: e.target.value });
   };
 
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageData = data.slice(startIndex, endIndex);
+
   return (
     <div className="admin-container d-flex flex-column mt-5">
       <div className="container-fluid">
@@ -266,6 +274,7 @@ const AdminPage = () => {
 <table className="table table-hover align-middle">
               <thead>
                 <tr>
+                  <th>#</th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
@@ -275,87 +284,98 @@ const AdminPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.length > 0 ? (
-                  data.map((user) => (
-                    <tr key={user.id}>
-                      <td>{user.full_name || "N/A"}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        {editAccount && editAccount.id === user.id ? (
-                          <select
-                            value={formValues.role}
-                            onChange={handleRoleChange}
-                          >
-                            {ROLE_CHOICES.map(role => (
-                              <option key={role.value} value={role.value}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          getRoleLabel(user.role)
-                        )}
-                      </td>
-                      <td>
-  {departments && departments.find(dept => dept.id === user.department)?.name || "N/A"}
-</td>
-                      <td>{user.is_active ? "Active" : "Pending"}</td>
-                      <td>
-                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                          <button
-                            className="btn btn-sm"
-                            style={{backgroundColor:"#0b455b",color:"white"}}
-                            onClick={() => handleEdit(user)}
-                          >
-                            Edit
-                          </button>
-                          {editAccount && editAccount.id === user.id && (
-                            <div>
-                              <button
-                                className="btn btn-sm btn-primary"
-                                onClick={handleSaveEdit}
-                              >
-                                Save
-                              </button>
-                              <button
-                                className="btn btn-sm btn-secondary"
-                                onClick={handleCancelEdit}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          )}
-                          {!user.is_active && (
-                            <>
-                              <button
-                                className="btn btn-sm btn-success"
-                                onClick={() => {
-                                  setUserToApprove(user);
-                                  setShowApproveModal(true);
-                                }}
-                              >
-                                Approve
-                              </button>
-                              <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => handleReject(user.id)}
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="6">No users found.</td>
-                  </tr>
-                )}
-              </tbody>
+  {currentPageData.length > 0 ? (
+    currentPageData.map((user, index) => (
+      <tr key={user.id}>
+        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+        <td>{user.full_name || "N/A"}</td>
+        <td>{user.email}</td>
+        <td>
+          {editAccount && editAccount.id === user.id ? (
+            <select
+              value={formValues.role}
+              onChange={handleRoleChange}
+            >
+              {ROLE_CHOICES.map(role => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            getRoleLabel(user.role)
+          )}
+        </td>
+        <td>
+          {departments && departments.find(dept => dept.id === user.department)?.name || "N/A"}
+        </td>
+        <td>{user.is_active ? "Active" : "Pending"}</td>
+        <td>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <button
+              className="btn btn-sm"
+              style={{ backgroundColor: "#0b455b", color: "white" }}
+              onClick={() => handleEdit(user)}
+            >
+              Edit
+            </button>
+            {editAccount && editAccount.id === user.id && (
+              <div>
+                <button
+                  className="btn btn-sm btn-primary"
+                  onClick={handleSaveEdit}
+                >
+                  Save
+                </button>
+                <button
+                  className="btn btn-sm btn-secondary"
+                  onClick={handleCancelEdit}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {!user.is_active && (
+              <>
+                <button
+                  className="btn btn-sm btn-success"
+                  onClick={() => {
+                    setUserToApprove(user);
+                    setShowApproveModal(true);
+                  }}
+                >
+                  Approve
+                </button>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => handleReject(user.id)}
+                >
+                  Reject
+                </button>
+              </>
+            )}
+          </div>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan="6">No users found.</td>
+    </tr>
+  )}
+</tbody>
             </table>
             </div>
+            <div
+  className="d-flex justify-content-center align-items-center"
+  style={{ height: "100px" }}
+>
+  <CustomPagination
+    currentPage={currentPage}
+    totalPages={Math.ceil(data.length / itemsPerPage)}
+    handlePageChange={(page) => setCurrentPage(page)}
+  />
+</div>
           </div>
         </div>
       </div>

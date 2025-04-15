@@ -11,6 +11,8 @@ import { MdOutlineDashboard, MdOutlineHistory, MdOutlineRequestPage } from "reac
 import { IoBusiness } from "react-icons/io5"
 import { FaUserCog, FaTools, FaGasPump } from "react-icons/fa"
 import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai"
+import { p } from "framer-motion/client"
+import { FaGaugeHigh } from "react-icons/fa6";
 
 const Sidebar = ({ role }) => {
   const location = useLocation()
@@ -43,14 +45,16 @@ const Sidebar = ({ role }) => {
     { path: "/driver/driver-schedule", icon: <MdOutlineDashboard />, label: "Driver Schedule" },
     { path: "/driver/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
     { path: "/driver/refueling-request", icon: <FaGasPump />, label: "Refueling Request" },
+
   ]
 
   const departmentManagerMenus = [
     { path: "/department-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
     { path: "/department-manager/refueling-request", icon: <FaGasPump />, label: "Refueling" },
     { path: "/department-manager/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
-    { path: "/department-manager/history", icon: <MdOutlineHistory />, label: "History" },
-  ]
+    { path: "/department-manager/hight-cost", icon: <FaGaugeHigh />, label: "High Cost" },
+    { p}
+]
 
   const financeManagerMenus = [
     { path: "/finance-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
@@ -60,9 +64,25 @@ const Sidebar = ({ role }) => {
 
   const ceoMenus = [
     { path: "/ceo/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
+    // { path: "/ceo/highcost_vehicle-request", icon: <FaTools />, label: "High cost" },
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
     { path: "/ceo/ceomaintenance-table", icon: <FaTools />, label: "Maintenance" },
-    { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
+    
+
+   
+  ]
+  const BudgetManagerMenus = [
+
+    { path: "/Budget Manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+
+  ]
+
+  const GeneralSystemExcuterMenus = [
+    { path: "/general-system-executer/requests", icon: <MdOutlineRequestPage />, label: "Vechicle Requests" },
+    { path: "general-system-executer/refueling", icon: <FaGasPump />, label: "Refueling" },
+    
+
+
   ]
 
   const menuMappings = {
@@ -71,7 +91,9 @@ const Sidebar = ({ role }) => {
     "/driver": driverMenus,
     "/department-manager": departmentManagerMenus,
     "/finance-manager": financeManagerMenus,
-    "/ceo": ceoMenus,
+    "/ceo": ceoMenus,   
+    "/general-system-executer": GeneralSystemExcuterMenus, // Added Budget Manager menus
+    "/Budget Manager": BudgetManagerMenus, // Added Budget Officer menus
   }
 
   const activeMenu = Object.keys(menuMappings).find((key) => location.pathname.startsWith(key))
@@ -106,8 +128,8 @@ const Sidebar = ({ role }) => {
           transform: isOpen ? "translateX(0)" : "translateX(-100%)",
           boxShadow: "2px 0 5px rgba(0,0,0,0.1)",
           borderBottom: "none",
-          backgroundColor: "rgba(219, 219, 219, 0.01)", // Transparent white background
-          backdropFilter: "blur(10px)", // Optional: Adds a blur effect
+          backgroundColor: "rgba(219, 219, 219, 0.9)", 
+          backdropFilter: "blur(10px)", 
         }}
       >
         <div className="d-flex justify-content-between align-items-center mb-4">

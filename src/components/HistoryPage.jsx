@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../index.css'; 
 import { ENDPOINTS } from '../utilities/endpoints';
+import CustomPagination from './CustomPagination';
 const HistoryPage = () => {
-  const itemsPerPage = 8;
+  const itemsPerPage = 5;
   const [history, setHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -72,29 +73,36 @@ const HistoryPage = () => {
   const handlePreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   return (
-    <div className="container py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div className="container-fluid py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <h2 className="h5 mb-4">History</h2>
 
       {loading && <p>Loading...</p>}
       {error && <div className="alert alert-danger">{error}</div>}
 
       {/* Filter Options */}
-      <div className="mb-3">
-        <button className="btn btn-success me-2" onClick={() => setFilter('approved')}>Approved</button>
-        <button className="btn btn-danger me-2" onClick={() => setFilter('rejected')}>Rejected</button>
-        <button className="btn btn-secondary" onClick={() => setFilter('')}>All</button>
+      <div className="mb-3 d-flex flex-wrap">
+        <button className="btn btn-success me-2 mb-2" onClick={() => setFilter('approved')}>
+          Approved
+        </button>
+        <button className="btn btn-danger me-2 mb-2" onClick={() => setFilter('rejected')}>
+          Rejected
+        </button>
+        <button className="btn btn-secondary mb-2" onClick={() => setFilter('')}>
+          All
+        </button>
       </div>
 
       <div className="card shadow-sm">
         <div className="card-body">
-        <div className="table-responsive">
-        <table className="table table-hover align-middle">
+          {/* Responsive Table */}
+          <div className="table-responsive">
+            <table className="table table-hover align-middle">
               <thead className="table-light">
                 <tr>
                   <th>#</th>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Status</th>
+                  <th className="d-none d-md-table-cell">Status</th>
                   <th>Date</th>
                 </tr>
               </thead>
@@ -102,19 +110,24 @@ const HistoryPage = () => {
                 {currentPageHistory.length > 0 ? (
                   currentPageHistory.map((record, index) => (
                     <tr key={record.id}>
-                      <td>{startIndex + index + 1}</td>
+                      <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                       <td>{record.user_full_name}</td>
                       <td>{record.user_email}</td>
-                      <td>{record.name || "No Department Assigned"}</td> {/* Added Department column */}
-                      <td className={record.status === 'approve' ? 'text-success fw-bold' : 'text-danger fw-bold'}>
-                        {record.status === 'approve' ? 'Approved' : 'Rejected'}
+                      <td className="d-none d-md-table-cell">
+                        {record.status === 'approve' ? (
+                          <span className="text-success fw-bold">Approved</span>
+                        ) : (
+                          <span className="text-danger fw-bold">Rejected</span>
+                        )}
                       </td>
                       <td>{new Date(record.timestamp).toLocaleDateString()}</td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">No history records available.</td> {/* Adjusted colspan */}
+                    <td colSpan="5" className="text-center">
+                      No history records available.
+                    </td>
                   </tr>
                 )}
               </tbody>
@@ -125,14 +138,15 @@ const HistoryPage = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <button className="btn btn-secondary btn-sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
-            Previous
-          </button>
-          <small>Page {currentPage} of {totalPages}</small>
-          <button className="btn btn-secondary btn-sm" onClick={handleNextPage} disabled={currentPage === totalPages}>
-            Next
-          </button>
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "100px" }} // Center pagination
+        >
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            handlePageChange={(page) => setCurrentPage(page)} // Update current page
+          />
         </div>
       )}
     </div>

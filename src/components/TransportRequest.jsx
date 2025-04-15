@@ -7,6 +7,7 @@ import { IoMdClose } from "react-icons/io";
 import axios from "axios";
 import { IoClose } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
+import CustomPagination from './CustomPagination';
 
 const TransportRequest = () => {
   const [requests, setRequests] = useState([]);
@@ -14,13 +15,15 @@ const TransportRequest = () => {
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
   const [rejectionReason, setRejectionReason] = useState(""); // State for rejection reason
-  const [showRejectionModal, setShowRejectionModal] = useState(false); // State for rejection modal
-  const [showConfirmation, setShowConfirmation] = useState(false); // State for rejection confirmation dialog
-  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false); // State for approve confirmation dialog
-  const [drivers, setDrivers] = useState([]); // State for available drivers
-  const [vehicles, setVehicles] = useState([]); // State for available vehicles
+  const [showRejectionModal, setShowRejectionModal] = useState(false); 
+  const [showConfirmation, setShowConfirmation] = useState(false); 
+  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false); 
+  const [drivers, setDrivers] = useState([]); 
+  const [vehicles, setVehicles] = useState([]); 
   const [selectedDriver, setSelectedDriver] = useState(null); // State for selected driver
   const [selectedVehicle, setSelectedVehicle] = useState(null); // State for selected vehicle
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Number of items per page
 
   const accessToken = localStorage.getItem("authToken");
 
@@ -328,6 +331,11 @@ useEffect(() => {
       toast.error("Failed to reject request."); // Show error toast
     }
   };
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageRequests = requests.slice(startIndex, endIndex);
+
   return (
     <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <ToastContainer /> {/* Toast container for notifications */}
@@ -340,9 +348,10 @@ useEffect(() => {
         </div>
       ) : (
         <div className="table-responsive">
-                  <table className="table table-hover align-middle">
+          <table className="table table-hover align-middle">
             <thead className="table">
               <tr>
+                <th>#</th>
                 <th>Start Day</th>
                 <th>Start Time</th>
                 <th>Return Day</th>
@@ -352,28 +361,47 @@ useEffect(() => {
               </tr>
             </thead>
             <tbody>
-              {requests.map((request) => (
-                <tr key={request.id}>
-                  <td>{request.start_day}</td>
-                  <td>{request.start_time}</td>
-                  <td>{request.return_day}</td>
-                  <td>{request.destination}</td>
-                  <td>{request.status}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => handleViewDetail(request)}
-                    >
-                      View Detail
-                    </button>
+              {currentPageRequests.length > 0 ? (
+                currentPageRequests.map((request, index) => (
+                  <tr key={request.id}>
+                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+                    <td>{request.start_day}</td>
+                    <td>{request.start_time}</td>
+                    <td>{request.return_day}</td>
+                    <td>{request.destination}</td>
+                    <td>{request.status}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#181E4B", color: "white" }}
+                        onClick={() => handleViewDetail(request)}
+                      >
+                        View Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center">
+                    No transport requests found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       )}
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100px" }}
+      >
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(requests.length / itemsPerPage)}
+          handlePageChange={(page) => setCurrentPage(page)}
+        />
+      </div>
       {selectedRequest && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="modal-dialog">

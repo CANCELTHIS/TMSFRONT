@@ -43,10 +43,7 @@ export const ENDPOINTS = {
   REQUEST_NOTIFICATIONS: `${BASE_URL}transport-requests/notifications/`,
   UNREADOUNT: `${BASE_URL}transport-requests/notifications/unread-count/`,
   MARKALL_READ: `${BASE_URL}transport-requests/notifications/mark-all-read/`,
-  REFUELING_REQUESTS: `${BASE_URL}refueling_requests/`,
-  CREATE_REFUELING_REQUEST: `${BASE_URL}refueling_requests/create/`,
-  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`,
-  APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`,
+
 
   VEHICLE_LIST: `${BASE_URL}vehicles/`,
   VEHICLE_LIST_FORMAT: `${BASE_URL}vehicles.{format}/`,
@@ -57,4 +54,13 @@ export const ENDPOINTS = {
   MENTENANCE_REQUEST_LIST: `${BASE_URL}maintenance-requests/list/`,
   APPREJ_MENTENANCE_REQUEST: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`,
   CURRENT_USER_VEHICLES: `${BASE_URL}my-vehicle/`,
+
+  //refuling endpoints
+  CREATE_HIGH_COST_REQEST: `${BASE_URL}highcost-requests/create/`, // POST method to create a high cost request
+  HIGH_COST_LIST: `${BASE_URL}highcost-requests/list/`,
+  CREATE_REFUELING_REQUEST: `${BASE_URL}refueling_requests/create/`, // POST method to create a refueling request
+  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`, // GET method to list refueling requests
+  REFUELING_REQUEST_DETAIL: (pk) => `${BASE_URL}refueling_requests/${pk}/`, // GET method for refueling request detail view
+  REFUELING_REQUEST_ESTIMATE: (request_id) => `${BASE_URL}refueling_requests/${request_id}/estimate/`, // POST method to calculate refueling request
+  APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`, // POST method to approve, reject, or forward refueling request
 };

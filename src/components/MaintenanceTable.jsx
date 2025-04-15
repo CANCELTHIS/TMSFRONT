@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+import CustomPagination from './CustomPagination';
 
 const MaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -12,6 +13,12 @@ const MaintenanceTable = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false); // State for confirmation modal
   const [showRejectModal, setShowRejectModal] = useState(false); // State for rejection modal
   const [pendingAction, setPendingAction] = useState(null); // State for pending action
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageRequests = maintenanceRequests.slice(startIndex, endIndex);
 
   // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
@@ -130,28 +137,47 @@ const MaintenanceTable = () => {
               </tr>
             </thead>
             <tbody>
-              {maintenanceRequests.map((request, index) => (
-                <tr key={request.id}>
-                  <td>{index + 1}</td>
-                  <td>{new Date(request.date).toLocaleDateString()}</td>
-                  <td>{request.requester_name || "N/A"}</td>
-                  <td>{request.requesters_car_name || "N/A"}</td>
-                  <td>{request.status || "N/A"}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      View Detail
-                    </button>
+              {currentPageRequests.length > 0 ? (
+                currentPageRequests.map((request, index) => (
+                  <tr key={request.id}>
+                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+                    <td>{new Date(request.date).toLocaleDateString()}</td>
+                    <td>{request.requester_name || "N/A"}</td>
+                    <td>{request.requesters_car_name || "N/A"}</td>
+                    <td>{request.status || "N/A"}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#181E4B", color: "white" }}
+                        onClick={() => setSelectedRequest(request)}
+                      >
+                        View Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="text-center">
+                    No maintenance requests found.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       )}
+
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100px" }}
+      >
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
+          handlePageChange={(page) => setCurrentPage(page)}
+        />
+      </div>
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (

@@ -50,6 +50,10 @@ const LoginModal = ({ onClose }) => {
         navigate('/driver/driver-schedule');
       } else if (decodedToken.role === 7) {
         navigate('/admin/admin');
+      } else if (decodedToken.role === 8) {
+        navigate('/general-system-executer/refueling'); // Budget Manager
+      } else if (decodedToken.role === 9) {
+        navigate('/Budget Manager/refueling'); // Budget Officer
       } else {
         navigate('/');
       }

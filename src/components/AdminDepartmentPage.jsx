@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios"; // For API requests
 import { ENDPOINTS } from "../utilities/endpoints";
+import CustomPagination from './CustomPagination';
+
 const AdminDepartmentPage = () => {
   const [departments, setDepartments] = useState([]);  // Ensure it's always an array
   const [users, setUsers] = useState([]); // State for users
@@ -12,6 +14,12 @@ const AdminDepartmentPage = () => {
     manager: "",
   });
   const [formErrors, setFormErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentDepartments = departments.slice(startIndex, endIndex);
 
   // Get the token from localStorage
   const token = localStorage.getItem("authToken");
@@ -105,8 +113,8 @@ const AdminDepartmentPage = () => {
         </div>
 
         <div className="container py-4">
-          <div className="d-flex justify-content-start align-items-center mb-4">
-            <button className="btn" style={{backgroundColor:"#0b455b",color:"#fff"}} onClick={() => setShowModal(true)}>
+          <div className="d-flex justify-content-start align-items-center mb-2">
+            <button className="btn" style={{backgroundColor:"#0b455b",color:"#fff",height:"50px",width:"200px"}} onClick={() => setShowModal(true)}>
               + Add Department
             </button>
           </div>
@@ -123,10 +131,10 @@ const AdminDepartmentPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-  {departments.length > 0 ? (
-    departments.map((dept, index) => (
+  {currentDepartments.length > 0 ? (
+    currentDepartments.map((dept, index) => (
       <tr key={dept.id}>
-        <td>{index + 1}</td>
+        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
         <td>{dept.name}</td>
         <td>{dept.department_manager ? dept.department_manager : "No Manager Assigned"}</td>
       </tr>
@@ -144,6 +152,17 @@ const AdminDepartmentPage = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        <div
+          className="d-flex justify-content-center align-items-center"
+         
+        >
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(departments.length / itemsPerPage)}
+            handlePageChange={(page) => setCurrentPage(page)}
+          />
         </div>
 
         {showModal && (

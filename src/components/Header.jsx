@@ -19,19 +19,21 @@ const Header = ({ role, userId, onResubmit }) => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const navigate = useNavigate();
+  const fetchCurrentUser = () => {
+    axios
+      .get(ENDPOINTS.CURRENT_USER, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+      })
+      .then((response) => {
+        const user = response.data;
+        console.log("Current user fetched:", user);
+        setRole(user.role); // Set the user's role
+      })
+      .catch((error) => console.error("Error fetching current user:", error));
+  };
 
   useEffect(() => {
-    axios
-      .get(`/users/${userId}/`)
-      .then((response) => {
-        setFormData({
-          fullName: response.data.full_name,
-          phoneNumber: response.data.phone_number,
-          password: "",
-        });
-      })
-      .catch((error) => console.error("Error fetching user data:", error));
-
+      fetchCurrentUser();
     fetchNotifications();
     fetchUnreadCount();
   }, [userId]);

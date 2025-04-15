@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
+import CustomPagination from "./CustomPagination";
 const AccountPage = () => {
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
   const [accounts, setAccounts] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [roleMappings, setRoleMappings] = useState({});
@@ -13,7 +14,7 @@ const AccountPage = () => {
     phone: "",
     role: "",
     department: "",
-  });
+  }); 
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -87,6 +88,7 @@ const AccountPage = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageAccounts = accounts.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(accounts.length / itemsPerPage);
 
   const handleToggleStatus = async (id, isActive) => {
     const token = localStorage.getItem('authToken');
@@ -164,6 +166,10 @@ const AccountPage = () => {
     }
   };
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="d-flex mt-5" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <div className="flex-grow-1 mt-2">
@@ -198,7 +204,7 @@ const AccountPage = () => {
                       {Array.isArray(currentPageAccounts) && currentPageAccounts.length > 0 ? (
                         currentPageAccounts.map((acc, index) => (
                           <tr key={acc.id}>
-                            <td>{index + 1}</td>
+                            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Adjust numbering */}
                             <td>{acc.full_name}</td>
                             <td>{acc.email}</td>
                             <td>
@@ -219,33 +225,50 @@ const AccountPage = () => {
                               )}
                             </td>
                             <td>
-  {departments.length > 0
-    ? departments.find(dep => dep.id === acc.department)?.name || "No Department"
-    : "Loading..."}
-</td>
-
+                              {departments.length > 0
+                                ? departments.find((dep) => dep.id === acc.department)?.name ||
+                                  "No Department"
+                                : "Loading..."}
+                            </td>
                             <td>
-                              <span className={`badge ${acc.is_active ? "bg-success" : "bg-secondary"}`}>
+                              <span
+                                className={`badge ${
+                                  acc.is_active ? "bg-success" : "bg-secondary"
+                                }`}
+                              >
                                 {acc.is_active ? "Active" : "Inactive"}
                               </span>
                             </td>
                             <td>
                               {editAccount && editAccount.id === acc.id ? (
                                 <>
-                                  <button style={{backgroundColor:"#0b455b", color:"#fff"}} className="btn btn-sm me-2" onClick={handleSaveEdit}>
+                                  <button
+                                    style={{ backgroundColor: "#0b455b", color: "#fff" }}
+                                    className="btn btn-sm me-2"
+                                    onClick={handleSaveEdit}
+                                  >
                                     Save
                                   </button>
-                                  <button className="btn btn-secondary btn-sm" onClick={handleCancelEdit}>
+                                  <button
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={handleCancelEdit}
+                                  >
                                     Cancel
                                   </button>
                                 </>
                               ) : (
-                                <button style={{backgroundColor:"#0b455b", color:"#fff"}} className="btn btn-sm me-2" onClick={() => handleEdit(acc)}>
+                                <button
+                                  style={{ backgroundColor: "#0b455b", color: "#fff" }}
+                                  className="btn btn-sm me-2"
+                                  onClick={() => handleEdit(acc)}
+                                >
                                   Edit
                                 </button>
                               )}
                               <button
-                                className={`btn btn-sm ${acc.is_active ? "btn-danger" : "btn-success"}`}
+                                className={`btn btn-sm ${
+                                  acc.is_active ? "btn-danger" : "btn-success"
+                                }`}
                                 onClick={() => handleToggleStatus(acc.id, acc.is_active)}
                               >
                                 {acc.is_active ? "Deactivate" : "Activate"}
@@ -268,17 +291,16 @@ const AccountPage = () => {
           </div>
         )}
 
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <button className="btn btn-secondary btn-sm" onClick={handlePreviousPage} disabled={currentPage === 1}>
-            Previous
-          </button>
-          <small>
-            Page {currentPage} of {Math.ceil(accounts.length / itemsPerPage)}
-          </small>
-          <button className="btn btn-secondary btn-sm" onClick={handleNextPage} disabled={currentPage * itemsPerPage >= accounts.length}>
-            Next
-          </button>
-        </div>
+<div
+  className="d-flex justify-content-center align-items-center"
+  // Full viewport height
+>
+  <CustomPagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    handlePageChange={handlePageChange}
+  />
+</div>
       </div>
     </div>
   );

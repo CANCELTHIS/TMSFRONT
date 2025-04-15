@@ -6,8 +6,10 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaWindowClose } from "react-icons/fa"; // Import the close icon
 import Header from "./Header"; // Import the Header component
-import CustomPagination from "./CustomPagination";
-const EmployeePage = () => {
+import CustomPagination from "./CustomPagination"; // Import the CustomPagination component
+import { FaAngleLeft, FaAngleRight} from "react-icons/fa";
+
+const HightCost = () => {
   const [showForm, setShowForm] = useState(false);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ const EmployeePage = () => {
 
     setLoading(true); // Show loading state
     try {
-      const response = await fetch(ENDPOINTS.REQUEST_LIST, {
+      const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
@@ -115,6 +117,7 @@ const EmployeePage = () => {
       console.error("Fetch Users Error:", error);
     }
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -157,7 +160,7 @@ const EmployeePage = () => {
   
     setSubmitting(true);
     try {
-      const response = await fetch(ENDPOINTS.CREATE_REQUEST, {
+    const response = await fetch(ENDPOINTS.CREATE_HIGH_COST_REQEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -527,8 +530,6 @@ const EmployeePage = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* Pagination Controls */}
             <CustomPagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -573,10 +574,10 @@ const EmployeePage = () => {
             </div>
           </div>
         )}
-        <ToastContainer /> {/* Add ToastContainer for displaying notifications */} {/* Add ToastContainer for displaying notifications */}
+        <ToastContainer />
       </div>
     </>
   );
 };
 
-export default EmployeePage;
+export default HightCost;
