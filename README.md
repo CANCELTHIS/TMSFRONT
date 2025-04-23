@@ -1,46 +1,65 @@
-# 1. Fork the Repository on GitHub: https://github.com/CANCELTHIS/TMS_FRONT.git
+Transport Management System (TMS) - Frontend
+A React-based frontend for managing transport operations, including request approvals, and role-based dashboards. Built with Vite, Material-UI, and React Router.
 
-# 2. Clone the Repository
-git clone https://github.com/CANCELTHIS/TMS_FRONT.git
+🚀 Quick Start
+Install dependencies:
 
-# 3. Navigate to the Project Folder
-cd TMS_FRONT
-
-# 4. Install Dependencies
-# For npm:
+bash
 npm install
-# For yarn:
-yarn install
+Run the development server:
 
-# 5. Create a New Branch
-git checkout -b my-new-feature
+bash
+npm run dev
+Build for production:
 
-# 6. Make Changes to the Code
+bash
+npm run build
+Preview production build:
 
-# 7. Run the Project
-# For npm:
-npm start
-# For yarn:
-yarn start
+bash
+npm run preview
+🔧 Main Features
+Role-based UI (Driver, Manager, Admin)
 
-# 8. Stage and Commit Changes
-git add .
-git commit -m "Description of changes"
+JWT Authentication (Axios + JWT-decode)
 
-# 9. Push Your Changes
-git push origin my-new-feature
+Real-time Vehicle Tracking (React Leaflet + Maps)
 
-# 10. Create a Pull Request on GitHub
+Multi-step Approval Workflow
 
-# 11. Review and Address Feedback (if any)
+Responsive Dashboard (MUI + Recharts)
 
-# 12. Clean Up after Merging
-git branch -d my-new-feature
-git push origin --delete my-new-feature
+Notifications & Alerts (React Toastify)
 
-# 13. Keep Your Fork Updated
-git remote add upstream https://github.com/CANCELTHIS/TMS_FRONT.git
-git fetch upstream
-git checkout main
-git merge upstream/main
-git push origin main
+📂 Project Structure
+src/  
+├── assets/           
+├── components/         
+├── context/        
+└── utilities/         
+🌐 API Integration
+Configure your backend API in:
+
+js
+// src/services/api.js  
+axios.create({ baseURL: "https://tms-api-23gs.onrender.com/" });
+🛠️ Tech Stack
+Frontend: React 18 + Vite
+
+UI Library: Material-UI (MUI) + Bootstrap
+
+Routing: React Router DOM
+
+HTTP Client: Axios
+
+Maps: React Leaflet
+
+Animation: Framer Motion + Lottie
+
+📜 Scripts
+Command	Description
+npm run dev	Start dev server (Vite)
+npm run build	Create optimized production build
+npm run lint	Run ESLint for code quality
+📌 Dependencies
+See package.json for full list.
