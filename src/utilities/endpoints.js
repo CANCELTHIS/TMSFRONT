@@ -44,23 +44,28 @@ export const ENDPOINTS = {
   UNREADOUNT: `${BASE_URL}transport-requests/notifications/unread-count/`,
   MARKALL_READ: `${BASE_URL}transport-requests/notifications/mark-all-read/`,
 
-
   VEHICLE_LIST: `${BASE_URL}vehicles/`,
   VEHICLE_LIST_FORMAT: `${BASE_URL}vehicles.{format}/`,
   VEHICLE_DETAIL: (pk) => `${BASE_URL}vehicles/${pk}/`,
   EDIT_VEHICLE: (pk) => `${BASE_URL}vehicles/${editingVehicle.id}/`,
   VEHICLE_DETAIL_FORMAT: (pk, format) => `${BASE_URL}vehicles/${pk}.${format}/`,
-  CREATE_MENTENANCE_REQUEST: `${BASE_URL}maintenance-requests/create/`,
-  MENTENANCE_REQUEST_LIST: `${BASE_URL}maintenance-requests/list/`,
-  APPREJ_MENTENANCE_REQUEST: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`,
   CURRENT_USER_VEHICLES: `${BASE_URL}my-vehicle/`,
-
   //refuling endpoints
-  CREATE_HIGH_COST_REQEST: `${BASE_URL}highcost-requests/create/`, // POST method to create a high cost request
+  CREATE_HIGH_COST_REQEST: `${BASE_URL}highcost-requests/create/`, 
   HIGH_COST_LIST: `${BASE_URL}highcost-requests/list/`,
-  CREATE_REFUELING_REQUEST: `${BASE_URL}refueling_requests/create/`, // POST method to create a refueling request
-  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`, // GET method to list refueling requests
-  REFUELING_REQUEST_DETAIL: (pk) => `${BASE_URL}refueling_requests/${pk}/`, // GET method for refueling request detail view
-  REFUELING_REQUEST_ESTIMATE: (request_id) => `${BASE_URL}refueling_requests/${request_id}/estimate/`, // POST method to calculate refueling request
-  APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`, // POST method to approve, reject, or forward refueling request
-};
+  CREATE_REFUELING_REQUEST: `${BASE_URL}refueling_requests/create/`,
+  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`, 
+  REFUELING_REQUEST_DETAIL: (pk) => `${BASE_URL}refueling_requests/${pk}/`,
+  REFUELING_REQUEST_ESTIMATE: (request_id) => `${BASE_URL}refueling_requests/${request_id}/estimate/`,
+  APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`,
+  APPREJ_HIGHCOST_REQUEST:(request_id)=>`${BASE_URL}highcost-requests/${request_id}/action/`,
+  ESTIMATE_HIGH_COST: (request_id) => `${BASE_URL}highcost-requests/${request_id}/estimate/`, 
+  ASSIGN_VEHICLE:(request_id) =>`${BASE_URL}highcost-requests/${request_id}/assign-vehicle/`, 
+  HIGH_COST_DETAIL: (request_id) => `${BASE_URL}highcost-requests/${request_id}/`,
+  COMPLETE_TRIP: (request_id) => `${BASE_URL}highcost-requests/${request_id}/complete-trip/`,
+  //maintennace endpoints
+  CREATE_MAINTENANCE_REQUEST: `${BASE_URL}maintenance-requests/create/`, // Create a new maintenance request
+  LIST_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/list/`, // List all maintenance requests
+  MAINTENANCE_REQUEST_ACTION: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`, // Approve/Reject a maintenance request
+  SUBMIT_MAINTENANCE_FILES: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
+ };

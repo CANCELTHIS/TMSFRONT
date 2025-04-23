@@ -4,7 +4,7 @@ import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import CustomPagination from './CustomPagination';
 
-const MaintenanceTable = () => {
+const BUmaintenance = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
@@ -305,4 +305,4 @@ const MaintenanceTable = () => {
   );
 };
 
-export default MaintenanceTable;
+export default BUmaintenance;

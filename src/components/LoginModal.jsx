@@ -33,7 +33,6 @@ const LoginModal = ({ onClose }) => {
       const { access } = response.data;
       localStorage.setItem('authToken', access);
       const decodedToken = jwtDecode(access);
-      console.log('Decoded Token:', decodedToken);
       onClose();
 
       if (decodedToken.role === 1) {
@@ -47,13 +46,13 @@ const LoginModal = ({ onClose }) => {
       } else if (decodedToken.role === 5) {
         navigate('/ceo/vehicle-request');
       } else if (decodedToken.role === 6) {
-        navigate('/driver/driver-schedule');
+        navigate('/driver/high-cost-schedule');
       } else if (decodedToken.role === 7) {
         navigate('/admin/admin');
       } else if (decodedToken.role === 8) {
-        navigate('/general-system-executer/refueling'); // Budget Manager
+        navigate('/general-service/refueling'); 
       } else if (decodedToken.role === 9) {
-        navigate('/Budget Manager/refueling'); // Budget Officer
+        navigate('/budget-manager/high_cost'); 
       } else {
         navigate('/');
       }

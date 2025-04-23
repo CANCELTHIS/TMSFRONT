@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { MdMenu } from "react-icons/md"
+import { MdMenu, MdSchedule } from "react-icons/md"
 import { IoClose } from "react-icons/io5"
 import Logo from "../assets/Logo.jpg"
 import "bootstrap/dist/css/bootstrap.min.css"
@@ -11,8 +11,9 @@ import { MdOutlineDashboard, MdOutlineHistory, MdOutlineRequestPage } from "reac
 import { IoBusiness } from "react-icons/io5"
 import { FaUserCog, FaTools, FaGasPump } from "react-icons/fa"
 import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai"
-import { p } from "framer-motion/client"
+import { p, path } from "framer-motion/client"
 import { FaGaugeHigh } from "react-icons/fa6";
+import { Wrench } from "lucide-react"
 
 const Sidebar = ({ role }) => {
   const location = useLocation()
@@ -37,15 +38,19 @@ const Sidebar = ({ role }) => {
     { path: "/transport-manager/vehicle-management", icon: <AiOutlineCar />, label: "Vehicle Management" },
     { path: "/transport-manager/maintenance-table", icon: <FaTools />, label: "Maintenance" },
     { path: "/transport-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/transport-manager/high_cost", icon: <FaGaugeHigh />, label: "Highcost Vehicle Requests" },
     { path: "/transport-manager/report", icon: <AiOutlineFileText />, label: "Report" },
     { path: "/transport-manager/history", icon: <MdOutlineHistory />, label: "History" },
+    { path: "/transport-manager/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
+
   ]
 
   const driverMenus = [
-    { path: "/driver/driver-schedule", icon: <MdOutlineDashboard />, label: "Driver Schedule" },
-    { path: "/driver/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
+    { path: "/driver/driver-schedule", icon: <MdSchedule />, label: "Driver Schedules" },
+    { path: "/driver/high-cost-schedule", icon: <FaGaugeHigh />, label: "High Cost Schedule" },
+    { path: "/driver/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
     { path: "/driver/refueling-request", icon: <FaGasPump />, label: "Refueling Request" },
-
+    {path: "/driver/vehicle-services", icon: <Wrench />, label: "Vehicle Service" },
   ]
 
   const departmentManagerMenus = [
@@ -53,35 +58,39 @@ const Sidebar = ({ role }) => {
     { path: "/department-manager/refueling-request", icon: <FaGasPump />, label: "Refueling" },
     { path: "/department-manager/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
     { path: "/department-manager/hight-cost", icon: <FaGaugeHigh />, label: "High Cost" },
-    { p}
+    { p},
+    { path: "/department-manager/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
+
 ]
 
   const financeManagerMenus = [
     { path: "/finance-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
+    { path: "/finance-manager/hight-cost", icon: <FaGaugeHigh />, label: "High Cost" },
     { path: "/finance-manager/financemaintenance-table", icon: <FaTools />, label: "Maintenance Request" },
     { path: "/finance-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/finance-manager/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
+
   ]
 
   const ceoMenus = [
-    { path: "/ceo/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
-    // { path: "/ceo/highcost_vehicle-request", icon: <FaTools />, label: "High cost" },
+    { path: "/ceo/high_cost", icon: <FaGaugeHigh />, label: "Highcost Vehicle Requests" },
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
     { path: "/ceo/ceomaintenance-table", icon: <FaTools />, label: "Maintenance" },
-    
-
-   
+    { path: "/ceo/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
   ]
   const BudgetManagerMenus = [
-
-    { path: "/Budget Manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/budget-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/budget-manager/high_cost", icon: <FaGaugeHigh />, label: "Highcost Vehicle Requests" },
+    { path: "/budget-manager/maintenance", icon: <FaTools />, label: "Maintenance" },
+    { path: "/budget-manager/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
 
   ]
 
   const GeneralSystemExcuterMenus = [
-    { path: "/general-system-executer/requests", icon: <MdOutlineRequestPage />, label: "Vechicle Requests" },
-    { path: "general-system-executer/refueling", icon: <FaGasPump />, label: "Refueling" },
-    
-
+    { path: "/general-service/refueling", icon: <FaGasPump />, label: "Refueling" },
+    { path: "/general-service/high_cost", icon: <FaGaugeHigh />, label: "Highcost Vehicle Requests" },
+    { path: "/general-service/maintenance", icon: <Wrench />, label: "Maintenance" },
+    { path: "/general-service/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
 
   ]
 
@@ -92,8 +101,8 @@ const Sidebar = ({ role }) => {
     "/department-manager": departmentManagerMenus,
     "/finance-manager": financeManagerMenus,
     "/ceo": ceoMenus,   
-    "/general-system-executer": GeneralSystemExcuterMenus, // Added Budget Manager menus
-    "/Budget Manager": BudgetManagerMenus, // Added Budget Officer menus
+    "/general-service": GeneralSystemExcuterMenus, // Added Budget Manager menus
+    "/budget-manager": BudgetManagerMenus, // Added Budget Officer menus
   }
 
   const activeMenu = Object.keys(menuMappings).find((key) => location.pathname.startsWith(key))

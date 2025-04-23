@@ -3,8 +3,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import CustomPagination from './CustomPagination';
+import { Eye } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const MaintenanceTable = () => {
+const GSmaintenance = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
@@ -15,10 +18,22 @@ const MaintenanceTable = () => {
   const [pendingAction, setPendingAction] = useState(null); // State for pending action
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [maintenanceLetter, setMaintenanceLetter] = useState(null); // State for maintenance letter file
+  const [receiptFile, setReceiptFile] = useState(null); // State for receipt file
+  const [maintenanceTotalCost, setMaintenanceTotalCost] = useState(""); // State for total cost
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = maintenanceRequests.slice(startIndex, endIndex);
+
+  const handleFileChange = (e, setFile) => {
+    const file = e.target.files[0];
+    if (file && file.type === "application/pdf") {
+      setFile(file);
+    } else {
+      alert("Please upload a valid PDF file.");
+    }
+  };
 
   // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
@@ -53,39 +68,91 @@ const MaintenanceTable = () => {
 
   // Handle actions (forward, reject)
   const handleAction = async (id, action) => {
+    if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
+      toast.error("Please upload all required files and provide the total cost before proceeding.");
+      return;
+    }
+
     const accessToken = localStorage.getItem("authToken");
-  
+
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-  
+
     setActionLoading(true);
     try {
       const body = { action };
       if (action === "reject") {
+        if (!rejectionMessage.trim()) {
+          toast.error("Rejection message cannot be empty.");
+          return;
+        }
         body.rejection_message = rejectionMessage; // Include rejection message for rejection action
       }
-  
+
       const response = await fetch(ENDPOINTS.MAINTENANCE_REQUEST_ACTION(id), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body), // Send the correct payload
+        body: JSON.stringify(body),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Failed to ${action} the maintenance request`);
       }
-  
-      fetchMaintenanceRequests(); // Refresh the list after action
+
+      fetchMaintenanceRequests(); // Refresh the list
       setSelectedRequest(null); // Close the detail view
+      toast.success(`Request ${action}ed successfully.`);
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
+      toast.error(`Failed to ${action} the maintenance request.`);
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const handleSubmitFiles = async (id) => {
+    const accessToken = localStorage.getItem("authToken");
+
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
+      toast.error("Please upload all required files and provide the total cost.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("maintenance_letter_file", maintenanceLetter); // Correct field name
+    formData.append("maintenance_receipt_file", receiptFile); // Correct field name
+    formData.append("maintenance_total_cost", maintenanceTotalCost); // Correct field name
+
+    try {
+      const response = await fetch(ENDPOINTS.SUBMIT_MAINTENANCE_FILES(id), {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Backend response:", errorText);
+        throw new Error("Failed to submit maintenance files");
+      }
+
+      toast.success("Files submitted successfully!");
+      fetchMaintenanceRequests(); 
+    } catch (error) {
+      console.error("Error submitting maintenance files:", error);
+      toast.error("Failed to submit maintenance files.");
     }
   };
 
@@ -97,11 +164,13 @@ const MaintenanceTable = () => {
   };
 
   const handleRejectAction = () => {
-    if (rejectionMessage.trim() && selectedRequest) {
+    if (!rejectionMessage.trim()) {
+      toast.error("Rejection message cannot be empty.");
+      return;
+    }
+    if (selectedRequest) {
       handleAction(selectedRequest.id, "reject"); // Use the correct `id` from the selected request
       setShowRejectModal(false);
-    } else {
-      alert("Rejection message cannot be empty.");
     }
   };
 
@@ -112,6 +181,7 @@ const MaintenanceTable = () => {
 
   return (
     <div className="container mt-5">
+        <ToastContainer />
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       {loading ? (
@@ -195,12 +265,82 @@ const MaintenanceTable = () => {
                 <p><strong>Reason:</strong> {selectedRequest.reason}</p>
                 <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
                 <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+
+                <div className="mb-3">
+                  <label htmlFor="maintenanceLetter" className="form-label">
+                    Maintenance Letter (PDF) <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    id="maintenanceLetter"
+                    accept="application/pdf"
+                    onChange={(e) => handleFileChange(e, setMaintenanceLetter)}
+                  />
+                  {maintenanceLetter && (
+                    <button
+                      className="btn"
+                      onClick={() => window.open(URL.createObjectURL(maintenanceLetter), "_blank")}
+                    >
+                      <Eye />
+                    </button>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="receiptFile" className="form-label">
+                    Receipt File (PDF) <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    id="receiptFile"
+                    accept="application/pdf"
+                    onChange={(e) => handleFileChange(e, setReceiptFile)}
+                  />
+                  {receiptFile && (
+                    <button
+                      className="btn"
+                      onClick={() => window.open(URL.createObjectURL(receiptFile), "_blank")}
+                    >
+                      <Eye />
+                    </button>
+                  )}
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="maintenanceTotalCost" className="form-label">
+                    Total Cost <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="maintenanceTotalCost"
+                    value={maintenanceTotalCost}
+                    onChange={(e) => setMaintenanceTotalCost(e.target.value)}
+                    placeholder="Enter total cost"
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <button
+                    className="btn"
+                    style={{ backgroundColor: "#181E4B", color: "white",width:"100px" }}
+                    onClick={() => handleSubmitFiles(selectedRequest.id)}
+                  >
+                    Submit
+                  </button>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white" }}
                   onClick={() => {
+                    if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
+                      toast.error("Please upload all required files and provide the total cost before forwarding.");
+                      return;
+                    }
                     setPendingAction("forward");
                     setShowConfirmModal(true);
                   }}
@@ -210,7 +350,13 @@ const MaintenanceTable = () => {
                 </button>
                 <button
                   className="btn btn-danger"
-                  onClick={() => setShowRejectModal(true)}
+                  onClick={() => {
+                    if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
+                      toast.error("Please upload all required files and provide the total cost before rejecting.");
+                      return;
+                    }
+                    setShowRejectModal(true);
+                  }}
                   disabled={actionLoading}
                 >
                   {actionLoading ? "Processing..." : "Reject"}
@@ -305,4 +451,4 @@ const MaintenanceTable = () => {
   );
 };
 
-export default MaintenanceTable;
+export default GSmaintenance;

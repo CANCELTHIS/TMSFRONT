@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import axios from "axios"; // Ensure axios is imported
+import axios from "axios"; 
 import Lottie from 'lottie-react';
 import animationData from "./Lottie Lego (1).json";
 import { IoCloseSharp } from "react-icons/io5";
@@ -10,7 +10,7 @@ import CustomPagination from './CustomPagination';
 const AdminPage = () => {
   const [data, setData] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [departments, setDepartments] = useState([]);
+const [departments, setDepartments] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Number of items per page
   const [isLoading, setIsLoading] = useState(false);

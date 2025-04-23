@@ -7,7 +7,7 @@ import { IoMdClose } from "react-icons/io";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from './CustomPagination';
 
-const CeoVehicleRequest = () => {
+const FIHighCost = () => {
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]); // State for employees
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ const CeoVehicleRequest = () => {
 
     setLoading(true);
     try {
-      // Fetch high-cost requests first
+      // Fetch high-cost requests
       const highCostRequests = await fetchHighCostRequests();
 
       // Add a "requestType" property to high-cost requests
@@ -42,29 +42,8 @@ const CeoVehicleRequest = () => {
         requestType: "High Cost", // Label as high-cost
       }));
 
-      // Fetch normal requests
-      const normalResponse = await fetch(ENDPOINTS.REQUEST_LIST, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!normalResponse.ok) throw new Error("Failed to fetch normal transport requests");
-
-      const normalData = await normalResponse.json();
-
-      // Add a "requestType" property to normal requests
-      const normalRequestsWithLabel = normalData.results.map((request) => ({
-        ...request,
-        requestType: "Normal", // Label as normal
-      }));
-
-      // Combine high-cost and normal requests (high-cost first)
-      const combinedRequests = [...highCostRequestsWithLabel, ...normalRequestsWithLabel];
-
-      console.log("Combined Requests:", combinedRequests); // Debugging log
-      setRequests(combinedRequests); // Set combined requests to state
+      console.log("High-Cost Requests:", highCostRequestsWithLabel); // Debugging log
+      setRequests(highCostRequestsWithLabel); // Set high-cost requests to state
     } catch (error) {
       console.error("Fetch Requests Error:", error);
     } finally {
@@ -149,33 +128,29 @@ const CeoVehicleRequest = () => {
     }
 
     try {
-      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
+      const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          
         },
         body: JSON.stringify({
-          action: "forward", 
+          action: "approve", 
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to forward transport request");
-
-
-      // Update the status locally after forwarding
+      if (!response.ok) throw new Error("Failed to approve transport request");
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "forwarded" } : req
+          req.id === requestId ? { ...req, status: "approved" } : req
         )
       );
 
-      setSelectedRequest(null); // Close modal
-      toast.success("Request forwarded to transport manager successfully!"); // Show success toast
+      setSelectedRequest(null); 
+      toast.success("Request approved successfully!"); 
     } catch (error) {
       console.error("Approve Error:", error);
-      toast.error("Failed to forward request."); // Show error toast
+      toast.error("Failed to approve request."); 
     }
   };
 
@@ -191,7 +166,7 @@ const CeoVehicleRequest = () => {
     }
 
     try {
-      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
+      const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -282,16 +257,6 @@ const CeoVehicleRequest = () => {
             <td>{request.start_time}</td>
             <td>{request.return_day}</td>
             <td>{request.destination}</td>
-            <td>
-              <span
-                style={{
-                  color: request.requestType === "High Cost" ? "red" : "green", // Red for High Cost, Green for Normal
-                  fontWeight: "bold",
-                }}
-              >
-                {request.requestType}
-              </span>
-            </td>
             <td>{request.status}</td>
             <td>
               <button
@@ -443,7 +408,7 @@ const CeoVehicleRequest = () => {
                 <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}></button>
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to forward this request to the transport manager?</p>
+                <p>Are you sure you want to Approve This request?</p>
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowApproveConfirmation(false)}>
@@ -460,4 +425,4 @@ const CeoVehicleRequest = () => {
     </div>
   );
 };
-export default CeoVehicleRequest;
+export default FIHighCost;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+import { toast } from "react-toastify";
 
 const RefuelingRequest = () => {
   const [requests, setRequests] = useState([]);
@@ -33,7 +34,7 @@ const RefuelingRequest = () => {
       }
 
       const data = await response.json();
-      console.log("Fetched Refueling Requests:", data); // Log fetched data
+      console.log("Fetched Refueling Requests:", data);
       setRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching refueling requests:", error);
@@ -55,6 +56,7 @@ const RefuelingRequest = () => {
 
     if (!accessToken) {
       console.error("No access token found.");
+      toast.error("You are not authorized. Please log in again.");
       return;
     }
 
@@ -77,8 +79,10 @@ const RefuelingRequest = () => {
       setRequests((prevRequests) => [newRequest, ...prevRequests]);
       setFormData({ date: "", destination: "" }); // Reset form data
       setShowForm(false);
+      toast.success("Refueling request created successfully!");
     } catch (error) {
       console.error("Error creating refueling request:", error);
+      toast.error("Failed to create refueling request.");
     }
   };
 

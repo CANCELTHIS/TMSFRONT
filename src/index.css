@@ -316,9 +316,9 @@ html {
   background: white;
   padding: 2rem;
   border-radius: 10px;
-  width: 30rem;
+  width: 45rem;
   position: relative;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(68, 66, 66, 0.1);
 }
 
 .close-btn {
@@ -1140,4 +1140,18 @@ button{
   border-radius: 8px;
   padding: 1rem;
   max-width: 400px;
+}
+
+
+.modal-content {
+  margin:50px auto; /* Ensure the content is centered */
+}
+.btn-close{
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
 }

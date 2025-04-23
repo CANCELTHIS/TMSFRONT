@@ -82,7 +82,6 @@ const EmployeePage = () => {
 
       const data = await response.json();
       setCurrentUser(data);
-      console.log("This is the current logged user data:", data);
     } catch (error) {
       console.error("Fetch Current User Error:", error);
     }
@@ -105,8 +104,7 @@ const EmployeePage = () => {
       if (!response.ok) throw new Error("Failed to fetch users");
 
       const data = await response.json();
-      console.log("Users:", data);
-
+    
       const filteredUsers = data.results.filter(
         (user) => user.id !== currentUser?.id // Exclude current user
       );
@@ -204,7 +202,6 @@ const EmployeePage = () => {
       if (!response.ok) throw new Error("Failed to fetch notifications");
       
       const data = await response.json();
-      console.log("Updated notifications:", data.results);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }

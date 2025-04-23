@@ -1,95 +1,215 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Logo from "../assets/Logo.jpg"; // Import the logo
-
+import { toast, ToastContainer } from "react-toastify"; // For toast messages
+import "react-toastify/dist/ReactToastify.css";
+import Logo from "../assets/Logo.jpg"; // Import the logo image
+import { ENDPOINTS } from "../utilities/endpoints";
+import { IoClose } from "react-icons/io5";
 const DriverSchedule = () => {
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [users, setUsers] = useState([]); // State for employees
+  const [loading, setLoading] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
 
-  const schedules = [
-    {
-      id: 1,
-      sender: "John Doe",
-      destination: "Adama",
-      startDate: "23/12/2025",
-      startTime: "6:00 AM",
-      travelers: ["John Doe", "John Doe", "John Doe", "John Doe", "John Doe"],
-    },
-  ];
+  const accessToken = localStorage.getItem("authToken");
 
-  const handleViewDetails = (schedule) => {
-    setSelectedSchedule(schedule);
+  // Fetch requests and users when the component mounts
+  useEffect(() => {
+    fetchRequests();
+    fetchUsers(); // Fetch users
+  }, []);
+
+  const fetchRequests = async () => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(ENDPOINTS.REQUEST_LIST, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch transport requests");
+
+      const data = await response.json();
+      setRequests(data.results || []); // Set fetched data to state
+    } catch (error) {
+      console.error("Fetch Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const closePopup = () => {
-    setSelectedSchedule(null);
+  const fetchUsers = async () => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(ENDPOINTS.USER_LIST, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch users");
+
+      const data = await response.json();
+      setUsers(data.results || []); // Set users data
+    } catch (error) {
+      console.error("Fetch Users Error:", error);
+    }
   };
+
+  // Get employee names from IDs
+  const getEmployeeNames = (employeeIds) => {
+    return employeeIds
+      .map((id) => {
+        const employee = users.find((user) => user.id === id);
+        return employee ? employee.full_name : "Unknown";
+      })
+      .join(", ");
+  };
+
+  const handleViewDetail = (request) => {
+    setSelectedRequest(request);
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedRequest(null);
+  };
+
+  const handleNotify = async (requestId) => {
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(ENDPOINTS.COMPLETE_TRANSPORT_TRIP(requestId), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}), // Empty JSON body as per the prompt
+      });
+
+      if (!response.ok) throw new Error("Failed to send notification");
+
+      toast.success("Notification sent successfully!");
+      handleCloseDetail(); // Close the modal
+    } catch (error) {
+      console.error("Notify Error:", error);
+      toast.error("Failed to send notification.");
+    }
+  };
+
+  const handleCompleteTrip = async (requestId) => {
+    try {
+      const response = await fetch(ENDPOINTS.COMPLETE_TRANSPORT_TRIP(requestId), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) throw new Error("Failed to complete the trip");
+
+      toast.success("Trip completed successfully!");
+    } catch (error) {
+      console.error("Error completing trip:", error);
+      toast.error("Failed to complete the trip.");
+    }
+  };
+
 
   return (
-    <div className="d-flex vh-100">
-      <div className="flex-grow-1 p-4 bg-light">
-        <h5 className="mb-3">View Schedule</h5>
-        <table className="table table-hover">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Sender</th>
-              <th>Destination</th>
-              <th>Start Date</th>
-              <th>Start Time</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map((schedule) => (
-              <tr key={schedule.id}>
-                <td>{schedule.id}</td>
-                <td>{schedule.sender}</td>
-                <td>{schedule.destination}</td>
-                <td>{schedule.startDate}</td>
-                <td>{schedule.startTime}</td>
-                <td>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => handleViewDetails(schedule)}
-                  >
-                    View Details
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+      <ToastContainer />
+      {loading ? (
+        <div className="text-center mt-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p>Loading data...</p>
+        </div>
+      ) : (
+        <div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
+          <div style={{ overflowX: "auto" }}>
+            <div className="table-responsive">
+              <table className="table table-hover align-middle">
+                <thead className="table">
+                  <tr>
+                    <th>Start Day</th>
+                    <th>Start Time</th>
+                    <th>Return Day</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((request) => (
+                    <tr key={request.id}>
+                      <td>{request.start_day}</td>
+                      <td>{request.start_time}</td>
+                      <td>{request.return_day}</td>
+                      <td>{request.destination}</td>
+                      <td>{request.status}</td>
+                      <td>
+                        <button
+                          className="btn btn-sm"
+                          style={{ backgroundColor: "#181E4B", color: "white" }}
+                          onClick={() => handleViewDetail(request)}
+                        >
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {selectedSchedule && (
-        <div
-          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="bg-white p-4 rounded shadow-lg" style={{ width: "400px" }}>
-            <img src={Logo} alt="Logo" className="img-fluid mb-3" style={{ maxWidth: "100px", margin: "0 auto" }} />
-            <h5 className="mb-3">Route Details</h5>
-            <p><strong>Sender:</strong> {selectedSchedule.sender}</p>
-            <p><strong>Destination:</strong> {selectedSchedule.destination}</p>
-            <p><strong>Start Date:</strong> {selectedSchedule.startDate}</p>
-            <p><strong>Start Time:</strong> {selectedSchedule.startTime}</p>
-            <p><strong>Travelers:</strong></p>
-            <ul>
-              {selectedSchedule.travelers.map((traveler, index) => (
-                <li key={index}>{traveler}</li>
-              ))}
-            </ul>
-            <div className="d-flex justify-content-center">
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#0B455B",
-                  color: "white"
-                }}
-                onClick={closePopup}
-              >
-                Notify Return
-              </button>
+      {selectedRequest && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <h5 className="modal-title">Transport Request Details</h5>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}><IoClose/></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
+                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
+                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+              </div>
+              <div className="modal-footer text-center" style={{ justifyContent: "center" }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => handleNotify(selectedRequest.id)}
+                >
+                  Notify
+                </button>
+              </div>
             </div>
           </div>
         </div>

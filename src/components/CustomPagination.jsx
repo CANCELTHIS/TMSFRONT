@@ -22,7 +22,7 @@ export default function CustomPagination({ currentPage, totalPages, handlePageCh
         sx={{
           '& .MuiPaginationItem-root': {
             width: '35px', // Set width for each button
-            height: '35px', // Set height for each button
+    height: '35px', // Set height for each button 
             borderRadius: '75%',
             border: '1px solid rgba(47, 163, 181, 0.2)', // Add a transparent border
             backgroundColor: 'transparent', // Transparent background

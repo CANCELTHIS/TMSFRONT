@@ -38,8 +38,14 @@ import CEOMaintenanceTable from './components/CEOMaintenanceTable';
 import FinanceMaintenanceTable from './components/FinanceMaintenanceTable';
 import TMRefuelingTable  from './components/TMRefuelingTable';
 import HightCost from './components/HightCost';
-import CeoVehicleRequest from './components/CeoVehicleRequest';
-// Protected Route Component
+import HighCostRequests from './components/HighCostDriverSchedule';
+import BUHighCost from './components/BUHighCost';
+import TMhighcostrequests from './components/TMhighcostrequests';
+import FIHighCost from './components/FIHighCost';
+import HighCostDriverSchedule from './components/HighCostDriverSchedule';
+import VehicleServices from './components/VehicleServices';
+import GSmaintenance from './components/GSmaintenance';
+import BUmaintenance from "./components/BUmaintenance";
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
     return <Navigate to={redirectTo} />;
@@ -204,6 +210,8 @@ const App = () => {
                         <Route path="history" element={<DepartmentHistory />} />
                         <Route path="maintenance-request" element={<MaintenanceRequest />} />
                         <Route path="hight-cost" element={<HightCost />} />
+                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
+
                       </Routes>
                     </div>
                   </div>
@@ -223,6 +231,9 @@ const App = () => {
                         <Route path="vehicle-request" element={<VehicleRequest />} />
                         <Route path="financemaintenance-table" element={<FinanceMaintenanceTable />} />
                         <Route path="refueling" element={<FMRefuelingTable />} />
+                        <Route path="hight-cost" element={<FIHighCost />} />
+                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
+
                       </Routes>
                     </div>
                   </div>
@@ -240,10 +251,11 @@ const App = () => {
                     <div className="container">
                       <Routes>
                         
-                        <Route path="vehicle-request" element={<CeoVehicleRequest />} />
-                        {/* <Route path="highcost_vehicle-request" element={<CeoHighcostVehicleRequest />} /> */}
+                        <Route path="high_cost" element={<HighCostRequests />} />
                         <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
                         <Route path="refueling" element={<RefuelingTable />} />
+                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
+
                       </Routes>
                     </div>
                   </div>
@@ -260,9 +272,11 @@ const App = () => {
                     <Sidebar role="driver" />
                     <div className="container">
                       <Routes>
+                        <Route path="vehicle-services" element={<VehicleServices />} />
+                      <Route path="driver-schedule" element={<DriverSchedule/>} />
                       <Route path="refueling-request" element={<RefuelingRequest/>} />
                         <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-                        <Route path="driver-schedule" element={<DriverSchedule />} />
+                        <Route path="high-cost-schedule" element={<HighCostDriverSchedule />} />
                       </Routes>
                     </div>
                   </div>
@@ -306,7 +320,10 @@ const App = () => {
                         <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
                         <Route path="refueling" element={<TMRefuelingTable />} />
                         <Route path="report" element={<ReportPage/>} />
+                        <Route path="high_cost" element={<TMhighcostrequests/>} />
                         <Route path="history" element={<TransportHistory/>} />
+                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
+
                       </Routes>
                     </div>
                   </div>
@@ -315,7 +332,7 @@ const App = () => {
             />
 
             <Route
-              path="/Budget Manager/*"
+              path="/budget-manager/*"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
                   <div className="d-flex">
@@ -323,9 +340,12 @@ const App = () => {
                     <Sidebar role="budget_manager" />
                     <div className="container">
                       <Routes>
-                        
+                      <Route path="high_cost" element={<BUHighCost />} />
                         <Route path="refueling" element={<RefuelingTable />} />
                         <Route path="report" element={<ReportPage />} />
+                        <Route path="maintenance" element={<BUmaintenance/>}/ >
+                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
+
                       </Routes>
                     </div>
                   </div>
@@ -334,17 +354,18 @@ const App = () => {
             />
 
             <Route
-              path="/general-system-executer/*"
+              path="/general-service/*"
               element={
                 <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
                   <div className="d-flex">
-                    <Header role="budget_officer" />
-                    <Sidebar role="budget_officer" />
+                    <Header role="general-service" />
+                    <Sidebar role="general-service" />
                     <div className="container">
                       <Routes>
-                      <Route path="requests" element={<CeoVehicleRequest />} />
+                      <Route path="high_cost" element={<HighCostRequests />} />
                         <Route path="refueling" element={<RefuelingTable />} />
                         <Route path="report" element={<ReportPage />} />
+                        <Route path="maintenance" element={<GSmaintenance/>}/ >
                       </Routes>
                     </div>
                   </div>

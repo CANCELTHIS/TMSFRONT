@@ -81,6 +81,8 @@ const AccountPage = () => {
       5: "CEO",
       6: "Driver",
       7: "System Admin",
+      8: "General System Excuter", 
+      9: "Budget Manager",
     };
     setRoleMappings(roleData);
   };
