@@ -58,8 +58,6 @@ const Sidebar = ({ role }) => {
     { path: "/department-manager/refueling-request", icon: <FaGasPump />, label: "Refueling" },
     { path: "/department-manager/maintenance-request", icon: <FaTools />, label: "Maintenance Request" },
     { path: "/department-manager/hight-cost", icon: <FaGaugeHigh />, label: "High Cost" },
-    { p},
-    { path: "/department-manager/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
 
 ]
 

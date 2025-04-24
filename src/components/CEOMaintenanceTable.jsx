@@ -3,16 +3,18 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import CustomPagination from './CustomPagination';
+import { toast, ToastContainer } from "react-toastify"; // Import toast
+import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 
 const CEOMaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
-  const [actionLoading, setActionLoading] = useState(false); // State for approve/reject actions
-  const [rejectionMessage, setRejectionMessage] = useState(""); // State for rejection message
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // State for confirmation modal
-  const [showRejectModal, setShowRejectModal] = useState(false); // State for rejection modal
-  const [pendingAction, setPendingAction] = useState(null); // State for pending action
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -23,12 +25,12 @@ const CEOMaintenanceTable = () => {
   // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
-  
+
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-  
+
     try {
       const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         method: "GET",
@@ -37,53 +39,56 @@ const CEOMaintenanceTable = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch maintenance requests");
       }
-  
+
       const data = await response.json();
-      setMaintenanceRequests(data.results || []); // Update state with fetched data
+      setMaintenanceRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
+      toast.error("Failed to fetch maintenance requests."); // Error toast
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 
   // Handle actions (forward, reject)
   const handleAction = async (id, action) => {
     const accessToken = localStorage.getItem("authToken");
-  
+
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-  
+
     setActionLoading(true);
     try {
       const body = { action };
       if (action === "reject") {
-        body.rejection_message = rejectionMessage; // Include rejection message for rejection action
+        body.rejection_message = rejectionMessage;
       }
-  
+
       const response = await fetch(ENDPOINTS.MAINTENANCE_REQUEST_ACTION(id), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body), // Send the correct payload
+        body: JSON.stringify(body),
       });
-  
+
       if (!response.ok) {
         throw new Error(`Failed to ${action} the maintenance request`);
       }
-  
+
       fetchMaintenanceRequests(); // Refresh the list after action
-      setSelectedRequest(null); // Close the detail view
+      setSelectedRequest(null);
+      toast.success(`Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`); // Success toast
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
+      toast.error(`Failed to ${action} the request.`); // Error toast
     } finally {
       setActionLoading(false);
     }
@@ -98,20 +103,20 @@ const CEOMaintenanceTable = () => {
 
   const handleRejectAction = () => {
     if (rejectionMessage.trim() && selectedRequest) {
-      handleAction(selectedRequest.id, "reject"); // Use the correct `id` from the selected request
+      handleAction(selectedRequest.id, "reject");
       setShowRejectModal(false);
     } else {
-      alert("Rejection message cannot be empty.");
+      toast.error("Rejection message cannot be empty."); // Error toast
     }
   };
 
-  // Fetch data when the component mounts
   useEffect(() => {
     fetchMaintenanceRequests();
   }, []);
 
   return (
     <div className="container mt-5">
+      <ToastContainer /> {/* Add ToastContainer */}
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       {loading ? (
@@ -135,47 +140,34 @@ const CEOMaintenanceTable = () => {
               </tr>
             </thead>
             <tbody>
-              {currentPageRequests.length > 0 ? (
-                currentPageRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
-                    <td>{new Date(request.date).toLocaleDateString()}</td>
-                    <td>{request.requester_name || "N/A"}</td>
-                    <td>{request.requesters_car_name || "N/A"}</td>
-                    <td>{request.status || "N/A"}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => setSelectedRequest(request)}
-                      >
-                        View Detail
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center">
-                    No maintenance requests found.
+              {currentPageRequests.map((request, index) => (
+                <tr key={request.id}>
+                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                  <td>{new Date(request.date).toLocaleDateString()}</td>
+                  <td>{request.requester_name || "N/A"}</td>
+                  <td>{request.requesters_car_name || "N/A"}</td>
+                  <td>{request.status || "N/A"}</td>
+                  <td>
+                    <button
+                      className="btn btn-sm"
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
+                      onClick={() => setSelectedRequest(request)}
+                    >
+                      View Detail
+                    </button>
                   </td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
       )}
 
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100px" }}
-      >
-        <CustomPagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
-          handlePageChange={(page) => setCurrentPage(page)}
-        />
-      </div>
+      <CustomPagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
+        handlePageChange={(page) => setCurrentPage(page)}
+      />
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
@@ -188,7 +180,9 @@ const CEOMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
@@ -238,7 +232,9 @@ const CEOMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowConfirmModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <p>Are you sure you want to forward this request?</p>
@@ -273,7 +269,9 @@ const CEOMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowRejectModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <textarea
