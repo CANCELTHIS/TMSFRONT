@@ -3,6 +3,8 @@ import "../index.css";
 import axios from "axios";
 import { IoMdClose } from "react-icons/io";
 import CustomPagination from './CustomPagination';
+import { toast, ToastContainer } from "react-toastify"; // Import toast
+import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 
 const VehicleManagement = () => {
     const token = localStorage.getItem("authToken");
@@ -21,7 +23,7 @@ const VehicleManagement = () => {
         driver: "",
         status: "available",
         fuel_type: "",
-        fuel_efficiency: "", // Updated field
+        fuel_efficiency: "",
     });
     const [errorMessage, setErrorMessage] = useState("");
     const [isLoading, setIsLoading] = useState(true);
@@ -92,6 +94,7 @@ const VehicleManagement = () => {
         // Validation
         if (!license_plate || !model || !capacity || !source || !driver || !status || !fuel_type || !fuel_efficiency) {
             setErrorMessage("Please fill in all required fields with valid data.");
+            toast.error("Please fill in all required fields."); // Error toast
             return;
         }
 
@@ -113,10 +116,12 @@ const VehicleManagement = () => {
                 await axios.put(`https://tms-api-23gs.onrender.com/vehicles/${editingVehicle.id}/`, vehicleData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                toast.success("Vehicle updated successfully!"); // Success toast
             } else {
-                                await axios.post("https://tms-api-23gs.onrender.com/vehicles/", vehicleData, {
+                await axios.post("https://tms-api-23gs.onrender.com/vehicles/", vehicleData, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                toast.success("Vehicle added successfully!"); // Success toast
             }
             fetchVehicles();
             setShowModal(false);
@@ -134,6 +139,7 @@ const VehicleManagement = () => {
             });
         } catch (error) {
             setErrorMessage("An error occurred while saving the vehicle. Please try again.");
+            toast.error("Failed to save the vehicle."); // Error toast
         }
     };
 
@@ -199,7 +205,7 @@ const VehicleManagement = () => {
     }
     return (
         <div className="container mt-4">
-            
+            <ToastContainer /> {/* Add ToastContainer */}
             <button className="btn addve" onClick={openAddVehicleModal} style={{backgroundColor:"#0b455b",color:"#fff",width:"150px"}}>
                 + Add Vehicle
             </button>
@@ -370,19 +376,8 @@ const VehicleManagement = () => {
       )}
     </div>
 
-    {/* Status and Fuel Type */}
+    {/* Fuel Type and Fuel Efficiency */}
     <div className="row mb-3">
-      <div className="col-md-6">
-        <label>Status</label>
-        <select
-          className="form-control"
-          value={newVehicle.status}
-          onChange={(e) => setNewVehicle({ ...newVehicle, status: e.target.value })}
-        >
-          <option value="available">Available</option>
-          <option value="in_use">In Use</option>
-        </select>
-      </div>
       <div className="col-md-6">
         <label>Fuel Type</label>
         <select
@@ -395,9 +390,6 @@ const VehicleManagement = () => {
           <option value="naphtha">naphtha</option>
         </select>
       </div>
-    </div>
-    {/* Fuel Efficiency */}
-    <div className="row mb-3">
       <div className="col-md-6">
         <label>Fuel Efficiency (km/l)</label>
         <input

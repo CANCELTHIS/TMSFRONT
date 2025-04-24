@@ -358,8 +358,17 @@ const TMhighcostrequests = () => {
           >
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Estimate Cost and Assign Vehicle</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}><IoClose size={30}/></button>
+                <div className="d-flex align-items-center">
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                  />
+                  <h5 className="modal-title">Estimate Cost and Assign Vehicle</h5>
+                </div>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}>
+                  <IoClose size={30} />
+                </button>
               </div>
               <div className="modal-body">
                 <p><strong>Requester:</strong> {selectedRequest.requester}</p>

@@ -4,6 +4,7 @@ import { toast, ToastContainer } from "react-toastify"; // For toast messages
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { IoMdClose } from "react-icons/io";
+import { IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 const DepartementPage = () => {
   const [requests, setRequests] = useState([]);
@@ -255,7 +256,9 @@ const DepartementPage = () => {
               <div className="modal-header">
                 <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
                 <h5 className="modal-title">Transport Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}></button>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}>
+                  <IoCloseSharp size={24} />
+                </button>
               </div>
               <div className="modal-body">
                 <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
@@ -293,12 +296,14 @@ const DepartementPage = () => {
 
 
       {showRejectionModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(184, 113, 113, 0.5)" }}>
+        <div className="modal fade show d-block" tabIndex="-1" >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Reject Request</h5>
-                <button type="button" className="btn-close" onClick={() => setShowRejectionModal(false)}></button>
+                <button type="button" className="btn-close" onClick={() => setShowRejectionModal(false)}>
+                  <IoCloseSharp size={24} />
+                </button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
@@ -336,7 +341,7 @@ const DepartementPage = () => {
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Rejection</h5>
                 <button type="button" className="btn-close" onClick={() => setShowConfirmation(false)}>
-                  <IoMdClose size={30}/>
+                  <IoCloseSharp size={24} />
                 </button>
               </div>
               <div className="modal-body">
@@ -361,7 +366,9 @@ const DepartementPage = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Approval</h5>
-                <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}></button>
+                <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}>
+                  <IoCloseSharp size={24} />
+                </button>
               </div>
               <div className="modal-body">
                 <p>Are you sure you want to forward this request to the transport manager?</p>

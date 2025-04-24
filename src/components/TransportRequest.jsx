@@ -191,8 +191,8 @@ useEffect(() => {
   
     try {
       // Optimistically update the UI by removing the request
-      setRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
-      
+      setRequests((prevRequests) => prevRequests.filter((req) => req.id !== requestId));
+  
       const response = await axios.post(
         `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
         {
@@ -207,14 +207,12 @@ useEffect(() => {
   
       if (response.status === 200) {
         toast.success("Request approved successfully!");
-        setShowApproveConfirmation(false);
-        // No need to fetchRequests() since we already updated the UI
+        handleCloseDetail(); // Close the modal after approval
       }
     } catch (error) {
       console.error("Approve Error:", error);
       toast.error("Failed to approve request.");
-      // If there's an error, refetch the requests to restore the correct state
-      fetchRequests();
+      fetchRequests(); // Refetch requests to restore the correct state
     }
   };
   
@@ -224,8 +222,8 @@ useEffect(() => {
   const handleForwardRequest = async (requestId) => {
     try {
       // Optimistically update the UI by removing the request
-      setRequests(prevRequests => prevRequests.filter(req => req.id !== requestId));
-      
+      setRequests((prevRequests) => prevRequests.filter((req) => req.id !== requestId));
+
       const response = await axios.post(
         `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
         {
@@ -235,16 +233,15 @@ useEffect(() => {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
       );
-  
+
       if (response.status === 200) {
         toast.success("Request forwarded successfully!");
-        handleCloseDetail();
+        handleCloseDetail(); // Close the modal after forwarding
       }
     } catch (error) {
       console.error("Forward Error:", error);
       toast.error("Failed to forward request.");
-      // If there's an error, refetch the requests to restore the correct state
-      fetchRequests();
+      fetchRequests(); // Refetch requests to restore the correct state
     }
   };
 
@@ -272,7 +269,7 @@ useEffect(() => {
   
       if (response.status === 200) {
         toast.success("Request rejected successfully!");
-        setShowRejectionModal(false);
+        handleCloseDetail(); // Close the modal after rejection
         fetchRequests(); // Refresh the list of requests
       }
     } catch (error) {
@@ -424,7 +421,7 @@ useEffect(() => {
                   type="button"
                   className="btn"
                   style={{ backgroundColor: "#28a745", color: "white" }}
-                  onClick={handleApproveClick} 
+                  onClick={handleApproveClick}
                 >
                   Approve
                 </button>
@@ -457,7 +454,13 @@ useEffect(() => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Reject Request</h5>
-                <button type="button" onClick={() => setShowRejectionModal(false)}><IoMdClose size={30}/></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseDetail} // Use handleCloseDetail to close the modal
+                >
+                  <IoMdClose size={30} />
+                </button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
@@ -478,8 +481,8 @@ useEffect(() => {
                 <button
                   type="button"
                   className="btn btn-danger"
-                  onClick={handleConfirmReject} 
-                > 
+                  onClick={handleConfirmReject}
+                >
                   Submit Rejection
                 </button>
               </div>

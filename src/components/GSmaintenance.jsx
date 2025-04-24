@@ -6,6 +6,7 @@ import CustomPagination from './CustomPagination';
 import { Eye } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Logo from "../assets/Logo.jpg"; // Import the logo
 
 const GSmaintenance = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -253,7 +254,14 @@ const GSmaintenance = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Maintenance Request Details</h5>
+                <div className="d-flex align-items-center">
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                  />
+                  <h5 className="modal-title">Maintenance Request Details</h5>
+                </div>
                 <button
                   type="button"
                   className="btn-close"

@@ -25,18 +25,18 @@ import MaintenanceTable from './components/MaintenanceTable';
 import VehicleRequest from './components/VehicleRequest';
 import DriverSchedule from './components/DriverSchedule';
 import RefuelingRequest from './components/RefuelingRequest';
-import FMRefuelingTable from './components/FMRefuelingTable'; 
+import FMRefuelingTable from './components/FMRefuelingTable';
 import RefuelingTable from './components/RefuelingTable';
 import TransportManagerDashbord from './components/TransportManagerDashbord';
 import ReportPage from './components/ReportPage';
-import TransportRequest from "./components/TransportRequest";
-import TransportHistory from "./components/TransportHistory";
+import TransportRequest from './components/TransportRequest';
+import TransportHistory from './components/TransportHistory';
 import DepartmentHistory from './components/DepartmentHistory';
 import { ENDPOINTS } from './utilities/endpoints';
 import { NotificationProvider } from './context/NotificationContext';
 import CEOMaintenanceTable from './components/CEOMaintenanceTable';
 import FinanceMaintenanceTable from './components/FinanceMaintenanceTable';
-import TMRefuelingTable  from './components/TMRefuelingTable';
+import TMRefuelingTable from './components/TMRefuelingTable';
 import HightCost from './components/HightCost';
 import HighCostRequests from './components/HighCostDriverSchedule';
 import BUHighCost from './components/BUHighCost';
@@ -45,7 +45,9 @@ import FIHighCost from './components/FIHighCost';
 import HighCostDriverSchedule from './components/HighCostDriverSchedule';
 import VehicleServices from './components/VehicleServices';
 import GSmaintenance from './components/GSmaintenance';
-import BUmaintenance from "./components/BUmaintenance";
+import BUmaintenance from './components/BUmaintenance';
+import CEOhighcost from './components/CEOhighcost';
+
 const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
   if (!isAuthenticated) {
     return <Navigate to={redirectTo} />;
@@ -131,7 +133,7 @@ const App = () => {
               navigate('/finance-manager');
               break;
             case 'transport_manager':
-              navigate('/transport-manage/transport-dashboard');
+              navigate('/transport-manager/transport-dashbord');
               break;
             case 'ceo':
               navigate('/ceo/vehicle-request');
@@ -154,248 +156,240 @@ const App = () => {
   };
 
   return (
-<NotificationProvider>
-    <ThemeProvider>
-      <LanguageProvider>
-        <div className={`app ${modalType ? 'blurred' : ''}`}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <NavBar
-                    homeRef={homeRef}
-                    servicesRef={servicesRef}
-                    whyTMSRef={whyTMSRef}
-                    emailFormRef={emailFormRef}
-                    footerRef={footerRef}
-                    onOpenModal={setModalType}
-                  />
-                  <div ref={homeRef}><Home /></div>
-                  <div ref={servicesRef}><Services /></div>
-                  <div ref={whyTMSRef}><WhyTMS /></div>
-                  <div ref={emailFormRef}><EmailForm /></div>
-                  <Footer homeRef={homeRef} servicesRef={servicesRef} aboutRef={whyTMSRef} contactRef={emailFormRef} />
-                </>
-              }
-            />
+    <NotificationProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <div className={`app ${modalType ? 'blurred' : ''}`}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <>
+                    <NavBar
+                      homeRef={homeRef}
+                      servicesRef={servicesRef}
+                      whyTMSRef={whyTMSRef}
+                      emailFormRef={emailFormRef}
+                      footerRef={footerRef}
+                      onOpenModal={setModalType}
+                    />
+                    <div ref={homeRef}><Home /></div>
+                    <div ref={servicesRef}><Services /></div>
+                    <div ref={whyTMSRef}><WhyTMS /></div>
+                    <div ref={emailFormRef}><EmailForm /></div>
+                    <Footer homeRef={homeRef} servicesRef={servicesRef} aboutRef={whyTMSRef} contactRef={emailFormRef} />
+                  </>
+                }
+              />
 
-            {/* Protected Routes */}
-            <Route
-              path="/employee/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="employee" />
-                    
-                    <div className="container">
-                      <EmployeePage />
+              {/* Protected Routes */}
+              <Route
+                path="/employee/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="employee" />
+                      <div className="container">
+                        <EmployeePage />
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/department-manager/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="department_manager" />
-                    <Sidebar role="department_manager"/>
-                    <div className="container">
-                      <Routes>
-                        <Route path="vehicle-request" element={<VehicleRequest />} />
-                        <Route path="refueling-request" element={<RefuelingRequest/>} />
-                        <Route path="history" element={<DepartmentHistory />} />
-                        <Route path="maintenance-request" element={<MaintenanceRequest />} />
-                        <Route path="hight-cost" element={<HightCost />} />
-                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-
-                      </Routes>
+              <Route
+                path="/department-manager/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="department_manager" />
+                      <Sidebar role="department_manager" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="vehicle-request" element={<VehicleRequest />} />
+                          <Route path="refueling-request" element={<RefuelingRequest />} />
+                          <Route path="history" element={<DepartmentHistory />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                          <Route path="hight-cost" element={<HightCost />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/finance-manager/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="finance_manager" />
-                    <Sidebar role="finance_manager" />
-                    <div className="container">
-                      <Routes>
-                        <Route path="vehicle-request" element={<VehicleRequest />} />
-                        <Route path="financemaintenance-table" element={<FinanceMaintenanceTable />} />
-                        <Route path="refueling" element={<FMRefuelingTable />} />
-                        <Route path="hight-cost" element={<FIHighCost />} />
-                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-
-                      </Routes>
+              <Route
+                path="/finance-manager/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="finance_manager" />
+                      <Sidebar role="finance_manager" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="vehicle-request" element={<VehicleRequest />} />
+                          <Route path="financemaintenance-table" element={<FinanceMaintenanceTable />} />
+                          <Route path="refueling" element={<FMRefuelingTable />} />
+                          <Route path="hight-cost" element={<FIHighCost />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/ceo/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="ceo" />
-                    <Sidebar role="ceo" />
-                    <div className="container">
-                      <Routes>
-                        
-                        <Route path="high_cost" element={<HighCostRequests />} />
-                        <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
-                        <Route path="refueling" element={<RefuelingTable />} />
-                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-
-                      </Routes>
+              <Route
+                path="/ceo/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="ceo" />
+                      <Sidebar role="ceo" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="high_cost" element={<CEOhighcost />} />
+                          <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
+                          <Route path="refueling" element={<RefuelingTable />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/driver/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="driver" />
-                    <Sidebar role="driver" />
-                    <div className="container">
-                      <Routes>
-                        <Route path="vehicle-services" element={<VehicleServices />} />
-                      <Route path="driver-schedule" element={<DriverSchedule/>} />
-                      <Route path="refueling-request" element={<RefuelingRequest/>} />
-                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-                        <Route path="high-cost-schedule" element={<HighCostDriverSchedule />} />
-                      </Routes>
+              <Route
+                path="/driver/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="driver" />
+                      <Sidebar role="driver" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="vehicle-services" element={<VehicleServices />} />
+                          <Route path="driver-schedule" element={<DriverSchedule />} />
+                          <Route path="refueling-request" element={<RefuelingRequest />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                          <Route path="high-cost-schedule" element={<HighCostDriverSchedule />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Admin Pages */}
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="admin" />
-                    <Sidebar role="admin" />
-                    <div className="container">
-                      <Routes>
-                        <Route path="admin" element={<AdminPage />} />
-                        <Route path="admin-department" element={<AdminDepartmentPage />} />
-                      <Route path="account-page" element={<AccountPage />} />
-                        <Route path="history" element={<HistoryPage />} />
-                      </Routes>
+              {/* Admin Pages */}
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="admin" />
+                      <Sidebar role="admin" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="admin" element={<AdminPage />} />
+                          <Route path="admin-department" element={<AdminDepartmentPage />} />
+                          <Route path="account-page" element={<AccountPage />} />
+                          <Route path="history" element={<HistoryPage />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/transport-manager/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="transport_manager" />
-                    <Sidebar role="transport_manager" />
-                    <div className="container">
-                      <Routes>
-                        <Route path="vehicle-management" element={<VehicleManagement />} />
-                        <Route path="maintenance-table" element={<MaintenanceTable />} />
-                        <Route path="vehicle-request" element={<TransportRequest />} />
-                        <Route path="transport-dashbord" element={<TransportManagerDashbord/>} />
-                        <Route path="refueling" element={<TMRefuelingTable />} />
-                        <Route path="report" element={<ReportPage/>} />
-                        <Route path="high_cost" element={<TMhighcostrequests/>} />
-                        <Route path="history" element={<TransportHistory/>} />
-                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-
-                      </Routes>
+              <Route
+                path="/transport-manager/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="transport_manager" />
+                      <Sidebar role="transport_manager" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="vehicle-management" element={<VehicleManagement />} />
+                          <Route path="maintenance-table" element={<MaintenanceTable />} />
+                          <Route path="vehicle-request" element={<TransportRequest />} />
+                          <Route path="transport-dashbord" element={<TransportManagerDashbord />} />
+                          <Route path="refueling" element={<TMRefuelingTable />} />
+                          <Route path="report" element={<ReportPage />} />
+                          <Route path="high_cost" element={<TMhighcostrequests />} />
+                          <Route path="history" element={<TransportHistory />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/budget-manager/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="budget_manager" />
-                    <Sidebar role="budget_manager" />
-                    <div className="container">
-                      <Routes>
-                      <Route path="high_cost" element={<BUHighCost />} />
-                        <Route path="refueling" element={<RefuelingTable />} />
-                        <Route path="report" element={<ReportPage />} />
-                        <Route path="maintenance" element={<BUmaintenance/>}/ >
-                        <Route path="maintenance-request" element={<MaintenanceRequest/>} />
-
-                      </Routes>
+              <Route
+                path="/budget-manager/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="budget_manager" />
+                      <Sidebar role="budget_manager" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="high_cost" element={<BUHighCost />} />
+                          <Route path="refueling" element={<RefuelingTable />} />
+                          <Route path="report" element={<ReportPage />} />
+                          <Route path="maintenance" element={<BUmaintenance />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route
-              path="/general-service/*"
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
-                  <div className="d-flex">
-                    <Header role="general-service" />
-                    <Sidebar role="general-service" />
-                    <div className="container">
-                      <Routes>
-                      <Route path="high_cost" element={<HighCostRequests />} />
-                        <Route path="refueling" element={<RefuelingTable />} />
-                        <Route path="report" element={<ReportPage />} />
-                        <Route path="maintenance" element={<GSmaintenance/>}/ >
-                      </Routes>
+              <Route
+                path="/general-service/*"
+                element={
+                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                    <div className="d-flex">
+                      <Header role="general-service" />
+                      <Sidebar role="general-service" />
+                      <div className="container">
+                        <Routes>
+                          <Route path="high_cost" element={<CEOhighcost/>} />
+                          <Route path="refueling" element={<RefuelingTable />} />
+                          <Route path="report" element={<ReportPage />} />
+                          <Route path="maintenance" element={<GSmaintenance />} />
+                        </Routes>
+                      </div>
                     </div>
-                  </div>
-                </ProtectedRoute>
-              }
-            />
+                  </ProtectedRoute>
+                }
+              />
 
-            <Route path="/-login" element={<PleaseLoginPage />} />
-          </Routes>
+              <Route path="/-login" element={<PleaseLoginPage />} />
+            </Routes>
 
-          {/* Modals */}
-          {modalType === 'login' && (
-            <div className="modal-overlay">
-              <div className="modal">
-                <button className="close-button" onClick={closeModal}>X</button>
-                <LoginModal onLogin={handleLogin} />
+            {/* Modals */}
+            {modalType === 'login' && (
+              <div className="modal-overlay">
+                <div className="modal">
+                  <button className="close-button" onClick={closeModal}>X</button>
+                  <LoginModal onLogin={handleLogin} />
+                </div>
               </div>
-            </div>
-          )}
-          {modalType === 'signup' && (
-            <div className="modal-overlay">
-              <div className="modal">
-                <button className="close-button" onClick={closeModal}>X</button>
-                <SignupModal />
+            )}
+            {modalType === 'signup' && (
+              <div className="modal-overlay">
+                <div className="modal">
+                  <button className="close-button" onClick={closeModal}>X</button>
+                  <SignupModal />
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      </LanguageProvider>
-    </ThemeProvider>
+            )}
+          </div>
+        </LanguageProvider>
+      </ThemeProvider>
     </NotificationProvider>
   );
 };

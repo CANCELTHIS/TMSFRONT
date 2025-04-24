@@ -2,13 +2,16 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+import { toast, ToastContainer } from "react-toastify"; // Import toast
+import "react-toastify/dist/ReactToastify.css"; // Import toast styles
+import Logo from "../assets/Logo.jpg"; // Import the logo
 
 const RefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false); 
-  const [rejectionMessage, setRejectionMessage] = useState(""); 
+  const [actionLoading, setActionLoading] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
 
   const fetchRefuelingRequests = async () => {
@@ -37,6 +40,7 @@ const RefuelingTable = () => {
       setRefuelingRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching refueling requests:", error);
+      toast.error("Failed to fetch refueling requests."); // Error toast
     } finally {
       setLoading(false);
     }
@@ -74,8 +78,10 @@ const RefuelingTable = () => {
       console.log(`Refueling request ${action}d successfully`);
       fetchRefuelingRequests(); // Refresh the list after action
       setSelectedRequest(null); // Close the detail view
+      toast.success(`Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`); // Success toast
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
+      toast.error(`Failed to ${action} the request.`); // Error toast
     } finally {
       setActionLoading(false);
     }
@@ -86,7 +92,7 @@ const RefuelingTable = () => {
       handleAction(selectedRequest.id, "reject");
       setShowRejectModal(false);
     } else {
-      alert("Rejection message cannot be empty.");
+      toast.error("Rejection message cannot be empty."); // Error toast
     }
   };
 
@@ -97,6 +103,7 @@ const RefuelingTable = () => {
 
   return (
     <div className="container mt-5">
+      <ToastContainer /> {/* Add ToastContainer */}
       <h2 className="text-center mb-4">Refueling Requests</h2>
 
       {loading ? (
@@ -125,8 +132,7 @@ const RefuelingTable = () => {
                   <td>{index + 1}</td>
                   <td>{new Date(request.created_at).toLocaleDateString()}</td>
                   <td>{request.destination || "N/A"}</td>
-                  <th>{request.requester_name || "N/A"}</th>
-                  
+                  <td>{request.requester_name || "N/A"}</td>
                   <td>{request.status || "N/A"}</td>
                   <td>
                     <button
@@ -150,6 +156,7 @@ const RefuelingTable = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
+                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
                 <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"

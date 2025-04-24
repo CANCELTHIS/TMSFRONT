@@ -3,6 +3,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import CustomPagination from './CustomPagination';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Logo from "../assets/Logo.jpg"; // Import the logo
 
 const MaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -57,6 +60,7 @@ const MaintenanceTable = () => {
   
     if (!accessToken) {
       console.error("No access token found.");
+      toast.error("No access token found.");
       return;
     }
   
@@ -82,8 +86,10 @@ const MaintenanceTable = () => {
   
       fetchMaintenanceRequests(); // Refresh the list after action
       setSelectedRequest(null); // Close the detail view
+      toast.success(`Request successfully ${action === "forward" ? "forwarded" : "rejected"}.`);
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
+      toast.error(`Failed to ${action} the request. Please try again.`);
     } finally {
       setActionLoading(false);
     }
@@ -113,6 +119,9 @@ const MaintenanceTable = () => {
   return (
     <div className="container mt-5">
       <h2 className="text-center mb-4">Maintenance Requests</h2>
+
+      {/* Toast Container */}
+      <ToastContainer />
 
       {loading ? (
         <div className="text-center">
@@ -183,7 +192,14 @@ const MaintenanceTable = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Maintenance Request Details</h5>
+                <div className="d-flex align-items-center">
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                  />
+                  <h5 className="modal-title">Maintenance Request Details</h5>
+                </div>
                 <button
                   type="button"
                   className="btn-close"

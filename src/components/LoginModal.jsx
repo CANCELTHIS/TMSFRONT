@@ -44,7 +44,7 @@ const LoginModal = ({ onClose }) => {
       } else if (decodedToken.role === 4) {
         navigate('/transport-manager/transport-dashbord');
       } else if (decodedToken.role === 5) {
-        navigate('/ceo/vehicle-request');
+        navigate('/ceo/high_cost');
       } else if (decodedToken.role === 6) {
         navigate('/driver/high-cost-schedule');
       } else if (decodedToken.role === 7) {

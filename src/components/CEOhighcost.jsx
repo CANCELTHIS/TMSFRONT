@@ -4,11 +4,11 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
 import { IoMdClose } from "react-icons/io";
-import { IoCloseSharp } from "react-icons/io5"; // Import IoCloseSharp
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
+import { IoClose, IoCloseSharp } from "react-icons/io5";
 
-const BUHighCost = () => {
+const CEOhighcost = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -92,7 +92,7 @@ const BUHighCost = () => {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action: "approve" }),
+        body: JSON.stringify({ action: "forward" }),
       });
 
       if (!response.ok) throw new Error("Failed to forward request");
@@ -222,29 +222,28 @@ const BUHighCost = () => {
         />
       </div>
 
-      {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
-                <h5 className="modal-title">Transport Request Details</h5>
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                />
+                <h5 className="modal-title">Request Details</h5>
                 <button
                   type="button"
-                  className="btn"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "1.5rem",
-                    color: "#000",
-                    marginLeft: "auto",
-                  }}
+                  className="btn-close"
+                  style={{ marginLeft: "auto" }}
                   onClick={() => setSelectedRequest(null)}
                   aria-label="Close"
-                >
-                  <IoCloseSharp />
-                </button>
+                ><IoClose/></button>
               </div>
               <div className="modal-body">
                 <p><strong>Requester:</strong> {selectedRequest.requester}</p>
@@ -256,19 +255,14 @@ const BUHighCost = () => {
                 <p><strong>Destination:</strong> {selectedRequest.destination}</p>
                 <p><strong>Reason:</strong> {selectedRequest.reason}</p>
                 <p><strong>Status:</strong> {selectedRequest.status}</p>
-                <p><strong>Vehicle Assigned:</strong> {selectedRequest.vehicle_assigned ? "Yes" : "No"}</p>
-                <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km || "N/A"}</p>
-                <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter || "N/A"}</p>
-                <p><strong>Fuel Needed (Liters):</strong> {selectedRequest.fuel_needed_liters || "N/A"}</p>
-                <p><strong>Total Cost:</strong> {selectedRequest.total_cost || "N/A"} ETB</p>
-                <p><strong>Created At:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-success"
+                  className="btn"
+                  style={{ backgroundColor: "#181E4B", color: "white", width: "120px" }}
                   onClick={() => handleApprove(selectedRequest.id)}
                 >
-                  Approve
+                  Forward
                 </button>
                 <button
                   className="btn btn-danger"
@@ -276,20 +270,12 @@ const BUHighCost = () => {
                 >
                   Reject
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setSelectedRequest(null)}
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Rejection Modal */}
       {showRejectionModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="modal-dialog">
@@ -342,4 +328,4 @@ const BUHighCost = () => {
   );
 };
 
-export default BUHighCost;
+export default CEOhighcost;
