@@ -7,11 +7,11 @@ import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import Logo from "../assets/Logo.jpg"; // Import the logo
 
 const MaintenanceRequest = () => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showForm, setShowForm] = useState(false); 
-  const [formData, setFormData] = useState({ date: "", reason: "" }); 
+  const [requests, setRequests] = useState([]); // State to store maintenance requests
+  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
+  const [showForm, setShowForm] = useState(false); // State to toggle the form modal
+  const [formData, setFormData] = useState({ date: "", reason: "" }); // State for form data
+  const [currentUser, setCurrentUser] = useState(null); // State to store current user data
 
   const fetchMaintenanceRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
@@ -38,8 +38,35 @@ const MaintenanceRequest = () => {
       setRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  // Fetch the current user
+  const fetchCurrentUser = async () => {
+    const accessToken = localStorage.getItem("authToken");
+
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      const response = await fetch(ENDPOINTS.CURRENT_USER, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch current user data");
+      }
+
+      const userData = await response.json();
+      setCurrentUser(userData); // Set the current user data
+    } catch (error) {
+      console.error("Error fetching current user data:", error);
     }
   };
 
@@ -75,25 +102,32 @@ const MaintenanceRequest = () => {
       }
 
       const newRequest = await response.json();
-      setRequests((prevRequests) => [newRequest, ...prevRequests]);
+
+      // Add the new request to the top of the list if it matches the current user
+      if (currentUser && newRequest.requester_name === currentUser.full_name) {
+        setRequests((prevRequests) => [newRequest, ...prevRequests]);
+      }
+
+      // Reset the form and close the modal
       setFormData({ date: "", reason: "" });
       setShowForm(false);
 
       // Display success toast message
-      toast.success("Your request has been sent to the transport manager successfully!");
+      toast.success("Your maintenance request has been created successfully!");
     } catch (error) {
       console.error("Error creating maintenance request:", error);
-      toast.error("Failed to send the maintenance request. Please try again.");
+      toast.error("Failed to create the maintenance request. Please try again.");
     }
   };
 
   useEffect(() => {
     fetchMaintenanceRequests();
+    fetchCurrentUser();
   }, []);
 
   return (
     <div className="container mt-5">
-      <ToastContainer /> {/* Add this to display toast messages */}
+      <ToastContainer />
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       <div className="d-flex mb-4">
@@ -164,49 +198,38 @@ const MaintenanceRequest = () => {
         </div>
       )}
 
-      {loading ? (
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading maintenance requests...</p>
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered table-striped">
-            <thead className="thead-dark">
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                
-                <th>Requester's Car</th>
-                <th>Status</th>
-                <th>Action</th>
+      <div className="table-responsive">
+        <table className="table table-bordered table-striped">
+          <thead className="thead-dark">
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Requester's Car</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {requests.map((request, index) => (
+              <tr key={request.id}>
+                <td>{index + 1}</td>
+                <td>{new Date(request.date).toLocaleDateString()}</td>
+                <td>{request.requesters_car_name || "N/A"}</td>
+                <td>{request.status || "N/A"}</td>
+                <td>
+                  <button
+                    className="btn btn-sm"
+                    style={{ backgroundColor: "#181E4B", color: "white" }}
+                    onClick={() => setSelectedRequest(request)}
+                  >
+                    View Detail
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {requests.map((request, index) => (
-                <tr key={request.id}>
-                  <td>{index + 1}</td>
-                  <td>{new Date(request.date).toLocaleDateString()}</td>
-                  
-                  <td>{request.requesters_car_name || "N/A"}</td>
-                  <td>{request.status || "N/A"}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {selectedRequest && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>

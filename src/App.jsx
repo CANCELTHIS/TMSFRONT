@@ -360,6 +360,7 @@ const App = () => {
                           <Route path="refueling" element={<RefuelingTable />} />
                           <Route path="report" element={<ReportPage />} />
                           <Route path="maintenance" element={<GSmaintenance />} />
+                          <Route path="maintenance-request" element={<MaintenanceRequest />} />
                         </Routes>
                       </div>
                     </div>
