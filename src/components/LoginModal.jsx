@@ -33,7 +33,7 @@ const LoginModal = ({ onClose }) => {
       const { access } = response.data;
       localStorage.setItem('authToken', access);
       const decodedToken = jwtDecode(access);
-      onClose();
+      
 
       if (decodedToken.role === 1) {
         navigate('/employee');
@@ -56,6 +56,7 @@ const LoginModal = ({ onClose }) => {
       } else {
         navigate('/');
       }
+      onClose();
     } catch (err) {
       setError(
         mylanguage === 'EN'

@@ -21,7 +21,7 @@ const RefuelingRequest = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
+      const response = await fetch(ENDPOINTS.MY_REFUELING_REQUESTS, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,

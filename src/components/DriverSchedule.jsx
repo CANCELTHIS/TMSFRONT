@@ -37,6 +37,7 @@ const DriverSchedule = () => {
       if (!response.ok) throw new Error("Failed to fetch transport requests");
 
       const data = await response.json();
+      console .log("Fetched Requests:", data); // Log the fetched data
       setRequests(data.results || []); // Set fetched data to state
     } catch (error) {
       console.error("Fetch Error:", error);

@@ -233,47 +233,49 @@ const VehicleManagement = () => {
 
 
                   <table className="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Driver</th>
-                        <th>License Plate</th>
-                        <th>Model</th>
-                        <th>Capacity</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-  {currentPageVehicles
-    .filter((vehicle) => statusFilter === "all" || vehicle.status === statusFilter)
-    .map((vehicle, index) => (
-      <tr key={vehicle.id}>
-        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
-        <td>{vehicle.driver_name}</td>
-        <td>{vehicle.license_plate}</td>
-        <td>{vehicle.model}</td>
-        <td>{vehicle.capacity}</td>
-        <td>{vehicle.status}</td>
-        <td>
-          <button
-            className="btn btn-sm me-2"
-            onClick={() => handleEdit(vehicle)}
-            style={{ backgroundColor: "#0b455b", color: "#fff" }}
-          >
-            Edit
-          </button>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => handleDeactivate(vehicle.id)}
-          >
-            Deactivate
-          </button>
-        </td>
-      </tr>
-    ))}
-</tbody>
-            </table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Driver</th>
+      <th>License Plate</th>
+      <th>Model</th>
+      <th>Capacity</th>
+      <th>Total KM</th> 
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {currentPageVehicles
+      .filter((vehicle) => statusFilter === "all" || vehicle.status === statusFilter)
+      .map((vehicle, index) => (
+        <tr key={vehicle.id}>
+          <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+          <td>{vehicle.driver_name}</td>
+          <td>{vehicle.license_plate}</td>
+          <td>{vehicle.model}</td>
+          <td>{vehicle.capacity}</td>
+          <td>{vehicle.total_km || "N/A"}</td> {/* Display Total KM */}
+          <td>{vehicle.status}</td>
+          <td>
+            <button
+              className="btn btn-sm me-2"
+              onClick={() => handleEdit(vehicle)}
+              style={{ backgroundColor: "#0b455b", color: "#fff" }}
+            >
+              Edit
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => handleDeactivate(vehicle.id)}
+            >
+              Deactivate
+            </button>
+          </td>
+        </tr>
+      ))}
+  </tbody>
+</table>
 <div
   className="d-flex justify-content-center align-items-center"
   style={{ height: "100px" }}
