@@ -1,0 +1,11 @@
+
+services:
+
+  # Autoscaler Service (Runs the scaling script)
+  tmsfront:
+    build: ./  # Dockerfile for the autoscaler
+    # depends_on:
+    #   - prometheus
+    #   - app
+    
+    restart: always
