@@ -28,8 +28,7 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile  # NO extra backend/ here
+      image: tms_api # NO extra backend/ here
     container_name: tms_backend
     command: >
       bash -c "
@@ -49,7 +48,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./
       dockerfile: Dockerfile
     container_name: tms_frontend
     ports:
