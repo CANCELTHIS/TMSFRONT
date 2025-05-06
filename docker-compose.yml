@@ -12,39 +12,39 @@ services:
   #       - db
   #       - backend
   #       - frontend
-  db:
-    image: postgres:14
-    container_name: tms_db
-    environment:
-      POSTGRES_DB: tms_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - tms_net
+  # db:
+  #   image: postgres:14
+  #   container_name: tms_db
+  #   environment:
+  #     POSTGRES_DB: tms_db
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - tms_net
 
-  backend:
-    build:
-      image: tms-web # NO extra backend/ here
-    container_name: tms_backend
-    command: >
-      bash -c "
-      python manage.py migrate &&
-      python manage.py runserver 0.0.0.0:8000
-      "
-    volumes:
-      - ./backend:/app
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/tms_db
-    depends_on:
-      - db
-    networks:
-      - tms_net
+  # backend:
+  #   build:
+  #     image: tms-web # NO extra backend/ here
+  #   container_name: tms_backend
+  #   command: >
+  #     bash -c "
+  #     python manage.py migrate &&
+  #     python manage.py runserver 0.0.0.0:8000
+  #     "
+  #   volumes:
+  #     - ./backend:/app
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/tms_db
+  #   depends_on:
+  #     - db
+  #   networks:
+  #     - tms_net
 
   frontend:
     build:
