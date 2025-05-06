@@ -63,9 +63,11 @@ export const ENDPOINTS = {
   ASSIGN_VEHICLE:(request_id) =>`${BASE_URL}highcost-requests/${request_id}/assign-vehicle/`, 
   HIGH_COST_DETAIL: (request_id) => `${BASE_URL}highcost-requests/${request_id}/`,
   COMPLETE_TRIP: (request_id) => `${BASE_URL}highcost-requests/${request_id}/complete-trip/`,
+  MY_REFUELING_REQUESTS: `${BASE_URL}refueling_requests/my/`, // List current user's refueling requests
   //maintennace endpoints
   CREATE_MAINTENANCE_REQUEST: `${BASE_URL}maintenance-requests/create/`, // Create a new maintenance request
   LIST_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/list/`, // List all maintenance requests
   MAINTENANCE_REQUEST_ACTION: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`, // Approve/Reject a maintenance request
   SUBMIT_MAINTENANCE_FILES: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
+  MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`, // List current user's maintenance requests
  };

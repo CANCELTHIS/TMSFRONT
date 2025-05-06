@@ -43,6 +43,7 @@ const BUmaintenance = () => {
       }
   
       const data = await response.json();
+      console.log("Fetched Maintenance Requests:", data); // Log the fetched data
       setMaintenanceRequests(data.results || []); // Update state with fetched data
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -188,7 +189,9 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
@@ -201,12 +204,12 @@ const BUmaintenance = () => {
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white" }}
                   onClick={() => {
-                    setPendingAction("forward");
+                    setPendingAction("approve");
                     setShowConfirmModal(true);
                   }}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Forward"}
+                  {actionLoading ? "Processing..." : "Approve"}
                 </button>
                 <button
                   className="btn btn-danger"
@@ -238,10 +241,12 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowConfirmModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to forward this request?</p>
+                <p>Are you sure you want to approve this request?</p>
               </div>
               <div className="modal-footer">
                 <button
@@ -273,7 +278,9 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowRejectModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <textarea

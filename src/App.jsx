@@ -57,7 +57,10 @@ const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
 
 const App = () => {
   const [modalType, setModalType] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem('authToken')
+  );
+  
   const [authToken, setAuthToken] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();

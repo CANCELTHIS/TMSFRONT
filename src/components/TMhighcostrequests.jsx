@@ -257,17 +257,16 @@ const TMhighcostrequests = () => {
         },
         body: JSON.stringify({}),
       });
-
+  
       if (!response.ok) {
         const errorText = await response.text();
         const errorMessage = JSON.parse(errorText).error || "Failed to assign vehicle.";
         toast.error(errorMessage);
         return;
       }
-
+  
       toast.success("Vehicle assigned successfully!");
-      setSelectedRequest(null); // Close the modal
-      fetchRequests(); // Refresh the table data
+      fetchHighCostDetails(selectedRequest.id); // Refresh details
     } catch (error) {
       console.error("Assign Vehicle Error:", error);
       toast.error("Failed to assign vehicle.");
@@ -380,21 +379,12 @@ const TMhighcostrequests = () => {
                 <p><strong>Reason:</strong> {selectedRequest.reason}</p>
 
                 {!isCostCalculated && (
-                  <>
-                    <Button
-                      style={{ color: "#ffffff", backgroundColor: "#1976d2", width: "150px" }}
-                      onClick={() => setShowEstimateModal(true)}
-                    >
-                      Estimate Cost
-                    </Button>
-                    <Button
-                      variant="contained"
-                      style={{ color: "#ffffff", backgroundColor: "rgb(26, 72, 118)", width: "200px", marginLeft: "10px" }}
-                      onClick={assignVehicle}
-                    >
-                      Assign Vehicle
-                    </Button>
-                  </>
+                  <Button
+                    style={{ color: "#ffffff", backgroundColor: "#1976d2", width: "150px" }} // Blue button
+                    onClick={() => setShowEstimateModal(true)}
+                  >
+                    Estimate Cost
+                  </Button>
                 )}
 
                 {isCostCalculated && (
@@ -408,21 +398,28 @@ const TMhighcostrequests = () => {
                       <Stack direction="row" spacing={2}>
                         <Button
                           variant="contained"
-                          style={{ color: "#ffffff", backgroundColor: "#388e3c", width: "150px" }}
+                          style={{ color: "#ffffff", backgroundColor: "rgb(26, 72, 118)", width: "150px" }} // Blue button
+                          onClick={assignVehicle}
+                        >
+                          Assign Vehicle
+                        </Button>
+                        <Button
+                          variant="contained"
+                          style={{ color: "#ffffff", backgroundColor: "#388e3c", width: "150px" }} // Green button
                           onClick={() => handleApproveReject("forward")}
                         >
                           Forward
                         </Button>
                         <Button
                           variant="contained"
-                          style={{ color: "#ffffff", backgroundColor: "#d32f2f", width: "150px" }}
+                          style={{ color: "#ffffff", backgroundColor: "#d32f2f", width: "150px" }} // Red button
                           onClick={() => handleApproveReject("reject")}
                         >
                           Reject
                         </Button>
                         <Button
                           variant="contained"
-                          style={{ color: "#fff", borderColor: "#388e3c", width: "150px", backgroundColor: "rgb(26, 72, 118)" }}
+                          style={{ color: "#fff", borderColor: "#388e3c", width: "150px", backgroundColor: "rgb(26, 72, 118)" }} // Orange outlined button
                           onClick={() => setShowEstimateModal(true)}
                         >
                           Recalculate

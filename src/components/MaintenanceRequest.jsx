@@ -22,7 +22,7 @@ const MaintenanceRequest = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
+      const response = await fetch(ENDPOINTS.MY_MAINTENANCE_REQUESTS, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
