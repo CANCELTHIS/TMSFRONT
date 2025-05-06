@@ -28,7 +28,7 @@ services:
 
   backend:
     build:
-      image: tms_api # NO extra backend/ here
+      image: tms-web # NO extra backend/ here
     container_name: tms_backend
     command: >
       bash -c "
