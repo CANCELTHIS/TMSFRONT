@@ -1,4 +1,4 @@
-services:
+#services:
   # nginx:
   #     image: nginx:latest
   #     container_name: nginx-tms
@@ -46,20 +46,22 @@ services:
   #   networks:
   #     - tms_net
 
+  #
+
+version: '3.9'
+
+services:
+
   frontend:
     build:
-      context: ./
+      context: .
       dockerfile: Dockerfile
     container_name: tms_frontend
     ports:
-      - "3001:3000"
-    # depends_on:
-    #   - backend
+      - "3000:3000"
     networks:
       - tms_net
 
 networks:
   tms_net:
-
-volumes:
-  postgres_data:
+    external: true
