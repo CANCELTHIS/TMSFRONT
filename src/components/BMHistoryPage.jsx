@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const TransportHistoryPage = () => {
+const BMHistoryPage = () => {
   const itemsPerPage = 5; // Number of items to display per page
   const [currentPage, setCurrentPage] = useState(1); // Current page number
   const [filter, setFilter] = useState("all"); // Default filter is "all"
@@ -11,9 +11,9 @@ const TransportHistoryPage = () => {
       id: 1,
       name: "John Doe",
       email: "johndoe@example.com",
-      request_type: "Refueling Request",
+      request_type: "Budget Approval",
       department: "Finance",
-      action: "Requested refueling",
+      action: "Requested budget approval",
       date: "2025-01-25",
       status: "Approved",
     },
@@ -21,9 +21,9 @@ const TransportHistoryPage = () => {
       id: 2,
       name: "Jane Smith",
       email: "janesmith@example.com",
-      request_type: "Maintenance Request",
+      request_type: "Project Approval",
       department: "HR",
-      action: "Requested maintenance",
+      action: "Requested project approval",
       date: "2025-01-26",
       status: "Rejected",
     },
@@ -31,9 +31,9 @@ const TransportHistoryPage = () => {
       id: 3,
       name: "Alice Johnson",
       email: "alice.johnson@example.com",
-      request_type: "High-Cost Request",
-      department: "Finance",
-      action: "Requested high-cost approval",
+      request_type: "Policy Change",
+      department: "Operations",
+      action: "Requested policy change",
       date: "2025-01-27",
       status: "Approved",
     },
@@ -41,9 +41,9 @@ const TransportHistoryPage = () => {
       id: 4,
       name: "Bob Brown",
       email: "bob.brown@example.com",
-      request_type: "Transport Request",
+      request_type: "Hiring Approval",
       department: "HR",
-      action: "Requested transport",
+      action: "Requested hiring approval",
       date: "2025-01-28",
       status: "Approved",
     },
@@ -51,10 +51,10 @@ const TransportHistoryPage = () => {
 
   // Filter requests based on request type
   const filteredRequests = sampleRequests.filter((record) => {
-    if (filter === "Refueling Request") return record.request_type === "Refueling Request";
-    if (filter === "Maintenance Request") return record.request_type === "Maintenance Request";
-    if (filter === "High-Cost Request") return record.request_type === "High-Cost Request";
-    if (filter === "Transport Request") return record.request_type === "Transport Request";
+    if (filter === "Budget Approval") return record.request_type === "Budget Approval";
+    if (filter === "Project Approval") return record.request_type === "Project Approval";
+    if (filter === "Policy Change") return record.request_type === "Policy Change";
+    if (filter === "Hiring Approval") return record.request_type === "Hiring Approval";
     return true; // Show all records if filter is "all"
   });
 
@@ -77,7 +77,7 @@ const TransportHistoryPage = () => {
 
   return (
     <div className="container py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      <h2 className="h5 mb-4">Transport History</h2>
+      <h2 className="h5 mb-4">CEO/Manager History</h2>
 
       {/* Filter Dropdown */}
       <div className="d-flex justify-content-end mb-3">
@@ -88,10 +88,10 @@ const TransportHistoryPage = () => {
           onChange={(e) => setFilter(e.target.value)}
         >
           <option value="all">All</option>
-          <option value="Refueling Request">Refueling Request</option>
-          <option value="Maintenance Request">Maintenance Request</option>
-          <option value="High-Cost Request">High-Cost Request</option>
-          <option value="Transport Request">Transport Request</option>
+          <option value="Budget Approval">Budget Approval</option>
+          <option value="Project Approval">Project Approval</option>
+          <option value="Policy Change">Policy Change</option>
+          <option value="Hiring Approval">Hiring Approval</option>
         </select>
       </div>
 
@@ -169,4 +169,4 @@ const TransportHistoryPage = () => {
   );
 };
 
-export default TransportHistoryPage;
+export default BMHistoryPage;

@@ -8,7 +8,11 @@ import { jwtDecode } from "jwt-decode";
 import operation from "../assets/CarImg.jpg";
 import { IoClose, IoEye, IoEyeOff } from "react-icons/io5";  
 import { ENDPOINTS } from '../utilities/endpoints';
+import { useAuth } from '../context/AuthContext';
+
 const LoginModal = ({ onClose }) => {
+  const { login } = useAuth();
+
   const [showSignup, setShowSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +35,8 @@ const LoginModal = ({ onClose }) => {
       });
 
       const { access } = response.data;
+      login(access);
+      
       localStorage.setItem('authToken', access);
       const decodedToken = jwtDecode(access);
       onClose();
@@ -40,7 +46,7 @@ const LoginModal = ({ onClose }) => {
       } else if (decodedToken.role === 2) {
         navigate('/department-manager/vehicle-request');
       } else if (decodedToken.role === 3) {
-        navigate('/finance-manager/vehicle-request');
+        navigate('/finance-manager/hight-cost');
       } else if (decodedToken.role === 4) {
         navigate('/transport-manager/transport-dashbord');
       } else if (decodedToken.role === 5) {

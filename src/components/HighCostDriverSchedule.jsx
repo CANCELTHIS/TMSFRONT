@@ -239,6 +239,10 @@ const HighCostDriverSchedule = () => {
       if (!response.ok) throw new Error("Failed to send notification");
 
       toast.success("Notification sent successfully!");
+
+      // Remove the notified request from the table
+      setRequests((prevRequests) => prevRequests.filter((req) => req.id !== requestId));
+
       handleCloseDetail(); // Close the modal
     } catch (error) {
       console.error("Notify Error:", error);

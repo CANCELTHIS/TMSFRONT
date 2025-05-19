@@ -99,6 +99,35 @@ const FIHighCost = () => {
     }
   };
 
+  const fetchHighCostDetail = async (requestId) => {
+    const accessToken = localStorage.getItem("authToken");
+  
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch high-cost request details");
+      }
+  
+      const data = await response.json();
+      console.log("High-Cost Request Details:", data); // Log the details
+      setSelectedRequest(data); // Set the fetched details to the state
+    } catch (error) {
+      console.error("Error fetching high-cost request details:", error);
+    }
+  };
+
   // Get employee names from IDs
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
@@ -110,7 +139,7 @@ const FIHighCost = () => {
   };
 
   const handleViewDetail = (request) => {
-    setSelectedRequest(request);
+    fetchHighCostDetail(request.id); // Fetch and log the details
   };
 
   const handleCloseDetail = () => {
@@ -244,7 +273,7 @@ const FIHighCost = () => {
         <th>Return Day</th>
         <th>Destination</th>
         <th>Request Type</th> {/* Add Request Type column */}
-        <th>Status</th>
+        
         <th>Action</th>
       </tr>
     </thead>
@@ -298,37 +327,28 @@ const FIHighCost = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
-                <h5 className="modal-title">Transport Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}><IoMdClose/></button>
+                <h5 className="modal-title">High-Cost Request Details</h5>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}>
+                  <IoMdClose />
+                </button>
               </div>
               <div className="modal-body">
+                <p><strong>Created At:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
+                <p><strong>Updated At:</strong> {new Date(selectedRequest.updated_at).toLocaleString()}</p>
+                <p><strong>Requester:</strong> {selectedRequest.requester}</p>
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                <p><strong>Employees:</strong> {selectedRequest.employees.join(", ")}</p>
+                <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km}</p>
+                <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle}</p>
+                <p><strong>Fuel Needed (liters):</strong> {selectedRequest.fuel_needed_liters}</p>
+                <p><strong>Fuel Price Per Liter:</strong> {selectedRequest.fuel_price_per_liter}</p>
+                <p><strong>Total Cost:</strong> {selectedRequest.total_cost}</p>
+
                 <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
                 <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
                 <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseDetail}>
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ backgroundColor: "#28a745", color: "white" }}
-                  onClick={handleApproveClick} // Show approve confirmation dialog
-                >
-                  Approve
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ backgroundColor: "#dc3545", color: "white" }}
-                  onClick={handleRejectClick} // Show rejection modal
-                >
-                  Reject
-                </button>
+                <p><strong>Vehicle:</strong> {selectedRequest.vehicle}</p>
+                
               </div>
             </div>
           </div>

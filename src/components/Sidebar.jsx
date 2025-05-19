@@ -62,7 +62,6 @@ const Sidebar = ({ role }) => {
 ]
 
   const financeManagerMenus = [
-    { path: "/finance-manager/vehicle-request", icon: <MdOutlineRequestPage />, label: "Vehicle Request" },
     { path: "/finance-manager/hight-cost", icon: <FaGaugeHigh />, label: "High Cost" },
     { path: "/finance-manager/financemaintenance-table", icon: <FaTools />, label: "Maintenance Request" },
     { path: "/finance-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
@@ -75,12 +74,14 @@ const Sidebar = ({ role }) => {
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
     { path: "/ceo/ceomaintenance-table", icon: <FaTools />, label: "Maintenance" },
     { path: "/ceo/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
+    { path: "/ceo/history", icon: <MdOutlineHistory />, label: "History" },
   ]
   const BudgetManagerMenus = [
     { path: "/budget-manager/refueling", icon: <FaGasPump />, label: "Refueling" },
     { path: "/budget-manager/high_cost", icon: <FaGaugeHigh />, label: "Highcost Vehicle Requests" },
     { path: "/budget-manager/maintenance", icon: <FaTools />, label: "Maintenance" },
     { path: "/budget-manager/maintenance-request", icon: <FaTools />, label: "Create Maintenance Request" },
+    { path: "/budget-manager/history", icon: <MdOutlineHistory />, label: "History" },
 
   ]
 

@@ -51,6 +51,35 @@ const BUmaintenance = () => {
     }
   };
 
+  const fetchMaintenanceRequestDetail = async (requestId) => {
+    const accessToken = localStorage.getItem("authToken");
+  
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+  
+    try {
+      const response = await fetch(ENDPOINTS.MAINTENANCE_REQUEST_DETAIL(requestId), {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch maintenance request details");
+      }
+  
+      const data = await response.json();
+      console.log("Maintenance Request Details:", data); // Log the fetched data
+      setSelectedRequest(data); // Set the fetched data to state
+    } catch (error) {
+      console.error("Error fetching maintenance request details:", error);
+    }
+  };
+
   // Handle actions (forward, reject)
   const handleAction = async (id, action) => {
     const accessToken = localStorage.getItem("authToken");
@@ -147,7 +176,7 @@ const BUmaintenance = () => {
                       <button
                         className="btn btn-sm"
                         style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => setSelectedRequest(request)}
+                        onClick={() => fetchMaintenanceRequestDetail(request.id)} // Fetch details on click
                       >
                         View Detail
                       </button>
@@ -188,38 +217,55 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
                 <p><strong>Reason:</strong> {selectedRequest.reason}</p>
                 <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
                 <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                <p><strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB</p>
+                <p>
+                  <strong>Maintenance Letter:</strong>{" "}
+                  <a href={selectedRequest.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                    View Letter
+                  </a>
+                </p>
+                <p>
+                  <strong>Receipt File:</strong>{" "}
+                  <a href={selectedRequest.receipt_file} target="_blank" rel="noopener noreferrer">
+                    View Receipt
+                  </a>
+                </p>
+                <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message || "N/A"}</p>
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => {
-                    setPendingAction("forward");
-                    setShowConfirmModal(true);
-                  }}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Forward"}
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => setShowRejectModal(true)}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Reject"}
-                </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setPendingAction("approve");
+                    setShowConfirmModal(true);
+                  }}
+                >
+                  Approve
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    setPendingAction("reject");
+                    setShowRejectModal(true);
+                  }}
+                >
+                  Reject
                 </button>
               </div>
             </div>

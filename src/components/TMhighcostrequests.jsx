@@ -138,7 +138,7 @@ const TMhighcostrequests = () => {
       console.error("No access token found.");
       return;
     }
-
+  
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
         headers: {
@@ -146,22 +146,16 @@ const TMhighcostrequests = () => {
           "Content-Type": "application/json",
         },
       });
-
-      const contentType = response.headers.get("Content-Type");
-      if (!response.ok || !contentType.includes("application/json")) {
-        const errorText = await response.text(); // Read the error response as text
-        console.error("Error Response:", errorText);
-        throw new Error("Failed to fetch high-cost request details");
-      }
-
+  
+      if (!response.ok) throw new Error("Failed to fetch high-cost request details");
+  
       const data = await response.json();
-      setSelectedRequest(data); // Update the modal with fetched details
+      setSelectedRequest(data); // Set the fetched data to state
     } catch (error) {
       console.error("Fetch High-Cost Details Error:", error);
       toast.error("Failed to fetch high-cost request details.");
     }
   };
-
   // Get employee names from IDs
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
@@ -178,11 +172,11 @@ const TMhighcostrequests = () => {
 
   const handleCloseDetail = () => {
     setSelectedRequest(null);
-    setRejectionReason(""); // Clear rejection reason
-    setShowRejectionModal(false); // Close rejection modal
-    setShowConfirmation(false); // Close rejection confirmation dialog
-    setShowApproveConfirmation(false); // Close approve confirmation dialog
-    setIsCostCalculated(false); // Reset cost calculation state
+    setRejectionReason(""); 
+    setShowRejectionModal(false); 
+    setShowConfirmation(false); 
+    setShowApproveConfirmation(false); 
+    setIsCostCalculated(false); 
   };
 
   const handleApproveReject = async (action) => {
@@ -240,7 +234,7 @@ const TMhighcostrequests = () => {
       toast.success("Cost estimated successfully!");
       setShowEstimateModal(false); // Close the estimate modal
       fetchHighCostDetails(selectedRequest.id); // Refresh details in the first modal
-      setIsCostCalculated(true);
+      setIsCostCalculated(true); // Mark cost as calculated
     } catch (error) {
       console.error("Estimate Cost Error:", error);
       toast.error("Failed to estimate cost.");
@@ -297,7 +291,7 @@ const TMhighcostrequests = () => {
         <th>Start Time</th>
         <th>Return Day</th>
         <th>Destination</th>
-        <th>Request Type</th> {/* Add Request Type column */}
+        <th>Request Type</th> 
         <th>Status</th>
     
       </tr>
@@ -306,7 +300,7 @@ const TMhighcostrequests = () => {
       {currentPageRequests.length > 0 ? (
         currentPageRequests.map((request, index) => (
           <tr key={request.id}>
-            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> 
             <td>{request.start_day}</td>
             <td>{request.start_time}</td>
             <td>{request.return_day}</td>
@@ -351,9 +345,9 @@ const TMhighcostrequests = () => {
           <div
             className="modal-dialog"
             style={{
-              width: "90%", // Set the width to 90% of the viewport
-              maxWidth: "1200px", // Set a maximum width for larger screens
-              margin: "0 auto", // Center the modal horizontally
+              width: "90%", 
+              maxWidth: "1200px", 
+              margin: "0 auto", 
             }}
           >
             <div className="modal-content">
@@ -378,7 +372,21 @@ const TMhighcostrequests = () => {
                 <p><strong>Destination:</strong> {selectedRequest.destination}</p>
                 <p><strong>Reason:</strong> {selectedRequest.reason}</p>
 
-                {!isCostCalculated && (
+                {/* Display cost details if available */}
+                {isCostCalculated && (
+                  <>
+                    <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle}</p>
+                    <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km}</p>
+                    <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter}</p>
+                    <p><strong>Fuel Needed (Liters):</strong> {selectedRequest.fuel_needed_liters}</p>
+                    <p><strong>Total Cost:</strong> {selectedRequest.total_cost} ETB</p>
+                  </>
+                )}
+              </div>
+
+              <div className="modal-footer">
+                {/* Conditionally render buttons based on status and cost calculation */}
+                {selectedRequest.status === "forwarded" && !isCostCalculated && (
                   <Button
                     style={{ color: "#ffffff", backgroundColor: "#1976d2", width: "150px" }} // Blue button
                     onClick={() => setShowEstimateModal(true)}
@@ -387,49 +395,38 @@ const TMhighcostrequests = () => {
                   </Button>
                 )}
 
-                {isCostCalculated && (
-                  <>
-                    <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle}</p>
-                    <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km}</p>
-                    <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter}</p>
-                    <p><strong>Fuel Needed (Liters):</strong> {selectedRequest.fuel_needed_liters}</p>
-                    <p><strong>Total Cost:</strong> {selectedRequest.total_cost} ETB</p>
-                    <div className="d-flex justify-content-between mt-4">
-                      <Stack direction="row" spacing={2}>
-                        <Button
-                          variant="contained"
-                          style={{ color: "#ffffff", backgroundColor: "rgb(26, 72, 118)", width: "150px" }} // Blue button
-                          onClick={assignVehicle}
-                        >
-                          Assign Vehicle
-                        </Button>
-                        <Button
-                          variant="contained"
-                          style={{ color: "#ffffff", backgroundColor: "#388e3c", width: "150px" }} // Green button
-                          onClick={() => handleApproveReject("forward")}
-                        >
-                          Forward
-                        </Button>
-                        <Button
-                          variant="contained"
-                          style={{ color: "#ffffff", backgroundColor: "#d32f2f", width: "150px" }} // Red button
-                          onClick={() => handleApproveReject("reject")}
-                        >
-                          Reject
-                        </Button>
-                        <Button
-                          variant="contained"
-                          style={{ color: "#fff", borderColor: "#388e3c", width: "150px", backgroundColor: "rgb(26, 72, 118)" }} // Orange outlined button
-                          onClick={() => setShowEstimateModal(true)}
-                        >
-                          Recalculate
-                        </Button>
-                      </Stack>
-                    </div>
-                  </>
+                {selectedRequest.status === "forwarded" && isCostCalculated && (
+                  <Stack direction="row" spacing={2}>
+                    <Button
+                      style={{ color: "#ffffff", backgroundColor: "#1976d2" }} // Blue button
+                      onClick={() => handleApproveReject("forward")}
+                    >
+                      Forward
+                    </Button>
+                    <Button
+                      style={{ color: "#ffffff", backgroundColor: "#d32f2f" }} // Red button
+                      onClick={() => setShowRejectionModal(true)}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      style={{ color: "#ffffff", backgroundColor: "#ffa726" }} // Orange button
+                      onClick={() => setShowEstimateModal(true)}
+                    >
+                      Recalculate
+                    </Button>
+                  </Stack>
+                )}
+
+                {selectedRequest.status === "approved" && (
+                  <Button
+                    style={{ color: "#ffffff", backgroundColor: "#4caf50", width: "150px" }} // Green button
+                    onClick={assignVehicle}
+                  >
+                    Assign Vehicle
+                  </Button>
                 )}
               </div>
-              <div className="modal-footer"></div>
             </div>
           </div>
         </div>

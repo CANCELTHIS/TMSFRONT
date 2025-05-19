@@ -1,4 +1,4 @@
-const BASE_URL = "https://tms-api-23gs.onrender.com/";
+const BASE_URL = "http://172.30.61.194/api/";
 
 export const ENDPOINTS = {
   // Department endpoints
@@ -47,7 +47,7 @@ export const ENDPOINTS = {
   VEHICLE_LIST: `${BASE_URL}vehicles/`,
   VEHICLE_LIST_FORMAT: `${BASE_URL}vehicles.{format}/`,
   VEHICLE_DETAIL: (pk) => `${BASE_URL}vehicles/${pk}/`,
-  EDIT_VEHICLE: (pk) => `${BASE_URL}vehicles/${editingVehicle.id}/`,
+  EDIT_VEHICLE: (pk) => `${BASE_URL}vehicles/${pk}/`,
   VEHICLE_DETAIL_FORMAT: (pk, format) => `${BASE_URL}vehicles/${pk}.${format}/`,
   CURRENT_USER_VEHICLES: `${BASE_URL}my-vehicle/`,
   //refuling endpoints
@@ -62,10 +62,15 @@ export const ENDPOINTS = {
   ESTIMATE_HIGH_COST: (request_id) => `${BASE_URL}highcost-requests/${request_id}/estimate/`, 
   ASSIGN_VEHICLE:(request_id) =>`${BASE_URL}highcost-requests/${request_id}/assign-vehicle/`, 
   HIGH_COST_DETAIL: (request_id) => `${BASE_URL}highcost-requests/${request_id}/`,
+  FETCH_HIGH_COST_REQUEST_DETAIL: (request_id) => `${BASE_URL}highcost-requests/${request_id}/details/`,
   COMPLETE_TRIP: (request_id) => `${BASE_URL}highcost-requests/${request_id}/complete-trip/`,
+  COMPLETE_TRANSPORT_TRIP: (request_id) => `${BASE_URL}transport-requests/${request_id}/complete-trip/`, 
+  
+  // Complete a transport trip
   //maintennace endpoints
   CREATE_MAINTENANCE_REQUEST: `${BASE_URL}maintenance-requests/create/`, // Create a new maintenance request
   LIST_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/list/`, // List all maintenance requests
   MAINTENANCE_REQUEST_ACTION: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`, // Approve/Reject a maintenance request
-  SUBMIT_MAINTENANCE_FILES: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
- };
+  MAINTENANCE_REQUEST_DETAIL: (pk) => `${BASE_URL}maintenance-requests/${pk}/`,
+  SUBMIT_MAINTENANCE_FILES: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/submit-files/`,
+};

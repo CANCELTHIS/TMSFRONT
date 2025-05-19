@@ -2,16 +2,25 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+import CustomPagination from './CustomPagination';
+import { toast, ToastContainer } from "react-toastify"; // Import toast
+import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 
 const FinanceMaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
-  const [actionLoading, setActionLoading] = useState(false); // State for approve/reject actions
-  const [rejectionMessage, setRejectionMessage] = useState(""); // State for rejection message
-  const [showConfirmModal, setShowConfirmModal] = useState(false); // State for confirmation modal
-  const [showRejectModal, setShowRejectModal] = useState(false); // State for rejection modal
-  const [pendingAction, setPendingAction] = useState(null); // State for pending action
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [rejectionMessage, setRejectionMessage] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageRequests = maintenanceRequests.slice(startIndex, endIndex);
 
   // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
@@ -23,7 +32,7 @@ const FinanceMaintenanceTable = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.MENTENANCE_REQUEST_LIST, {
+      const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -36,77 +45,25 @@ const FinanceMaintenanceTable = () => {
       }
 
       const data = await response.json();
-      console.log("Fetched Maintenance Requests:", data); // Log the data to the console
-      setMaintenanceRequests(data.results || []); // Update state with fetched data
+      console.log("Fetched maintenance requests:", data.results);
+      setMaintenanceRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
+      toast.error("Failed to fetch maintenance requests."); 
     } finally {
-      setLoading(false); // Stop loading spinner
+      setLoading(false);
     }
   };
 
-  // Handle actions (forward, reject)
-  const handleAction = async (id, action) => {
-    const accessToken = localStorage.getItem("authToken");
 
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
 
-    setActionLoading(true);
-    try {
-      const body = { action };
-      if (action === "reject") {
-        body.rejection_message = rejectionMessage; // Include rejection message for rejection action
-      }
-
-      const response = await fetch(ENDPOINTS.APPREJ_MENTENANCE_REQUEST(id), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body), // Send the correct payload
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} the maintenance request`);
-      }
-
-      console.log(`Maintenance request ${action}d successfully`);
-      fetchMaintenanceRequests(); // Refresh the list after action
-      setSelectedRequest(null); // Close the detail view
-    } catch (error) {
-      console.error(`Error performing ${action} action:`, error);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleConfirmAction = () => {
-    if (pendingAction && selectedRequest) {
-      handleAction(selectedRequest.id, pendingAction);
-    }
-    setShowConfirmModal(false);
-  };
-
-  const handleRejectAction = () => {
-    if (rejectionMessage.trim() && selectedRequest) {
-      handleAction(selectedRequest.id, "reject"); // Use the correct `id` from the selected request
-      setShowRejectModal(false);
-    } else {
-      alert("Rejection message cannot be empty.");
-    }
-  };
-
-  // Fetch data when the component mounts
   useEffect(() => {
     fetchMaintenanceRequests();
   }, []);
 
   return (
     <div className="container mt-5">
+      <ToastContainer /> {/* Add ToastContainer */}
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       {loading ? (
@@ -130,9 +87,9 @@ const FinanceMaintenanceTable = () => {
               </tr>
             </thead>
             <tbody>
-              {maintenanceRequests.map((request, index) => (
+              {currentPageRequests.map((request, index) => (
                 <tr key={request.id}>
-                  <td>{index + 1}</td>
+                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td>{new Date(request.date).toLocaleDateString()}</td>
                   <td>{request.requester_name || "N/A"}</td>
                   <td>{request.requesters_car_name || "N/A"}</td>
@@ -152,6 +109,12 @@ const FinanceMaintenanceTable = () => {
           </table>
         </div>
       )}
+
+      <CustomPagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
+        handlePageChange={(page) => setCurrentPage(page)}
+      />
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
@@ -173,33 +136,24 @@ const FinanceMaintenanceTable = () => {
                 <p><strong>Reason:</strong> {selectedRequest.reason}</p>
                 <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
                 <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                <p><strong>Current Approver Role:</strong> {selectedRequest.current_approver_role}</p>
+                <p><strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB</p>
+                <p>
+                  <strong>Maintenance Letter:</strong>{" "}
+                  <a href={selectedRequest.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                    View Maintenance Letter
+                  </a>
+                </p>
+                <p>
+                  <strong>Receipt File:</strong>{" "}
+                  <a href={selectedRequest.receipt_file} target="_blank" rel="noopener noreferrer">
+                    View Receipt
+                  </a>
+                </p>
+                <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message || "N/A"}</p>
               </div>
-              <div className="modal-footer">
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => {
-                    setPendingAction("approve");
-                    setShowConfirmModal(true);
-                  }}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Approve"}
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => setShowRejectModal(true)}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Reject"}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setSelectedRequest(null)}
-                >
-                  Close
-                </button>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -221,7 +175,7 @@ const FinanceMaintenanceTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to approve this request?</p>
+                <p>Are you sure you want to forward this request?</p>
               </div>
               <div className="modal-footer">
                 <button
@@ -253,7 +207,9 @@ const FinanceMaintenanceTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowRejectModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <textarea

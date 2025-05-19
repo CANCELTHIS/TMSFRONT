@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { toast, ToastContainer } from "react-toastify"; // For toast messages
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg"; // Import the logo image
+import Logo from "../assets/Logo.jpg";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+
 const DriverSchedule = () => {
   const [requests, setRequests] = useState([]);
-  const [users, setUsers] = useState([]); // State for employees
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
+  const [selectedRequest, setSelectedRequest] = useState(null);
 
   const accessToken = localStorage.getItem("authToken");
 
-  // Fetch requests and users when the component mounts
   useEffect(() => {
     fetchRequests();
-    fetchUsers(); // Fetch users
+    fetchUsers();
   }, []);
 
   const fetchRequests = async () => {
@@ -37,7 +37,7 @@ const DriverSchedule = () => {
       if (!response.ok) throw new Error("Failed to fetch transport requests");
 
       const data = await response.json();
-      setRequests(data.results || []); // Set fetched data to state
+      setRequests(data.results || []);
     } catch (error) {
       console.error("Fetch Error:", error);
     } finally {
@@ -62,13 +62,12 @@ const DriverSchedule = () => {
       if (!response.ok) throw new Error("Failed to fetch users");
 
       const data = await response.json();
-      setUsers(data.results || []); // Set users data
+      setUsers(data.results || []);
     } catch (error) {
       console.error("Fetch Users Error:", error);
     }
   };
 
-  // Get employee names from IDs
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
       .map((id) => {
@@ -99,13 +98,17 @@ const DriverSchedule = () => {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({}), // Empty JSON body as per the prompt
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) throw new Error("Failed to send notification");
 
       toast.success("Notification sent successfully!");
-      handleCloseDetail(); // Close the modal
+
+      // Remove the notified request from the table
+      setRequests((prevRequests) => prevRequests.filter((req) => req.id !== requestId));
+
+      handleCloseDetail();
     } catch (error) {
       console.error("Notify Error:", error);
       toast.error("Failed to send notification.");
@@ -126,12 +129,14 @@ const DriverSchedule = () => {
       if (!response.ok) throw new Error("Failed to complete the trip");
 
       toast.success("Trip completed successfully!");
+
+      // Optional: Remove completed request
+      setRequests((prevRequests) => prevRequests.filter((req) => req.id !== requestId));
     } catch (error) {
       console.error("Error completing trip:", error);
       toast.error("Failed to complete the trip.");
     }
   };
-
 
   return (
     <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
@@ -145,41 +150,39 @@ const DriverSchedule = () => {
         </div>
       ) : (
         <div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
-          <div style={{ overflowX: "auto" }}>
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table">
-                  <tr>
-                    <th>Start Day</th>
-                    <th>Start Time</th>
-                    <th>Return Day</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                    <th>Action</th>
+          <div className="table-responsive">
+            <table className="table table-hover align-middle">
+              <thead className="table">
+                <tr>
+                  <th>Start Day</th>
+                  <th>Start Time</th>
+                  <th>Return Day</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((request) => (
+                  <tr key={request.id}>
+                    <td>{request.start_day}</td>
+                    <td>{request.start_time}</td>
+                    <td>{request.return_day}</td>
+                    <td>{request.destination}</td>
+                    <td>{request.status}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#181E4B", color: "white" }}
+                        onClick={() => handleViewDetail(request)}
+                      >
+                        View Detail
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {requests.map((request) => (
-                    <tr key={request.id}>
-                      <td>{request.start_day}</td>
-                      <td>{request.start_time}</td>
-                      <td>{request.return_day}</td>
-                      <td>{request.destination}</td>
-                      <td>{request.status}</td>
-                      <td>
-                        <button
-                          className="btn btn-sm"
-                          style={{ backgroundColor: "#181E4B", color: "white" }}
-                          onClick={() => handleViewDetail(request)}
-                        >
-                          View Detail
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -191,7 +194,7 @@ const DriverSchedule = () => {
               <div className="modal-header">
                 <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
                 <h5 className="modal-title">Transport Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}><IoClose/></button>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}><IoClose /></button>
               </div>
               <div className="modal-body">
                 <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>

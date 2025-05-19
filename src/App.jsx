@@ -47,13 +47,18 @@ import VehicleServices from './components/VehicleServices';
 import GSmaintenance from './components/GSmaintenance';
 import BUmaintenance from './components/BUmaintenance';
 import CEOhighcost from './components/CEOhighcost';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
+import CEOHistoryPage from './components/CEOHistoryPage';
+import BMHistoryPage from './components/BMHistoryPage';
 
-const ProtectedRoute = ({ children, isAuthenticated, redirectTo }) => {
-  if (!isAuthenticated) {
-    return <Navigate to={redirectTo} />;
-  }
-  return children;
-};
+
+// const PrivateRoute = ({ children, isAuthenticated, redirectTo }) => {
+//   if (!isAuthenticated) {
+//     return <Navigate to={redirectTo} />;
+//   }
+//   return children;
+// };
 
 const App = () => {
   const [modalType, setModalType] = useState(null);
@@ -156,11 +161,15 @@ const App = () => {
   };
 
   return (
+        <AuthProvider>
+
     <NotificationProvider>
       <ThemeProvider>
         <LanguageProvider>
           <div className={`app ${modalType ? 'blurred' : ''}`}>
             <Routes>
+                        <Route path="/employee" element={<PrivateRoute allowedRoles={[1]}><EmployeePage /></PrivateRoute>} />
+
               <Route
                 path="/"
                 element={
@@ -186,21 +195,21 @@ const App = () => {
               <Route
                 path="/employee/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[1]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="employee" />
                       <div className="container">
                         <EmployeePage />
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/department-manager/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[2]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="department_manager" />
                       <Sidebar role="department_manager" />
@@ -214,20 +223,20 @@ const App = () => {
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/finance-manager/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[3]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="finance_manager" />
                       <Sidebar role="finance_manager" />
                       <div className="container">
                         <Routes>
-                          <Route path="vehicle-request" element={<VehicleRequest />} />
+                          
                           <Route path="financemaintenance-table" element={<FinanceMaintenanceTable />} />
                           <Route path="refueling" element={<FMRefuelingTable />} />
                           <Route path="hight-cost" element={<FIHighCost />} />
@@ -235,14 +244,14 @@ const App = () => {
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/ceo/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[5]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="ceo" />
                       <Sidebar role="ceo" />
@@ -252,17 +261,18 @@ const App = () => {
                           <Route path="ceomaintenance-table" element={<CEOMaintenanceTable />} />
                           <Route path="refueling" element={<RefuelingTable />} />
                           <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                          <Route path="history" element={<CEOHistoryPage />} />
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/driver/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[6]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="driver" />
                       <Sidebar role="driver" />
@@ -276,7 +286,7 @@ const App = () => {
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
@@ -284,7 +294,7 @@ const App = () => {
               <Route
                 path="/admin/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[7]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="admin" />
                       <Sidebar role="admin" />
@@ -297,14 +307,14 @@ const App = () => {
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/transport-manager/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[4]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="transport_manager" />
                       <Sidebar role="transport_manager" />
@@ -322,14 +332,14 @@ const App = () => {
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/budget-manager/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[9]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="budget_manager" />
                       <Sidebar role="budget_manager" />
@@ -340,17 +350,18 @@ const App = () => {
                           <Route path="report" element={<ReportPage />} />
                           <Route path="maintenance" element={<BUmaintenance />} />
                           <Route path="maintenance-request" element={<MaintenanceRequest />} />
+                          <Route path="history" element={<BMHistoryPage/>}/>
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
               <Route
                 path="/general-service/*"
                 element={
-                  <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/-login">
+                  <PrivateRoute  allowedRoles={[8]} redirectTo="/-login">
                     <div className="d-flex">
                       <Header role="general-service" />
                       <Sidebar role="general-service" />
@@ -363,7 +374,7 @@ const App = () => {
                         </Routes>
                       </div>
                     </div>
-                  </ProtectedRoute>
+                  </PrivateRoute>
                 }
               />
 
@@ -391,6 +402,7 @@ const App = () => {
         </LanguageProvider>
       </ThemeProvider>
     </NotificationProvider>
+        </AuthProvider>
   );
 };
 
