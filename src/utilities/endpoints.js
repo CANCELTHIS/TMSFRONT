@@ -1,17 +1,19 @@
-const BASE_URL = "http://172.30.61.194/api/";
+const BASE_URL = "https://tms-api-23gs.onrender.com/";
 
 export const ENDPOINTS = {
   // Department endpoints
   DEPARTMENT_LIST: `${BASE_URL}departments/`,
   DEPARTMENT_LIST_FORMAT: `${BASE_URL}departments.{format}/`,
   DEPARTMENT_DETAIL: (pk) => `${BASE_URL}departments/${pk}/`,
-  DEPARTMENT_DETAIL_FORMAT: (pk, format) => `${BASE_URL}departments/${pk}.${format}/`,
+  DEPARTMENT_DETAIL_FORMAT: (pk, format) =>
+    `${BASE_URL}departments/${pk}.${format}/`,
 
   // Status History endpoints
   STATUS_HISTORY_LIST: `${BASE_URL}status-history/`,
   STATUS_HISTORY_LIST_FORMAT: `${BASE_URL}status-history.{format}/`,
   STATUS_HISTORY_DETAIL: (pk) => `${BASE_URL}status-history/${pk}/`,
-  STATUS_HISTORY_DETAIL_FORMAT: (pk, format) => `${BASE_URL}status-history/${pk}.${format}/`,
+  STATUS_HISTORY_DETAIL_FORMAT: (pk, format) =>
+    `${BASE_URL}status-history/${pk}.${format}/`,
 
   // Authentication endpoints
   API_ROOT: `${BASE_URL}`,
@@ -39,7 +41,8 @@ export const ENDPOINTS = {
   AVAILABLE_VEHICLES: `${BASE_URL}available-vehicles/`,
 
   CREATE_REQUEST: `${BASE_URL}transport-requests/create/`,
-  TM_APPROVE_REJECT: `${BASE_URL}transport-requests/`,
+  TM_APPROVE_REJECT: (request_id) =>
+    `${BASE_URL}transport-requests/${request_id}/action/`,
   REQUEST_NOTIFICATIONS: `${BASE_URL}transport-requests/notifications/`,
   UNREADOUNT: `${BASE_URL}transport-requests/notifications/unread-count/`,
   MARKALL_READ: `${BASE_URL}transport-requests/notifications/mark-all-read/`,
@@ -50,27 +53,43 @@ export const ENDPOINTS = {
   EDIT_VEHICLE: (pk) => `${BASE_URL}vehicles/${pk}/`,
   VEHICLE_DETAIL_FORMAT: (pk, format) => `${BASE_URL}vehicles/${pk}.${format}/`,
   CURRENT_USER_VEHICLES: `${BASE_URL}my-vehicle/`,
+  ADD_MONTHLY_KILOMETERS: (vehicle_id) =>
+    `${BASE_URL}vehicles/${vehicle_id}/add-monthly-kilometers/`,
+  KILOMETER_LOGS: `${BASE_URL}vehicles/kilometer-logs/`,
+  // Action logs endpoints
+  ACTION_LOGS_LIST: `${BASE_URL}action-logs/`, // GET all action logs
+  ACTION_LOGS_DETAIL: (pk) => `${BASE_URL}action-logs/${pk}/`, // GET action log by id
+
   //refuling endpoints
-  CREATE_HIGH_COST_REQEST: `${BASE_URL}highcost-requests/create/`, 
+  CREATE_HIGH_COST_REQEST: `${BASE_URL}highcost-requests/create/`,
   HIGH_COST_LIST: `${BASE_URL}highcost-requests/list/`,
   CREATE_REFUELING_REQUEST: `${BASE_URL}refueling_requests/create/`,
-  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`, 
+  REFUELING_REQUEST_LIST: `${BASE_URL}refueling_requests/list/`,
   REFUELING_REQUEST_DETAIL: (pk) => `${BASE_URL}refueling_requests/${pk}/`,
-  REFUELING_REQUEST_ESTIMATE: (request_id) => `${BASE_URL}refueling_requests/${request_id}/estimate/`,
-  APPREJ_REFUELING_REQUEST: (request_id) => `${BASE_URL}refueling_requests/${request_id}/action/`,
-  APPREJ_HIGHCOST_REQUEST:(request_id)=>`${BASE_URL}highcost-requests/${request_id}/action/`,
-  ESTIMATE_HIGH_COST: (request_id) => `${BASE_URL}highcost-requests/${request_id}/estimate/`, 
-  ASSIGN_VEHICLE:(request_id) =>`${BASE_URL}highcost-requests/${request_id}/assign-vehicle/`, 
-  HIGH_COST_DETAIL: (request_id) => `${BASE_URL}highcost-requests/${request_id}/`,
-  FETCH_HIGH_COST_REQUEST_DETAIL: (request_id) => `${BASE_URL}highcost-requests/${request_id}/details/`,
-  COMPLETE_TRIP: (request_id) => `${BASE_URL}highcost-requests/${request_id}/complete-trip/`,
-  COMPLETE_TRANSPORT_TRIP: (request_id) => `${BASE_URL}transport-requests/${request_id}/complete-trip/`, 
-  
-  // Complete a transport trip
+  REFUELING_REQUEST_ESTIMATE: (request_id) =>
+    `${BASE_URL}refueling_requests/${request_id}/estimate/`,
+  APPREJ_REFUELING_REQUEST: (request_id) =>
+    `${BASE_URL}refueling_requests/${request_id}/action/`,
+  APPREJ_HIGHCOST_REQUEST: (request_id) =>
+    `${BASE_URL}highcost-requests/${request_id}/action/`,
+  ESTIMATE_HIGH_COST: (request_id) =>
+    `${BASE_URL}highcost-requests/${request_id}/estimate/`,
+  ASSIGN_VEHICLE: (request_id) =>
+    `${BASE_URL}highcost-requests/${request_id}/assign-vehicle/`,
+  HIGH_COST_DETAIL: (request_id) =>
+    `${BASE_URL}highcost-requests/${request_id}/`,
+  COMPLETE_TRIP: (request_id) =>
+    `${BASE_URL}highcost-requests/${request_id}/complete-trip/`,
+  COMPLETE_TRANSPORT_TRIP: (request_id) =>
+    ` ${BASE_URL}transport-requests/${request_id}/complete-trip/`,
+  MY_REFUELING_REQUESTS: `${BASE_URL}refueling_requests/my/`, // List current user's refueling requests
+
   //maintennace endpoints
   CREATE_MAINTENANCE_REQUEST: `${BASE_URL}maintenance-requests/create/`, // Create a new maintenance request
   LIST_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/list/`, // List all maintenance requests
-  MAINTENANCE_REQUEST_ACTION: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/action/`, // Approve/Reject a maintenance request
-  MAINTENANCE_REQUEST_DETAIL: (pk) => `${BASE_URL}maintenance-requests/${pk}/`,
-  SUBMIT_MAINTENANCE_FILES: (request_id) => `${BASE_URL}maintenance-requests/${request_id}/submit-files/`,
+  MAINTENANCE_REQUEST_ACTION: (request_id) =>
+    `${BASE_URL}maintenance-requests/${request_id}/action/`, // Approve/Reject a maintenance request
+  SUBMIT_MAINTENANCE_FILES: (request_id) =>
+    `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
+  MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`, // List current user's maintenance requests
 };

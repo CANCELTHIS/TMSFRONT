@@ -4,7 +4,7 @@ import { ENDPOINTS } from "../utilities/endpoints";
 import { MdOutlineClose } from "react-icons/md"; // Updated import
 import { toast, ToastContainer } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
-import CustomPagination from './CustomPagination';
+import CustomPagination from "./CustomPagination";
 
 const TMRefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
@@ -30,8 +30,10 @@ const TMRefuelingTable = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentRequests = refuelingRequests.slice(startIndex, endIndex);
 
-  const handleNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const handlePreviousPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handlePreviousPage = () =>
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
@@ -72,13 +74,16 @@ const TMRefuelingTable = () => {
     }
 
     try {
-      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_DETAIL(requestId), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await fetch(
+        ENDPOINTS.REFUELING_REQUEST_DETAIL(requestId),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch refueling request details");
@@ -88,13 +93,16 @@ const TMRefuelingTable = () => {
       console.log("Refueling Request Details:", requestData);
 
       // Fetch vehicle details to get the driver name and fuel efficiency
-      const vehicleResponse = await fetch(ENDPOINTS.VEHICLE_DETAIL(requestData.requesters_car), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const vehicleResponse = await fetch(
+        ENDPOINTS.VEHICLE_DETAIL(requestData.requesters_car),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!vehicleResponse.ok) {
         throw new Error("Failed to fetch vehicle details");
@@ -106,7 +114,7 @@ const TMRefuelingTable = () => {
       requestData.driver_name = vehicleData.driver_name;
       requestData.fuel_efficiency = parseFloat(vehicleData.fuel_efficiency);
 
-      setSelectedRequest(requestData); 
+      setSelectedRequest(requestData);
     } catch (error) {
       console.error("Error fetching refueling request details:", error);
       toast.error("Failed to fetch request details.");
@@ -181,7 +189,11 @@ const TMRefuelingTable = () => {
     }
   };
 
-  const calculateTotalCost = async (requestId, estimatedDistance, fuelPrice) => {
+  const calculateTotalCost = async (
+    requestId,
+    estimatedDistance,
+    fuelPrice
+  ) => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
@@ -202,14 +214,17 @@ const TMRefuelingTable = () => {
 
       console.log("Payload for calculation:", payload);
 
-      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_ESTIMATE(requestId), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        ENDPOINTS.REFUELING_REQUEST_ESTIMATE(requestId),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -260,14 +275,17 @@ const TMRefuelingTable = () => {
 
       console.log("Payload being sent to backend:", body); // Debugging
 
-      const response = await fetch(ENDPOINTS.APPREJ_REFUELING_REQUEST(requestId), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body), // Convert the payload to JSON
-      });
+      const response = await fetch(
+        ENDPOINTS.APPREJ_REFUELING_REQUEST(requestId),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body), // Convert the payload to JSON
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -331,7 +349,6 @@ const TMRefuelingTable = () => {
     <div className="container mt-5">
       <ToastContainer /> {/* Add ToastContainer */}
       <h2 className="text-center mb-4">Refueling Requests</h2>
-
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
@@ -356,7 +373,8 @@ const TMRefuelingTable = () => {
               {currentRequests.length > 0 ? (
                 currentRequests.map((request, index) => (
                   <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>{" "}
+                    {/* Correct numbering */}
                     <td>{new Date(request.created_at).toLocaleDateString()}</td>
                     <td>{request.destination || "N/A"}</td>
                     <td>{request.requester_name || "N/A"}</td>
@@ -393,11 +411,12 @@ const TMRefuelingTable = () => {
           </div>
         </div>
       )}
-
-
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -414,9 +433,16 @@ const TMRefuelingTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Fuel Type:</strong> {selectedRequest.fuel_type}</p>
-                <p><strong>Driver:</strong> {selectedRequest.driver_name || "N/A"}</p>
+                <p>
+                  <strong>Destination:</strong> {selectedRequest.destination}
+                </p>
+                <p>
+                  <strong>Fuel Type:</strong> {selectedRequest.fuel_type}
+                </p>
+                <p>
+                  <strong>Driver:</strong>{" "}
+                  {selectedRequest.driver_name || "N/A"}
+                </p>
                 <div className="mb-3">
                   <label htmlFor="distanceInput" className="form-label">
                     Estimated Distance (in km)
@@ -452,9 +478,18 @@ const TMRefuelingTable = () => {
               <div className="modal-footer">
                 {!totalCost ? (
                   <button
-                    className="btn btn-primary"
+                    style={{
+                      backgroundColor: "#181E4B",
+                      color: "white",
+                      width: "150px",
+                    }}
+                    className="btn"
                     onClick={() =>
-                      calculateTotalCost(selectedRequest.id, distance, fuelPrice)
+                      calculateTotalCost(
+                        selectedRequest.id,
+                        distance,
+                        fuelPrice
+                      )
                     }
                   >
                     Calculate Total
@@ -462,8 +497,11 @@ const TMRefuelingTable = () => {
                 ) : (
                   <>
                     <button
-                      className="btn btn-success"
-                      onClick={() => handleAction(selectedRequest.id, "forward")}
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
+                      className="btn"
+                      onClick={() =>
+                        handleAction(selectedRequest.id, "forward")
+                      }
                     >
                       Forward
                     </button>
@@ -489,10 +527,12 @@ const TMRefuelingTable = () => {
           </div>
         </div>
       )}
-
       {/* Calculate Modal */}
       {showCalculateModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -537,14 +577,18 @@ const TMRefuelingTable = () => {
                 </div>
                 {totalCost && (
                   <div className="alert alert-info mt-3">
-                    <strong>Total Cost:</strong> The total cost to go from the Ministry of Innovation and Technology to the destination is <strong>{totalCost} ETB</strong>.
+                    <strong>Total Cost:</strong> The total cost to go from the
+                    Ministry of Innovation and Technology to the destination is{" "}
+                    <strong>{totalCost} ETB</strong>.
                   </div>
                 )}
               </div>
               <div className="modal-footer">
                 <button
                   className="btn btn-primary"
-                  onClick={() => calculateTotalAmount(distance, fuelPrice, fuelEfficiency)} // Pass the required parameters
+                  onClick={() =>
+                    calculateTotalAmount(distance, fuelPrice, fuelEfficiency)
+                  } // Pass the required parameters
                 >
                   Calculate
                 </button>
@@ -562,10 +606,12 @@ const TMRefuelingTable = () => {
           </div>
         </div>
       )}
-
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -608,10 +654,12 @@ const TMRefuelingTable = () => {
           </div>
         </div>
       )}
-
       {/* Fuel Cost Update Modal */}
       {showFuelCostModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">

@@ -22,7 +22,9 @@ const Header = ({ role, userId, onResubmit }) => {
   const fetchCurrentUser = () => {
     axios
       .get(ENDPOINTS.CURRENT_USER, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
       })
       .then((response) => {
         const user = response.data;
@@ -33,7 +35,7 @@ const Header = ({ role, userId, onResubmit }) => {
   };
 
   useEffect(() => {
-      fetchCurrentUser();
+    fetchCurrentUser();
     fetchNotifications();
     fetchUnreadCount();
   }, [userId]);
@@ -42,7 +44,9 @@ const Header = ({ role, userId, onResubmit }) => {
     axios
       .get(ENDPOINTS.REQUEST_NOTIFICATIONS, {
         params: { unread_only: false },
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
       })
       .then((response) => {
         console.log("Notifications fetched:", response.data);
@@ -56,7 +60,9 @@ const Header = ({ role, userId, onResubmit }) => {
     axios
       .get(ENDPOINTS.UNREADOUNT, {
         params: { user_id: userId },
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
       })
       .then((response) => {
         console.log("Unread count fetched:", response.data);
@@ -87,7 +93,9 @@ const Header = ({ role, userId, onResubmit }) => {
         setUnreadCount(0);
         fetchNotifications();
       })
-      .catch((error) => console.error("Error marking notifications as read:", error));
+      .catch((error) =>
+        console.error("Error marking notifications as read:", error)
+      );
   };
 
   const handleCloseNotifications = () => {
@@ -152,50 +160,84 @@ const Header = ({ role, userId, onResubmit }) => {
       notificationClass += " bg-danger bg-opacity-10";
     } else if (notification.notification_type === "new_maintenance") {
       notificationClass += " bg-warning bg-opacity-10";
+    } else if (notification.notification_type === "service_due") {
+      notificationClass += " bg-info bg-opacity-10";
     }
 
     return (
       <div key={notification.id} className={notificationClass}>
-        <h6 className="fw-bold mb-1">{notification.title}</h6>
-        
-        {notification.metadata && (
-          <div className="small text-muted">
-            {notification.metadata.requester && (
-              <div className="d-flex justify-content-between">
-                <strong>Requester:</strong> <span>{notification.metadata.requester}</span>
-              </div>
-            )}
-            {notification.metadata.destination && (
-              <div className="d-flex justify-content-between">
-                <strong>Destination:</strong> <span>{notification.metadata.destination}</span>
-              </div>
-            )}
-            {notification.metadata.passengers && (
-              <div className="d-flex justify-content-between">
-                <strong>Passengers:</strong> <span>{notification.metadata.passengers}</span>
-              </div>
-            )}
-            {notification.notification_type === "rejected" &&
-              notification.metadata.rejection_reason && (
+        <h6 className="fw-bold mb-1">{notification.title || "Service Due"}</h6>
+        <div className="small text-muted">
+          {notification.notification_type === "service_due" &&
+            notification.metadata && (
+              <>
                 <div className="d-flex justify-content-between">
-                  <strong>Reason:</strong> <span>{notification.metadata.rejection_reason}</span>
+                  <strong>Vehicle:</strong>{" "}
+                  <span>{notification.metadata.vehicle_model}</span>
                 </div>
-              )}
-          </div>
-        )}
+                <div className="d-flex justify-content-between">
+                  <strong>Plate:</strong>{" "}
+                  <span>{notification.metadata.license_plate}</span>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <strong>Kilometer:</strong>{" "}
+                  <span>{notification.metadata.kilometer}</span>
+                </div>
+              </>
+            )}
+          {notification.metadata &&
+            notification.notification_type !== "service_due" && (
+              <>
+                {notification.metadata.requester && (
+                  <div className="d-flex justify-content-between">
+                    <strong>Requester:</strong>{" "}
+                    <span>{notification.metadata.requester}</span>
+                  </div>
+                )}
+                {notification.metadata.destination && (
+                  <div className="d-flex justify-content-between">
+                    <strong>Destination:</strong>{" "}
+                    <span>{notification.metadata.destination}</span>
+                  </div>
+                )}
+                {notification.metadata.passengers && (
+                  <div className="d-flex justify-content-between">
+                    <strong>Passengers:</strong>{" "}
+                    <span>{notification.metadata.passengers}</span>
+                  </div>
+                )}
+                {notification.notification_type === "rejected" &&
+                  notification.metadata.rejection_reason && (
+                    <div className="d-flex justify-content-between">
+                      <strong>Reason:</strong>{" "}
+                      <span>{notification.metadata.rejection_reason}</span>
+                    </div>
+                  )}
+              </>
+            )}
+        </div>
         <div className="d-flex justify-content-between align-items-center mt-2">
           <small className="text-muted">
             {formattedDate} at {formattedTime}
           </small>
-          {notification.notification_type === "rejected" && notification.metadata.request_id && (
-            <button 
-              className="btn btn-sm btn-outline-primary"
-              onClick={() => handleResubmit(notification.metadata.request_id)}
-            >
-              Resubmit
-            </button>
-          )}
+          {notification.notification_type === "rejected" &&
+            notification.metadata.request_id && (
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={() => handleResubmit(notification.metadata.request_id)}
+              >
+                Resubmit
+              </button>
+            )}
         </div>
+        {notification.notification_type === "service_due" && (
+          <div
+            className="alert alert-warning mt-2 mb-0 py-2 px-3"
+            style={{ fontSize: "0.95em" }}
+          >
+            {notification.message}
+          </div>
+        )}
       </div>
     );
   };
@@ -253,7 +295,9 @@ const Header = ({ role, userId, onResubmit }) => {
               />
             </div>
             {notifications.length > 0 ? (
-              notifications.map((notification) => renderNotificationContent(notification))
+              notifications.map((notification) =>
+                renderNotificationContent(notification)
+              )
             ) : (
               <div className="text-center py-3">
                 <p className="text-muted">No new notifications</p>
@@ -284,7 +328,11 @@ const Header = ({ role, userId, onResubmit }) => {
             </h5>
             <form onSubmit={handleFormSubmit}>
               <div className="mb-2">
-                <label htmlFor="fullName" className="form-label" style={{ fontSize: "12px" }}>
+                <label
+                  htmlFor="fullName"
+                  className="form-label"
+                  style={{ fontSize: "12px" }}
+                >
                   Full Name
                 </label>
                 <input
@@ -297,7 +345,11 @@ const Header = ({ role, userId, onResubmit }) => {
                 />
               </div>
               <div className="mb-2">
-                <label htmlFor="phoneNumber" className="form-label" style={{ fontSize: "12px" }}>
+                <label
+                  htmlFor="phoneNumber"
+                  className="form-label"
+                  style={{ fontSize: "12px" }}
+                >
                   Phone Number
                 </label>
                 <input
@@ -310,7 +362,11 @@ const Header = ({ role, userId, onResubmit }) => {
                 />
               </div>
               <div className="mb-2">
-                <label htmlFor="password" className="form-label" style={{ fontSize: "12px" }}>
+                <label
+                  htmlFor="password"
+                  className="form-label"
+                  style={{ fontSize: "12px" }}
+                >
                   New Password
                 </label>
                 <input
@@ -323,8 +379,12 @@ const Header = ({ role, userId, onResubmit }) => {
                 />
               </div>
               <div className="d-flex justify-content-between mt-3">
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Save Changes
+                <button
+                  type="submit"
+                  style={{ backgroundColor: "#0B455B" }}
+                  className="btn w-90 text-white"
+                >
+                  Save
                 </button>
                 <button
                   onClick={handleLogout}

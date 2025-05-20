@@ -102,26 +102,22 @@ const DepartementPage = () => {
     }
 
     try {
-      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
+      const response = await fetch(ENDPOINTS.TM_APPROVE_REJECT(requestId), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
-          
         },
         body: JSON.stringify({
-          action: "forward", // Forward the request to the transport manager
+          action: "forward",
         }),
       });
 
       if (!response.ok) throw new Error("Failed to forward transport request");
 
-
-      // Update the status locally after forwarding
+      // Remove the request from the table after approval
       setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "forwarded" } : req
-        )
+        prevRequests.filter((req) => req.id !== requestId)
       );
 
       setSelectedRequest(null); // Close modal
@@ -144,7 +140,7 @@ const DepartementPage = () => {
     }
 
     try {
-      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
+      const response = await fetch(ENDPOINTS.TM_APPROVE_REJECT(requestId), {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -152,17 +148,15 @@ const DepartementPage = () => {
         },
         body: JSON.stringify({
           action: "reject",
-          rejection_message: rejectionReason, // Use the provided reason
+          rejection_message: rejectionReason,
         }),
       });
 
       if (!response.ok) throw new Error("Failed to reject transport request");
 
-      // Update the status locally after rejection
+      // Remove the request from the table after rejection
       setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "rejected" } : req
-        )
+        prevRequests.filter((req) => req.id !== requestId)
       );
 
       setSelectedRequest(null); // Close modal
@@ -176,20 +170,20 @@ const DepartementPage = () => {
   };
 
   const handleRejectClick = () => {
-    setShowRejectionModal(true); 
+    setShowRejectionModal(true);
   };
 
   const handleConfirmReject = () => {
-    setShowConfirmation(true); 
+    setShowConfirmation(true);
   };
 
   const handleConfirmAction = () => {
     handleReject(selectedRequest.id);
-    setShowConfirmation(false); 
+    setShowConfirmation(false);
   };
 
   const handleApproveClick = () => {
-    setShowApproveConfirmation(true); 
+    setShowApproveConfirmation(true);
   };
 
   const handleConfirmApprove = () => {
@@ -197,10 +191,12 @@ const DepartementPage = () => {
     setShowApproveConfirmation(false); // Close approve confirmation dialog
   };
 
-
   return (
-    <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      <ToastContainer /> 
+    <div
+      className="container mt-4"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
+      <ToastContainer />
       {loading ? (
         <div className="text-center mt-4">
           <div className="spinner-border text-primary" role="status">
@@ -209,76 +205,105 @@ const DepartementPage = () => {
           <p>Loading data...</p>
         </div>
       ) : (
-<div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
-<div style={{ overflowX: "auto" }}>
-<div className="table-responsive">
-                  <table className="table table-hover align-middle">
-            <thead className="table">
-              <tr>
-                <th>Start Day</th>
-                <th>Start Time</th>
-                <th>Return Day</th>
-                <th>Destination</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((request) => (
-                <tr key={request.id}>
-                  <td>{request.start_day}</td>
-                  <td>{request.start_time}</td>
-                  <td>{request.return_day}</td>
-                  <td>{request.destination}</td>
-                  <td>{request.status}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => handleViewDetail(request)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div
+          className="table-responsive"
+          style={{ width: "100%", overflowX: "auto" }}
+        >
+          <div style={{ overflowX: "auto" }}>
+            <div className="table-responsive">
+              <table className="table table-hover align-middle">
+                <thead className="table">
+                  <tr>
+                    <th>Start Day</th>
+                    <th>Start Time</th>
+                    <th>Return Day</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.map((request) => (
+                    <tr key={request.id}>
+                      <td>{request.start_day}</td>
+                      <td>{request.start_time}</td>
+                      <td>{request.return_day}</td>
+                      <td>{request.destination}</td>
+                      <td>{request.status}</td>
+                      <td>
+                        <button
+                          className="btn btn-sm"
+                          style={{ backgroundColor: "#181E4B", color: "white" }}
+                          onClick={() => handleViewDetail(request)}
+                        >
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
         </div>
       )}
 
       {selectedRequest && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
+                />
                 <h5 className="modal-title">Transport Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseDetail}
+                >
                   <IoCloseSharp size={24} />
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                <p>
+                  <strong>Start Day:</strong> {selectedRequest.start_day}
+                </p>
+                <p>
+                  <strong>Start Time:</strong> {selectedRequest.start_time}
+                </p>
+                <p>
+                  <strong>Return Day:</strong> {selectedRequest.return_day}
+                </p>
+                <p>
+                  <strong>Employees:</strong>{" "}
+                  {getEmployeeNames(selectedRequest.employees)}
+                </p>
+                <p>
+                  <strong>Destination:</strong> {selectedRequest.destination}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </p>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseDetail}>
-                  Close
-                </button>
                 <button
                   type="button"
                   className="btn"
-                  style={{ backgroundColor: "#28a745", color: "white" }}
+                  style={{ backgroundColor: "#0B455B", color: "white" }}
                   onClick={handleApproveClick} // Show approve confirmation dialog
                 >
-                  Approve
+                  Forward
                 </button>
                 <button
                   type="button"
@@ -294,14 +319,17 @@ const DepartementPage = () => {
         </div>
       )}
 
-
       {showRejectionModal && (
-        <div className="modal fade show d-block" tabIndex="-1" >
+        <div className="modal fade show d-block" tabIndex="-1">
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Reject Request</h5>
-                <button type="button" className="btn-close" onClick={() => setShowRejectionModal(false)}>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowRejectionModal(false)}
+                >
                   <IoCloseSharp size={24} />
                 </button>
               </div>
@@ -323,10 +351,10 @@ const DepartementPage = () => {
               <div className="modal-footer">
                 <button
                   type="button"
-                  className="btn btn-danger"
+                  className="btn btn-danger w-80"
                   onClick={handleConfirmReject} // Show confirmation dialog
                 >
-                  Submit Rejection
+                  Submit
                 </button>
               </div>
             </div>
@@ -335,12 +363,20 @@ const DepartementPage = () => {
       )}
 
       {showConfirmation && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Rejection</h5>
-                <button type="button" className="btn-close" onClick={() => setShowConfirmation(false)}>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowConfirmation(false)}
+                >
                   <IoCloseSharp size={24} />
                 </button>
               </div>
@@ -348,11 +384,19 @@ const DepartementPage = () => {
                 <p>Are you sure you want to reject this request?</p>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowConfirmation(false)}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowConfirmation(false)}
+                >
                   Cancel
                 </button>
-                <button type="button" className="btn btn-danger" onClick={handleConfirmAction}>
-                  Confirm Rejection
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleConfirmAction}
+                >
+                  Confirm
                 </button>
               </div>
             </div>
@@ -361,24 +405,38 @@ const DepartementPage = () => {
       )}
 
       {showApproveConfirmation && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Approval</h5>
-                <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowApproveConfirmation(false)}
+                >
                   <IoCloseSharp size={24} />
                 </button>
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to forward this request to the transport manager?</p>
+                <p>
+                  Are you sure you want to forward this request to the transport
+                  manager?
+                </p>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowApproveConfirmation(false)}>
-                  Cancel
-                </button>
-                <button type="button" className="btn btn-primary" onClick={handleConfirmApprove}>
-                  Confirm Approval
+                
+                <button
+                  type="button"
+                  style={{ backgroundColor: "#0B455B", color: "white" }}
+                  className="btn"
+                  onClick={handleConfirmApprove}
+                >
+                  Confirm 
                 </button>
               </div>
             </div>
