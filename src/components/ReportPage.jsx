@@ -1,13 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import {
-  PieChart,
-  Pie,
-  Cell,
   Tooltip,
   Legend,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -16,31 +11,167 @@ import {
   Line,
 } from "recharts";
 
-const COLORS = [
-  "#14183E",
-  "#0B455B",
-  "#F1A501",
-  "#FF7152",
-  "#8A79DF",
-  "#34A853",
-  "#EA4335",
+// Dummy monthly data for chart (per request type)
+const monthlyData = [
+  {
+    month: "Jan",
+    "Car Request": { requests: 10, cost: 3000, Owned: 6, Rented: 3, Leased: 1 },
+    "Maintenance Request": {
+      requests: 8,
+      cost: 4000,
+      Owned: 5,
+      Rented: 2,
+      Leased: 1,
+    },
+    "Service Request": {
+      requests: 12,
+      cost: 2500,
+      Owned: 7,
+      Rented: 4,
+      Leased: 1,
+    },
+    "Refueling Request": {
+      requests: 10,
+      cost: 1500,
+      Owned: 5,
+      Rented: 4,
+      Leased: 1,
+    },
+  },
+  {
+    month: "Feb",
+    "Car Request": { requests: 12, cost: 3500, Owned: 7, Rented: 4, Leased: 1 },
+    "Maintenance Request": {
+      requests: 9,
+      cost: 4200,
+      Owned: 6,
+      Rented: 2,
+      Leased: 1,
+    },
+    "Service Request": {
+      requests: 13,
+      cost: 2600,
+      Owned: 8,
+      Rented: 4,
+      Leased: 1,
+    },
+    "Refueling Request": {
+      requests: 16,
+      cost: 1800,
+      Owned: 8,
+      Rented: 7,
+      Leased: 1,
+    },
+  },
+  {
+    month: "Mar",
+    "Car Request": { requests: 15, cost: 4000, Owned: 8, Rented: 6, Leased: 1 },
+    "Maintenance Request": {
+      requests: 10,
+      cost: 4500,
+      Owned: 7,
+      Rented: 2,
+      Leased: 1,
+    },
+    "Service Request": {
+      requests: 14,
+      cost: 2700,
+      Owned: 9,
+      Rented: 4,
+      Leased: 1,
+    },
+    "Refueling Request": {
+      requests: 21,
+      cost: 2000,
+      Owned: 10,
+      Rented: 10,
+      Leased: 1,
+    },
+  },
+  {
+    month: "Apr",
+    "Car Request": { requests: 13, cost: 3700, Owned: 7, Rented: 5, Leased: 1 },
+    "Maintenance Request": {
+      requests: 11,
+      cost: 4700,
+      Owned: 8,
+      Rented: 2,
+      Leased: 1,
+    },
+    "Service Request": {
+      requests: 15,
+      cost: 2800,
+      Owned: 10,
+      Rented: 4,
+      Leased: 1,
+    },
+    "Refueling Request": {
+      requests: 16,
+      cost: 1700,
+      Owned: 8,
+      Rented: 7,
+      Leased: 1,
+    },
+  },
+  {
+    month: "May",
+    "Car Request": {
+      requests: 18,
+      cost: 5000,
+      Owned: 10,
+      Rented: 7,
+      Leased: 1,
+    },
+    "Maintenance Request": {
+      requests: 12,
+      cost: 5000,
+      Owned: 9,
+      Rented: 2,
+      Leased: 1,
+    },
+    "Service Request": {
+      requests: 18,
+      cost: 3000,
+      Owned: 12,
+      Rented: 5,
+      Leased: 1,
+    },
+    "Refueling Request": {
+      requests: 24,
+      cost: 2200,
+      Owned: 12,
+      Rented: 11,
+      Leased: 1,
+    },
+  },
+  {
+    month: "Jun",
+    "Car Request": { requests: 16, cost: 4800, Owned: 9, Rented: 6, Leased: 1 },
+    "Maintenance Request": {
+      requests: 13,
+      cost: 5200,
+      Owned: 10,
+      Rented: 2,
+      Leased: 1,
+    },
+    "Service Request": {
+      requests: 17,
+      cost: 3200,
+      Owned: 11,
+      Rented: 5,
+      Leased: 1,
+    },
+    "Refueling Request": {
+      requests: 19,
+      cost: 2100,
+      Owned: 10,
+      Rented: 8,
+      Leased: 1,
+    },
+  },
 ];
 
-const dummyMonthlyTrends = [
-  { month: "Jan", Maintenance: 12, Refueling: 20, Service: 8 },
-  { month: "Feb", Maintenance: 15, Refueling: 18, Service: 10 },
-  { month: "Mar", Maintenance: 10, Refueling: 25, Service: 12 },
-  { month: "Apr", Maintenance: 20, Refueling: 22, Service: 14 },
-  { month: "May", Maintenance: 18, Refueling: 30, Service: 16 },
-  { month: "Jun", Maintenance: 22, Refueling: 28, Service: 18 },
-  { month: "Jul", Maintenance: 17, Refueling: 24, Service: 15 },
-  { month: "Aug", Maintenance: 19, Refueling: 27, Service: 17 },
-  { month: "Sep", Maintenance: 14, Refueling: 21, Service: 13 },
-  { month: "Oct", Maintenance: 16, Refueling: 23, Service: 14 },
-  { month: "Nov", Maintenance: 21, Refueling: 29, Service: 19 },
-  { month: "Dec", Maintenance: 13, Refueling: 20, Service: 11 },
-];
-
+// Dummy table data
 const dummyTopVehicles = [
   {
     plate: "AA1234",
@@ -48,6 +179,8 @@ const dummyTopVehicles = [
     km: 12000,
     fuel: 1500,
     maintenance: 3,
+    type: "Car Request",
+    cost: 5000,
   },
   {
     plate: "BB5678",
@@ -55,6 +188,8 @@ const dummyTopVehicles = [
     km: 11000,
     fuel: 1400,
     maintenance: 2,
+    type: "Maintenance Request",
+    cost: 3200,
   },
   {
     plate: "CC9012",
@@ -62,87 +197,118 @@ const dummyTopVehicles = [
     km: 10500,
     fuel: 1350,
     maintenance: 4,
+    type: "Service Request",
+    cost: 4100,
   },
-  { plate: "DD3456", driver: "Sara Kim", km: 9800, fuel: 1200, maintenance: 1 },
-  { plate: "EE7890", driver: "Ali Musa", km: 9500, fuel: 1100, maintenance: 2 },
+  {
+    plate: "DD3456",
+    driver: "Sara Kim",
+    km: 9800,
+    fuel: 1200,
+    maintenance: 1,
+    type: "Refueling Request",
+    cost: 1800,
+  },
+  {
+    plate: "EE7890",
+    driver: "Ali Musa",
+    km: 9500,
+    fuel: 1100,
+    maintenance: 2,
+    type: "Car Request",
+    cost: 2500,
+  },
 ];
 
-const dummyBreakdown = [
-  { type: "Owned", vehicles: 15, requests: 120 },
-  { type: "Rented", vehicles: 8, requests: 60 },
-  { type: "Leased", vehicles: 5, requests: 40 },
+const requestTypes = [
+  "All",
+  "Car Request",
+  "Maintenance Request",
+  "Service Request",
+  "Refueling Request",
 ];
+
+const chartViews = [
+  { key: "requests", label: "Number of Requests" },
+  { key: "cost", label: "Cost" },
+  { key: "source", label: "Source of Cars" },
+];
+
+const COLORS = ["#14183E", "#F1A501", "#34A853", "#FF7152"];
 
 const ReportPage = () => {
-  const [reportData, setReportData] = useState({
-    totalMaintenanceCost: 0,
-    totalRefuelingCost: 0,
-    totalServiceCost: 0,
-    totalHighCost: 0,
-    totalVehicleRequests: 0,
-    totalMaintenanceRequests: 0,
-    totalRefuelingRequests: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const [maintFilter, setMaintFilter] = useState("All");
+  const [chartView, setChartView] = useState("requests");
+  const [chartReqType, setChartReqType] = useState("All");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-
   const { mylanguage } = useLanguage();
 
-  // Localization object
-  const localization = {
-    EN: {
-      reportPage: "Report Page",
-      maintenanceCost: "Maintenance Cost",
-      refuelingCost: "Refueling Cost",
-      serviceCost: "Service Cost",
-      highCost: "High-Cost Vehicle Requests",
-      vehicleRequests: "Vehicle Requests",
-      maintenanceRequests: "Maintenance Requests",
-      refuelingRequests: "Refueling Requests",
-      viewDetails: "View Details",
-      loading: "Loading...",
-      error: "Failed to fetch report data.",
-      print: "Print",
-      close: "Close",
-      monthlyTrends: "Monthly Request Trends",
-      topVehicles: "Top Vehicles (by KM)",
-      breakdown: "Vehicle Source Breakdown",
-      vehicles: "Vehicles",
-      requests: "Requests",
-      driver: "Driver",
-      kilometers: "Kilometers",
-      fuel: "Fuel (L)",
-      maint: "Maint.",
-    },
-    AM: {
-      reportPage: "የሪፖርት ገጽ",
-      maintenanceCost: "የጥገና ክፍያ",
-      refuelingCost: "የነዳጅ ክፍያ",
-      serviceCost: "የአገልግሎት ክፍያ",
-      highCost: "ውድ የተሽከርካሪ ጥያቄዎች",
-      vehicleRequests: "የተሽከርካሪ ጥያቄዎች",
-      maintenanceRequests: "የጥገና ጥያቄዎች",
-      refuelingRequests: "የነዳጅ ጥያቄዎች",
-      viewDetails: "ዝርዝር እይ",
-      loading: "በመጫን ላይ...",
-      error: "የሪፖርት መረጃን ማግኘት አልተቻለም።",
-      print: "አትም",
-      close: "ዝጋ",
-      monthlyTrends: "ወርሃዊ ትዕዛዞች እንቅስቃሴ",
-      topVehicles: "ምርጥ ተሽከርካሪዎች (በኪ.ሜ)",
-      breakdown: "የተሽከርካሪ ምንጭ ክፍል በኩል",
-      vehicles: "ተሽከርካሪዎች",
-      requests: "ጥያቄዎች",
-      driver: "አሽከርካሪ",
-      kilometers: "ኪ.ሜ",
-      fuel: "ነዳጅ (ሊትር)",
-      maint: "ጥገና",
-    },
-  };
+  // Table filter
+  const filteredVehicles =
+    maintFilter === "All"
+      ? dummyTopVehicles
+      : dummyTopVehicles.filter((v) => v.type === maintFilter);
 
-  const t = localization[mylanguage];
+  // Prepare chart data based on selection
+  let chartData = [];
+  if (chartReqType === "All") {
+    // For "All", merge all types for requests/cost/source
+    chartData = monthlyData.map((m) => ({
+      month: m.month,
+      "Car Request": m["Car Request"].requests,
+      "Maintenance Request": m["Maintenance Request"].requests,
+      "Service Request": m["Service Request"].requests,
+      "Refueling Request": m["Refueling Request"].requests,
+      "Car Request Cost": m["Car Request"].cost,
+      "Maintenance Request Cost": m["Maintenance Request"].cost,
+      "Service Request Cost": m["Service Request"].cost,
+      "Refueling Request Cost": m["Refueling Request"].cost,
+      "Car Request Owned": m["Car Request"].Owned,
+      "Car Request Rented": m["Car Request"].Rented,
+      "Car Request Leased": m["Car Request"].Leased,
+      "Maintenance Request Owned": m["Maintenance Request"].Owned,
+      "Maintenance Request Rented": m["Maintenance Request"].Rented,
+      "Maintenance Request Leased": m["Maintenance Request"].Leased,
+      "Service Request Owned": m["Service Request"].Owned,
+      "Service Request Rented": m["Service Request"].Rented,
+      "Service Request Leased": m["Service Request"].Leased,
+      "Refueling Request Owned": m["Refueling Request"].Owned,
+      "Refueling Request Rented": m["Refueling Request"].Rented,
+      "Refueling Request Leased": m["Refueling Request"].Leased,
+    }));
+  } else {
+    chartData = monthlyData.map((m) => ({
+      month: m.month,
+      requests: m[chartReqType].requests,
+      cost: m[chartReqType].cost,
+      Owned: m[chartReqType].Owned,
+      Rented: m[chartReqType].Rented,
+      Leased: m[chartReqType].Leased,
+    }));
+  }
+
+  // Localization object (shortened for brevity)
+  const t = {
+    reportPage: "Report Page",
+    topVehicles: "Top Vehicles (by KM)",
+    driver: "Driver",
+    kilometers: "Kilometers",
+    fuel: "Fuel (L)",
+
+    cost: "Cost",
+    type: "Type",
+    filter: "Filter",
+    chart: "Chart",
+    numberOfRequests: "Number of Requests",
+    costChart: "Cost",
+    source: "Source of Cars",
+    owned: "Owned",
+    rented: "Rented",
+    leased: "Leased",
+    selectReq: "Request Type",
+    selectChart: "Chart Data",
+  };
 
   useEffect(() => {
     const fetchReportData = async () => {
@@ -158,27 +324,6 @@ const ReportPage = () => {
     };
     fetchReportData();
   }, [t.error]);
-  const pieData = [
-    { name: t.maintenanceRequests, value: 42 },
-    { name: t.refuelingRequests, value: 58 },
-    { name: t.vehicleRequests, value: 75 },
-    { name: t.highCost, value: 12 },
-  ];
-
-  const barData = [
-    { name: t.maintenanceCost, value: 32000 },
-    { name: t.refuelingCost, value: 21000 },
-    { name: t.serviceCost, value: 15000 },
-  ];
-
-  const handleViewDetails = (reportType) => {
-    setSelectedReport(reportType);
-    setShowModal(true);
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   if (loading) return <p>{t.loading}</p>;
   if (error) return <div className="alert alert-danger">{error}</div>;
@@ -189,392 +334,236 @@ const ReportPage = () => {
       style={{
         minHeight: "100vh",
         backgroundColor: "#f8f9fc",
-        marginTop: "200px",
+        marginTop: "100px",
       }}
     >
-      <div className="row mb-5">
-        <div className="col-md-6 mb-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5
-                className="card-title text-center mb-4"
-                style={{ color: "#14183E" }}
-              >
-                {t.maintenanceRequests}, {t.refuelingRequests},{" "}
-                {t.vehicleRequests}, {t.highCost}
-              </h5>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    fill="#14183E"
-                    label
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-6 mb-4">
-          <div className="card shadow-sm h-100">
-            <div className="card-body">
-              <h5
-                className="card-title text-center mb-4"
-                style={{ color: "#14183E" }}
-              >
-                {t.maintenanceCost}, {t.refuelingCost}, {t.serviceCost}
-              </h5>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={barData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="value" fill="#14183E" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      </div>
+      <h2 className="h4 mb-4" style={{ color: "#14183E", fontWeight: 700 }}>
+        {t.reportPage}
+      </h2>
 
-      {/* Monthly Trends Line Chart */}
-      <div className="row mb-5">
-        <div className="col-12">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5
-                className="card-title text-center mb-4"
-                style={{ color: "#14183E" }}
+      {/* Chart Section */}
+      <div className="card shadow-sm mb-5">
+        <div className="card-body">
+          <div className="row mb-3">
+            <div className="col-md-4">
+              <label className="form-label">{t.selectChart}:</label>
+              <select
+                className="form-select form-select-sm"
+                value={chartView}
+                onChange={(e) => setChartView(e.target.value)}
               >
-                {t.monthlyTrends}
-              </h5>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={dummyMonthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="Maintenance"
-                    stroke="#14183E"
-                    strokeWidth={2}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Refueling"
-                    stroke="#F1A501"
-                    strokeWidth={2}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="Service"
-                    stroke="#34A853"
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+                {chartViews.map((view) => (
+                  <option key={view.key} value={view.key}>
+                    {view.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">{t.selectReq}:</label>
+              <select
+                className="form-select form-select-sm"
+                value={chartReqType}
+                onChange={(e) => setChartReqType(e.target.value)}
+              >
+                {requestTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Vehicle Source Breakdown Stacked Bar */}
-      <div className="row mb-5">
-        <div className="col-12">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5
-                className="card-title text-center mb-4"
-                style={{ color: "#14183E" }}
-              >
-                {t.breakdown}
-              </h5>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={dummyBreakdown}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="type" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar
-                    dataKey="vehicles"
-                    stackId="a"
-                    fill="#14183E"
-                    name={t.vehicles}
-                  />
-                  <Bar
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              {/* Chart rendering logic */}
+              {chartView === "requests" &&
+                (chartReqType === "All" ? (
+                  <>
+                    <Line
+                      type="monotone"
+                      dataKey="Car Request"
+                      stroke={COLORS[0]}
+                      name="Car Request"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Maintenance Request"
+                      stroke={COLORS[1]}
+                      name="Maintenance Request"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Service Request"
+                      stroke={COLORS[2]}
+                      name="Service Request"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Refueling Request"
+                      stroke={COLORS[3]}
+                      name="Refueling Request"
+                      strokeWidth={4}
+                    />
+                  </>
+                ) : (
+                  <Line
+                    type="monotone"
                     dataKey="requests"
-                    stackId="a"
-                    fill="#F1A501"
-                    name={t.requests}
+                    stroke={COLORS[0]}
+                    name={chartReqType}
+                    strokeWidth={4}
                   />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+                ))}
+              {chartView === "cost" &&
+                (chartReqType === "All" ? (
+                  <>
+                    <Line
+                      type="monotone"
+                      dataKey="Car Request Cost"
+                      stroke={COLORS[0]}
+                      name="Car Request Cost"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Maintenance Request Cost"
+                      stroke={COLORS[1]}
+                      name="Maintenance Request Cost"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Service Request Cost"
+                      stroke={COLORS[2]}
+                      name="Service Request Cost"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Refueling Request Cost"
+                      stroke={COLORS[3]}
+                      name="Refueling Request Cost"
+                      strokeWidth={4}
+                    />
+                  </>
+                ) : (
+                  <Line
+                    type="monotone"
+                    dataKey="cost"
+                    stroke={COLORS[0]}
+                    name={chartReqType + " Cost"}
+                    strokeWidth={4}
+                  />
+                ))}
+              {chartView === "source" &&
+                (chartReqType === "All" ? null : (
+                  <>
+                    <Line
+                      type="monotone"
+                      dataKey="Owned"
+                      stroke={COLORS[0]}
+                      name="Owned"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Rented"
+                      stroke={COLORS[1]}
+                      name="Rented"
+                      strokeWidth={4}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Leased"
+                      stroke={COLORS[2]}
+                      name="Leased"
+                      strokeWidth={4}
+                    />
+                  </>
+                ))}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Top Vehicles Table */}
-      <div className="row mb-5">
-        <div className="col-12">
-          <div className="card shadow-sm">
-            <div className="card-body">
-              <h5
-                className="card-title text-center mb-4"
-                style={{ color: "#14183E" }}
-              >
-                {t.topVehicles}
-              </h5>
-              <div className="table-responsive">
-                <table className="table table-bordered table-striped">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Plate</th>
-                      <th>{t.driver}</th>
-                      <th>{t.kilometers}</th>
-                      <th>{t.fuel}</th>
-                      <th>{t.maint}</th>
+      {/* Table Section */}
+      <div className="card shadow-sm mb-5">
+        <div className="card-body">
+          <div className="table-responsive">
+            <table className="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Plate</th>
+                  <th>{t.driver}</th>
+                  <th>{t.kilometers}</th>
+                  <th>{t.fuel}</th>
+                  {/* Maint. column with filter */}
+                  <th>
+                    <div className="d-flex align-items-center">
+                      <span>{t.maint}</span>
+                      <select
+                        className="form-select form-select-sm ms-2"
+                        style={{ width: "140px" }}
+                        value={maintFilter}
+                        onChange={(e) => setMaintFilter(e.target.value)}
+                      >
+                        {requestTypes.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </th>
+                  <th>{t.cost}</th>
+                  <th>{t.type}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVehicles.length === 0 ? (
+                  <tr>
+                    <td colSpan="8" className="text-center">
+                      No data found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredVehicles.map((v, idx) => (
+                    <tr key={v.plate}>
+                      <td>{idx + 1}</td>
+                      <td>{v.plate}</td>
+                      <td>{v.driver}</td>
+                      <td>{v.km}</td>
+                      <td>{v.fuel}</td>
+                      <td>{v.maintenance}</td>
+                      <td>{v.cost} ETB</td>
+                      <td>{v.type}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {dummyTopVehicles.map((v, idx) => (
-                      <tr key={v.plate}>
-                        <td>{idx + 1}</td>
-                        <td>{v.plate}</td>
-                        <td>{v.driver}</td>
-                        <td>{v.km}</td>
-                        <td>{v.fuel}</td>
-                        <td>{v.maintenance}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Cards Section */}
-      <div className="row">
-        {/* Vehicle Requests Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.vehicleRequests}</h5>
-              <p className="card-text display-6">
-                {reportData.totalVehicleRequests || 75}
-              </p>
+                  ))
+                )}
+              </tbody>
+            </table>
+            <div className="d-flex justify-content-end mt-2">
               <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.vehicleRequests)}
+                className="btn btn-sm"
+                style={{ backgroundColor: "#14183E", color: "#fff" }}
+                onClick={() => window.print()}
               >
-                {t.viewDetails}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Maintenance Requests Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.maintenanceRequests}</h5>
-              <p className="card-text display-6">
-                {reportData.totalMaintenanceRequests || 42}
-              </p>
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.maintenanceRequests)}
-              >
-                {t.viewDetails}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Refueling Requests Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.refuelingRequests}</h5>
-              <p className="card-text display-6">
-                {reportData.totalRefuelingRequests || 58}
-              </p>
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.refuelingRequests)}
-              >
-                {t.viewDetails}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Maintenance Cost Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.maintenanceCost}</h5>
-              <p className="card-text display-6">
-                {reportData.totalMaintenanceCost || 32000}
-              </p>
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.maintenanceCost)}
-              >
-                {t.viewDetails}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Refueling Cost Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.refuelingCost}</h5>
-              <p className="card-text display-6">
-                {reportData.totalRefuelingCost || 21000}
-              </p>
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.refuelingCost)}
-              >
-                {t.viewDetails}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* Service Cost Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.serviceCost}</h5>
-              <p className="card-text display-6">
-                {reportData.totalServiceCost || 15000}
-              </p>
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.serviceCost)}
-              >
-                {t.viewDetails}
-              </button>
-            </div>
-          </div>
-        </div>
-        {/* High-Cost Vehicle Requests Card */}
-        <div className="col-md-4 mb-4">
-          <div className="card shadow-sm">
-            <div className="card-body text-center">
-              <h5 className="card-title">{t.highCost}</h5>
-              <p className="card-text display-6">
-                {reportData.totalHighCost || 12}
-              </p>
-              <button
-                className="btn"
-                style={{
-                  backgroundColor: "#14183E",
-                  color: "#fff",
-                  width: "150px",
-                }}
-                onClick={() => handleViewDetails(t.highCost)}
-              >
-                {t.viewDetails}
+                Print Report
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Modal for Viewing Details */}
-      {showModal && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">{selectedReport}</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  Detailed information about <strong>{selectedReport}</strong>{" "}
-                  will go here.
-                </p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#14183E", color: "#fff" }}
-                  onClick={() => setShowModal(false)}
-                >
-                  {t.close}
-                </button>
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#14183E", color: "#fff" }}
-                  onClick={handlePrint}
-                >
-                  {t.print}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
