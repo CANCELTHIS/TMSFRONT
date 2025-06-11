@@ -1,332 +1,294 @@
 import { useState, useEffect } from "react";
+import Logo from "../assets/Logo.jpg";
+import { ENDPOINTS } from "../utilities/endpoints";
 import { useLanguage } from "../context/LanguageContext";
 import {
-  Tooltip,
-  Legend,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
 } from "recharts";
 
-// Dummy monthly data for chart (per request type)
-const monthlyData = [
-  {
-    month: "Jan",
-    "Car Request": { requests: 10, cost: 3000, Owned: 6, Rented: 3, Leased: 1 },
-    "Maintenance Request": {
-      requests: 8,
-      cost: 4000,
-      Owned: 5,
-      Rented: 2,
-      Leased: 1,
-    },
-    "Service Request": {
-      requests: 12,
-      cost: 2500,
-      Owned: 7,
-      Rented: 4,
-      Leased: 1,
-    },
-    "Refueling Request": {
-      requests: 10,
-      cost: 1500,
-      Owned: 5,
-      Rented: 4,
-      Leased: 1,
-    },
-  },
-  {
-    month: "Feb",
-    "Car Request": { requests: 12, cost: 3500, Owned: 7, Rented: 4, Leased: 1 },
-    "Maintenance Request": {
-      requests: 9,
-      cost: 4200,
-      Owned: 6,
-      Rented: 2,
-      Leased: 1,
-    },
-    "Service Request": {
-      requests: 13,
-      cost: 2600,
-      Owned: 8,
-      Rented: 4,
-      Leased: 1,
-    },
-    "Refueling Request": {
-      requests: 16,
-      cost: 1800,
-      Owned: 8,
-      Rented: 7,
-      Leased: 1,
-    },
-  },
-  {
-    month: "Mar",
-    "Car Request": { requests: 15, cost: 4000, Owned: 8, Rented: 6, Leased: 1 },
-    "Maintenance Request": {
-      requests: 10,
-      cost: 4500,
-      Owned: 7,
-      Rented: 2,
-      Leased: 1,
-    },
-    "Service Request": {
-      requests: 14,
-      cost: 2700,
-      Owned: 9,
-      Rented: 4,
-      Leased: 1,
-    },
-    "Refueling Request": {
-      requests: 21,
-      cost: 2000,
-      Owned: 10,
-      Rented: 10,
-      Leased: 1,
-    },
-  },
-  {
-    month: "Apr",
-    "Car Request": { requests: 13, cost: 3700, Owned: 7, Rented: 5, Leased: 1 },
-    "Maintenance Request": {
-      requests: 11,
-      cost: 4700,
-      Owned: 8,
-      Rented: 2,
-      Leased: 1,
-    },
-    "Service Request": {
-      requests: 15,
-      cost: 2800,
-      Owned: 10,
-      Rented: 4,
-      Leased: 1,
-    },
-    "Refueling Request": {
-      requests: 16,
-      cost: 1700,
-      Owned: 8,
-      Rented: 7,
-      Leased: 1,
-    },
-  },
-  {
-    month: "May",
-    "Car Request": {
-      requests: 18,
-      cost: 5000,
-      Owned: 10,
-      Rented: 7,
-      Leased: 1,
-    },
-    "Maintenance Request": {
-      requests: 12,
-      cost: 5000,
-      Owned: 9,
-      Rented: 2,
-      Leased: 1,
-    },
-    "Service Request": {
-      requests: 18,
-      cost: 3000,
-      Owned: 12,
-      Rented: 5,
-      Leased: 1,
-    },
-    "Refueling Request": {
-      requests: 24,
-      cost: 2200,
-      Owned: 12,
-      Rented: 11,
-      Leased: 1,
-    },
-  },
-  {
-    month: "Jun",
-    "Car Request": { requests: 16, cost: 4800, Owned: 9, Rented: 6, Leased: 1 },
-    "Maintenance Request": {
-      requests: 13,
-      cost: 5200,
-      Owned: 10,
-      Rented: 2,
-      Leased: 1,
-    },
-    "Service Request": {
-      requests: 17,
-      cost: 3200,
-      Owned: 11,
-      Rented: 5,
-      Leased: 1,
-    },
-    "Refueling Request": {
-      requests: 19,
-      cost: 2100,
-      Owned: 10,
-      Rented: 8,
-      Leased: 1,
-    },
-  },
+const to2dp = (v) => Number(v || 0).toFixed(2);
+
+const totalTypes = [
+  { key: "All", label: "All" },
+  { key: "Maintenance Request", label: "Maintenance" },
+  { key: "Service Request", label: "Service" },
+  { key: "Refueling Request", label: "Refueling" },
+  { key: "HighCost Request", label: "High Cost" },
 ];
 
-// Dummy table data
-const dummyTopVehicles = [
-  {
-    plate: "AA1234",
-    driver: "John Doe",
-    km: 12000,
-    fuel: 1500,
-    maintenance: 3,
-    type: "Car Request",
-    cost: 5000,
-  },
-  {
-    plate: "BB5678",
-    driver: "Jane Smith",
-    km: 11000,
-    fuel: 1400,
-    maintenance: 2,
-    type: "Maintenance Request",
-    cost: 3200,
-  },
-  {
-    plate: "CC9012",
-    driver: "Mike Lee",
-    km: 10500,
-    fuel: 1350,
-    maintenance: 4,
-    type: "Service Request",
-    cost: 4100,
-  },
-  {
-    plate: "DD3456",
-    driver: "Sara Kim",
-    km: 9800,
-    fuel: 1200,
-    maintenance: 1,
-    type: "Refueling Request",
-    cost: 1800,
-  },
-  {
-    plate: "EE7890",
-    driver: "Ali Musa",
-    km: 9500,
-    fuel: 1100,
-    maintenance: 2,
-    type: "Car Request",
-    cost: 2500,
-  },
+const apiTypeMap = {
+  "Car Request": "Transport",
+  "Maintenance Request": "Maintenance",
+  "Service Request": "Service",
+  "Refueling Request": "Refueling",
+  "HighCost Request": "HighCost",
+};
+
+const monthOptions = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-const requestTypes = [
-  "All",
-  "Car Request",
-  "Maintenance Request",
-  "Service Request",
-  "Refueling Request",
-];
-
-const chartViews = [
-  { key: "requests", label: "Number of Requests" },
-  { key: "cost", label: "Cost" },
-  { key: "source", label: "Source of Cars" },
-];
-
-const COLORS = ["#14183E", "#F1A501", "#34A853", "#FF7152"];
+const typeDisplayNames = {
+  Transport: "Transport",
+  Maintenance: "Maintenance",
+  Refueling: "Refueling",
+  HighCost: "HighCost",
+  Service: "Service",
+};
 
 const ReportPage = () => {
-  const [maintFilter, setMaintFilter] = useState("All");
-  const [chartView, setChartView] = useState("requests");
-  const [chartReqType, setChartReqType] = useState("All");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const { mylanguage } = useLanguage();
+  const [maintFilter, setMaintFilter] = useState("All");
+  const [totalType, setTotalType] = useState("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [tableData, setTableData] = useState([]);
+  const [tableDataRaw, setTableDataRaw] = useState(null);
 
-  // Table filter
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState("All");
+
+  const [filteredTotals, setFilteredTotals] = useState({
+    requests: 0,
+    cost: 0,
+  });
+
+  const currentYear = new Date().getFullYear();
+  const yearOptions = [];
+  for (let y = 2022; y <= currentYear; y++) yearOptions.push(y);
+
+  // Fetch table data when year/month changes
+  useEffect(() => {
+    const fetchTableData = async () => {
+      setLoading(true);
+      setError(null);
+
+      const accessToken =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        localStorage.getItem("token");
+      if (!accessToken) {
+        setError("You are not authorized. Please log in.");
+        setLoading(false);
+        setTableData([]);
+        setTableDataRaw(null);
+        return;
+      }
+
+      try {
+        let url;
+        if (selectedMonth === "All") {
+          url = ENDPOINTS.REPORT_LIST;
+        } else {
+          const monthNum = (
+            "0" +
+            (monthOptions.indexOf(selectedMonth) + 1)
+          ).slice(-2);
+          url = ENDPOINTS.REPORT_BY_MONTH(selectedYear, monthNum);
+        }
+        const res = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (res.status === 401) {
+          setError("Session expired or unauthorized. Please log in again.");
+          setLoading(false);
+          setTableData([]);
+          setTableDataRaw(null);
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to fetch report table data.");
+        const tableJson = await res.json();
+        setTableDataRaw(tableJson);
+        const vehicles = tableJson.results?.vehicles || [];
+        const flatTable = [];
+        vehicles.forEach((v) => {
+          v.requests.forEach((req) => {
+            flatTable.push({
+              plate: req.plate,
+              driver: req.driver,
+              km: req.kilometers,
+              fuel: req.fuel_liters,
+              maintenance: req.request_type_count,
+              type: req.request_type,
+              cost: req.cost,
+            });
+          });
+        });
+        setTableData(flatTable);
+      } catch (err) {
+        setError("Failed to fetch report data.");
+        setTableData([]);
+        setTableDataRaw(null);
+      }
+      setLoading(false);
+    };
+    fetchTableData();
+    // eslint-disable-next-line
+  }, [selectedYear, selectedMonth]);
+
+  // Fetch filtered totals by type
+  useEffect(() => {
+    // Calculate totals based on tableData and totalType filter
+    let filtered = tableData;
+    if (totalType !== "All") {
+      filtered = tableData.filter((row) =>
+        totalType === "HighCost Request"
+          ? row.type === "HighCost"
+          : row.type === apiTypeMap[totalType] || row.type === totalType
+      );
+    }
+    const totalRequests = filtered.reduce(
+      (sum, v) => sum + (Number(v.maintenance) || 0),
+      0
+    );
+    const totalCost = filtered.reduce(
+      (sum, v) => sum + (Number(v.cost) || 0),
+      0
+    );
+    setFilteredTotals({ requests: totalRequests, cost: totalCost });
+  }, [tableData, totalType]);
+
+  // Table filter (by type)
   const filteredVehicles =
     maintFilter === "All"
-      ? dummyTopVehicles
-      : dummyTopVehicles.filter((v) => v.type === maintFilter);
+      ? tableData
+      : tableData.filter((v) =>
+          maintFilter === "HighCost Request"
+            ? v.type === "HighCost"
+            : v.type === apiTypeMap[maintFilter] || v.type === maintFilter
+        );
 
-  // Prepare chart data based on selection
-  let chartData = [];
-  if (chartReqType === "All") {
-    // For "All", merge all types for requests/cost/source
-    chartData = monthlyData.map((m) => ({
-      month: m.month,
-      "Car Request": m["Car Request"].requests,
-      "Maintenance Request": m["Maintenance Request"].requests,
-      "Service Request": m["Service Request"].requests,
-      "Refueling Request": m["Refueling Request"].requests,
-      "Car Request Cost": m["Car Request"].cost,
-      "Maintenance Request Cost": m["Maintenance Request"].cost,
-      "Service Request Cost": m["Service Request"].cost,
-      "Refueling Request Cost": m["Refueling Request"].cost,
-      "Car Request Owned": m["Car Request"].Owned,
-      "Car Request Rented": m["Car Request"].Rented,
-      "Car Request Leased": m["Car Request"].Leased,
-      "Maintenance Request Owned": m["Maintenance Request"].Owned,
-      "Maintenance Request Rented": m["Maintenance Request"].Rented,
-      "Maintenance Request Leased": m["Maintenance Request"].Leased,
-      "Service Request Owned": m["Service Request"].Owned,
-      "Service Request Rented": m["Service Request"].Rented,
-      "Service Request Leased": m["Service Request"].Leased,
-      "Refueling Request Owned": m["Refueling Request"].Owned,
-      "Refueling Request Rented": m["Refueling Request"].Rented,
-      "Refueling Request Leased": m["Refueling Request"].Leased,
-    }));
-  } else {
-    chartData = monthlyData.map((m) => ({
-      month: m.month,
-      requests: m[chartReqType].requests,
-      cost: m[chartReqType].cost,
-      Owned: m[chartReqType].Owned,
-      Rented: m[chartReqType].Rented,
-      Leased: m[chartReqType].Leased,
-    }));
-  }
+  // Group and aggregate tableData by plate, driver, and request type
+  const groupedTable = {};
+  tableData
+    .filter((req) => {
+      if (maintFilter === "All") return true;
+      if (maintFilter === "HighCost Request") return req.type === "HighCost";
+      return req.type === apiTypeMap[maintFilter] || req.type === maintFilter;
+    })
+    .forEach((req) => {
+      const key = `${req.plate}_${req.driver}_${req.type}`;
+      if (!groupedTable[key]) {
+        groupedTable[key] = {
+          plate: req.plate,
+          driver: req.driver,
+          type: req.type,
+          km: 0,
+          fuel: 0,
+          maintenance: 0,
+          cost: 0,
+        };
+      }
+      groupedTable[key].km += Number(req.km) || 0;
+      groupedTable[key].fuel += Number(req.fuel) || 0;
+      groupedTable[key].maintenance += Number(req.maintenance) || 0;
+      groupedTable[key].cost += Number(req.cost) || 0;
+    });
+  const groupedRows = Object.values(groupedTable);
 
-  // Localization object (shortened for brevity)
+  // Totals for detailed report
+  const totalsByType = {};
+  groupedRows.forEach((row) => {
+    const type = row.type;
+    if (!totalsByType[type]) {
+      totalsByType[type] = { count: 0, cost: 0 };
+    }
+    totalsByType[type].count += row.maintenance || 0;
+    totalsByType[type].cost += Number(row.cost) || 0;
+  });
+  const reportTypesOrder = [
+    "Transport",
+    "HighCost",
+    "Maintenance",
+    "Refueling",
+    "Service",
+  ];
+  const overallTotalCount = reportTypesOrder.reduce(
+    (sum, type) => sum + (totalsByType[type]?.count || 0),
+    0
+  );
+  const overallTotalCost = reportTypesOrder.reduce(
+    (sum, type) => sum + (totalsByType[type]?.cost || 0),
+    0
+  );
+
+  // Prepare data for the graph
+  const graphData = reportTypesOrder
+    .filter((type) => totalsByType[type])
+    .map((type) => ({
+      name: typeDisplayNames[type] || type,
+      Requests: totalsByType[type].count,
+      Cost: Number(totalsByType[type].cost),
+    }));
+
   const t = {
-    reportPage: "Report Page",
-    topVehicles: "Top Vehicles (by KM)",
+    reportPage: mylanguage === "EN" ? "Report Page" : "ሪፖርት ገፅ",
     driver: "Driver",
     kilometers: "Kilometers",
-    fuel: "Fuel (L)",
-
+    fuel: "Fuel",
     cost: "Cost",
     type: "Type",
-    filter: "Filter",
-    chart: "Chart",
-    numberOfRequests: "Number of Requests",
-    costChart: "Cost",
-    source: "Source of Cars",
-    owned: "Owned",
-    rented: "Rented",
-    leased: "Leased",
-    selectReq: "Request Type",
-    selectChart: "Chart Data",
+    loading: "Loading...",
   };
-
-  useEffect(() => {
-    const fetchReportData = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) throw new Error("User not authenticated");
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching report data:", err);
-        setError(t.error);
-        setLoading(false);
-      }
-    };
-    fetchReportData();
-  }, [t.error]);
 
   if (loading) return <p>{t.loading}</p>;
   if (error) return <div className="alert alert-danger">{error}</div>;
+
+  // Print only the table section WITH LOGO at the top of the page
+  const handlePrintTable = () => {
+    const tableContent = document.getElementById(
+      "print-table-section"
+    ).innerHTML;
+    const logoImg = Logo.startsWith("data:") ? Logo : Logo;
+
+    const printWindow = window.open("", "", "width=900,height=700");
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Report Table</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+            th { background: #f8f9fc; }
+            .logo-header { text-align: center; margin-bottom: 30px; }
+            .logo-header img { max-width: 200px; max-height: 120px; }
+          </style>
+        </head>
+        <body>
+          <div class="logo-header">
+            <img src="${logoImg}" alt="Logo" />
+          </div>
+          ${tableContent}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+  };
 
   return (
     <div
@@ -341,164 +303,201 @@ const ReportPage = () => {
         {t.reportPage}
       </h2>
 
-      {/* Chart Section */}
-      <div className="card shadow-sm mb-5">
+      <div className="card shadow-sm mb-4">
         <div className="card-body">
-          <div className="row mb-3">
-            <div className="col-md-4">
-              <label className="form-label">{t.selectChart}:</label>
-              <select
-                className="form-select form-select-sm"
-                value={chartView}
-                onChange={(e) => setChartView(e.target.value)}
-              >
-                {chartViews.map((view) => (
-                  <option key={view.key} value={view.key}>
-                    {view.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">{t.selectReq}:</label>
-              <select
-                className="form-select form-select-sm"
-                value={chartReqType}
-                onChange={(e) => setChartReqType(e.target.value)}
-              >
-                {requestTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={chartData}>
+          <h5 className="mb-3">
+            {mylanguage === "EN"
+              ? "Requests and Cost by Type"
+              : "ጥያቄዎች እና ወጪ በአይነት"}
+          </h5>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={graphData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
+              <XAxis dataKey="name" />
+              <YAxis
+                yAxisId="left"
+                label={{
+                  value: "Requests",
+                  angle: -90,
+                  position: "insideLeft",
+                }}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                label={{
+                  value: "Cost (ETB)",
+                  angle: 90,
+                  position: "insideRight",
+                }}
+              />
               <Tooltip />
               <Legend />
-              {/* Chart rendering logic */}
-              {chartView === "requests" &&
-                (chartReqType === "All" ? (
-                  <>
-                    <Line
-                      type="monotone"
-                      dataKey="Car Request"
-                      stroke={COLORS[0]}
-                      name="Car Request"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Maintenance Request"
-                      stroke={COLORS[1]}
-                      name="Maintenance Request"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Service Request"
-                      stroke={COLORS[2]}
-                      name="Service Request"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Refueling Request"
-                      stroke={COLORS[3]}
-                      name="Refueling Request"
-                      strokeWidth={4}
-                    />
-                  </>
-                ) : (
-                  <Line
-                    type="monotone"
-                    dataKey="requests"
-                    stroke={COLORS[0]}
-                    name={chartReqType}
-                    strokeWidth={4}
-                  />
-                ))}
-              {chartView === "cost" &&
-                (chartReqType === "All" ? (
-                  <>
-                    <Line
-                      type="monotone"
-                      dataKey="Car Request Cost"
-                      stroke={COLORS[0]}
-                      name="Car Request Cost"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Maintenance Request Cost"
-                      stroke={COLORS[1]}
-                      name="Maintenance Request Cost"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Service Request Cost"
-                      stroke={COLORS[2]}
-                      name="Service Request Cost"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Refueling Request Cost"
-                      stroke={COLORS[3]}
-                      name="Refueling Request Cost"
-                      strokeWidth={4}
-                    />
-                  </>
-                ) : (
-                  <Line
-                    type="monotone"
-                    dataKey="cost"
-                    stroke={COLORS[0]}
-                    name={chartReqType + " Cost"}
-                    strokeWidth={4}
-                  />
-                ))}
-              {chartView === "source" &&
-                (chartReqType === "All" ? null : (
-                  <>
-                    <Line
-                      type="monotone"
-                      dataKey="Owned"
-                      stroke={COLORS[0]}
-                      name="Owned"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Rented"
-                      stroke={COLORS[1]}
-                      name="Rented"
-                      strokeWidth={4}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="Leased"
-                      stroke={COLORS[2]}
-                      name="Leased"
-                      strokeWidth={4}
-                    />
-                  </>
-                ))}
-            </LineChart>
+              <Bar yAxisId="left" dataKey="Requests" fill="#8884d8" />
+              <Bar yAxisId="right" dataKey="Cost" fill="#82ca9d" />
+            </BarChart>
           </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Cards for total requests and total cost with filter */}
+      <div className="row mb-4 align-items-end">
+        <div className="col-md-3 mb-2">
+          <span className="me-2">Filter Totals By:</span>
+          <select
+            className="form-select form-select-sm"
+            style={{ width: "200px", display: "inline-block" }}
+            value={totalType}
+            onChange={(e) => setTotalType(e.target.value)}
+          >
+            {totalTypes.map((type) => (
+              <option key={type.key} value={type.key}>
+                {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="col-md-4 mb-2">
+          <div className="card shadow-sm">
+            <div className="card-body text-center">
+              <h6 className="mb-1">Total Requests</h6>
+              <span className="display-6">{filteredTotals.requests}</span>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-4 mb-2">
+          <div className="card shadow-sm">
+            <div className="card-body text-center">
+              <h6 className="mb-1">Total Cost</h6>
+              <span className="display-6">
+                {to2dp(filteredTotals.cost)} ETB
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Table Section */}
       <div className="card shadow-sm mb-5">
         <div className="card-body">
+          <div className="row mb-3">
+            <div className="col-md-2">
+              <label className="form-label">Year:</label>
+              <select
+                className="form-select form-select-sm"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <label className="form-label">Month:</label>
+              <select
+                className="form-select form-select-sm"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+              >
+                <option value="All">All</option>
+                {monthOptions.map((month) => (
+                  <option key={month} value={month}>
+                    {month}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <div className="table-responsive">
+            <table className="table table-bordered table-striped">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Year/Month</th>
+                  <th>Plate</th>
+                  <th>Driver</th>
+                  <th>Request Type</th>
+                  <th>Request Count</th>
+                  <th>Kilometers</th>
+                  <th>Fuel (L)</th>
+                  <th>Cost (ETB)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVehicles.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="text-center">
+                      No data found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredVehicles.map((req, idx) => (
+                    <tr key={req.plate + req.driver + req.type + idx}>
+                      <td>{idx + 1}</td>
+                      <td>
+                        {selectedYear}/
+                        {selectedMonth === "All"
+                          ? "All"
+                          : (
+                              "0" +
+                              (monthOptions.indexOf(selectedMonth) + 1)
+                            ).slice(-2)}
+                      </td>
+                      <td>{req.plate}</td>
+                      <td>{req.driver}</td>
+                      <td>{req.type}</td>
+                      <td>{req.maintenance}</td>
+                      <td>
+                        {req.km !== null && req.km !== undefined
+                          ? Number(req.km).toFixed(2)
+                          : "-"}
+                      </td>
+                      <td>
+                        {req.fuel !== null && req.fuel !== undefined
+                          ? Number(req.fuel).toFixed(2)
+                          : "-"}
+                      </td>
+                      <td>
+                        {req.cost !== null && req.cost !== undefined
+                          ? Number(req.cost).toFixed(2)
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Grouped Table Section (with type filter) */}
+      <div className="card shadow-sm mb-5">
+        <div className="card-body">
+          <div className="d-flex mb-3 align-items-center">
+            <label className="me-2">Filter Detailed Report By Type:</label>
+            <select
+              className="form-select form-select-sm"
+              style={{ width: "200px", display: "inline-block" }}
+              value={maintFilter}
+              onChange={(e) => setMaintFilter(e.target.value)}
+            >
+              <option value="All">All</option>
+              <option value="Car Request">Car Request</option>
+              <option value="Maintenance Request">Maintenance</option>
+              <option value="Service Request">Service</option>
+              <option value="Refueling Request">Refueling</option>
+              <option value="HighCost Request">High Cost</option>
+            </select>
+          </div>
+          <h5 className="mb-3">Detailed Report</h5>
+          <div className="table-responsive" id="print-table-section">
             <table className="table table-bordered table-striped">
               <thead>
                 <tr>
@@ -507,60 +506,68 @@ const ReportPage = () => {
                   <th>{t.driver}</th>
                   <th>{t.kilometers}</th>
                   <th>{t.fuel}</th>
-                  {/* Maint. column with filter */}
-                  <th>
-                    <div className="d-flex align-items-center">
-                      <span>{t.maint}</span>
-                      <select
-                        className="form-select form-select-sm ms-2"
-                        style={{ width: "140px" }}
-                        value={maintFilter}
-                        onChange={(e) => setMaintFilter(e.target.value)}
-                      >
-                        {requestTypes.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </th>
-                  <th>{t.cost}</th>
                   <th>{t.type}</th>
+                  <th>{t.cost}</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredVehicles.length === 0 ? (
+                {groupedRows.length === 0 ? (
                   <tr>
                     <td colSpan="8" className="text-center">
                       No data found.
                     </td>
                   </tr>
                 ) : (
-                  filteredVehicles.map((v, idx) => (
-                    <tr key={v.plate}>
+                  groupedRows.map((v, idx) => (
+                    <tr key={v.plate + v.driver + v.type}>
                       <td>{idx + 1}</td>
                       <td>{v.plate}</td>
                       <td>{v.driver}</td>
-                      <td>{v.km}</td>
-                      <td>{v.fuel}</td>
-                      <td>{v.maintenance}</td>
-                      <td>{v.cost} ETB</td>
+                      <td>{Number(v.km).toFixed(2)}</td>
+                      <td>{Number(v.fuel).toFixed(2)}</td>
                       <td>{v.type}</td>
+                      <td>{to2dp(v.cost)} ETB</td>
                     </tr>
                   ))
                 )}
+                {/* Totals by request type */}
+                {reportTypesOrder.map((type) =>
+                  totalsByType[type] ? (
+                    <tr
+                      key={type}
+                      style={{ fontWeight: "bold", background: "#f8f9fc" }}
+                    >
+                      <td colSpan={5} className="text-end">
+                        Total for {typeDisplayNames[type] || type}:
+                      </td>
+                      <td>{totalsByType[type].count}</td>
+                      <td colSpan={2}>{to2dp(totalsByType[type].cost)} ETB</td>
+                    </tr>
+                  ) : null
+                )}
+                {/* Overall total */}
+                <tr style={{ fontWeight: "bold", background: "#e0e7ef" }}>
+                  <td colSpan={5} className="text-end">
+                    Overall Total:
+                  </td>
+                  <td>{overallTotalCount}</td>
+                  <td colSpan={2}>{to2dp(overallTotalCost)} ETB</td>
+                </tr>
               </tbody>
             </table>
-            <div className="d-flex justify-content-end mt-2">
-              <button
-                className="btn btn-sm"
-                style={{ backgroundColor: "#14183E", color: "#fff" }}
-                onClick={() => window.print()}
-              >
-                Print Report
-              </button>
-            </div>
+          </div>
+          <div className="d-flex justify-content-end mt-2">
+            <button
+              className="btn"
+              style={{
+                backgroundColor: "#14183E",
+                color: "#fff",
+                width: "130px",
+              }}
+              onClick={handlePrintTable}
+            >
+              Print Report
+            </button>
           </div>
         </div>
       </div>

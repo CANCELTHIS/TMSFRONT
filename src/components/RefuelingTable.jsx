@@ -78,7 +78,11 @@ const RefuelingTable = () => {
       console.log(`Refueling request ${action}d successfully`);
       fetchRefuelingRequests(); // Refresh the list after action
       setSelectedRequest(null); // Close the detail view
-      toast.success(`Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`); // Success toast
+      toast.success(
+        `Request ${
+          action === "forward" ? "forwarded" : "rejected"
+        } successfully!`
+      ); // Success toast
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
       toast.error(`Failed to ${action} the request.`); // Error toast
@@ -105,7 +109,6 @@ const RefuelingTable = () => {
     <div className="container mt-5">
       <ToastContainer /> {/* Add ToastContainer */}
       <h2 className="text-center mb-4">Refueling Requests</h2>
-
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
@@ -149,14 +152,24 @@ const RefuelingTable = () => {
           </table>
         </div>
       )}
-
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
+                />
                 <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"
@@ -167,9 +180,16 @@ const RefuelingTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedRequest.created_at).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Destination:</strong> {selectedRequest.destination}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedRequest.status}
+                </p>
               </div>
               <div className="modal-footer">
                 <button
@@ -198,10 +218,12 @@ const RefuelingTable = () => {
           </div>
         </div>
       )}
-
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">

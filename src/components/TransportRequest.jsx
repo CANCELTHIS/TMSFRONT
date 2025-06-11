@@ -8,7 +8,7 @@ import axios from "axios";
 import { IoClose } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
-
+import { useLanguage } from "../context/LanguageContext";
 const TransportRequest = () => {
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]); // State for employees
@@ -24,7 +24,7 @@ const TransportRequest = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null); // State for selected vehicle
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5; // Number of items per page
-
+  const { mylanguage } = useLanguage();
   const accessToken = localStorage.getItem("authToken");
 
   useEffect(() => {
@@ -351,9 +351,10 @@ const TransportRequest = () => {
       {loading ? (
         <div className="text-center mt-4">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">
+              {mylanguage === "EN" ? "Loading..." : "በመጫን ላይ..."}
+            </span>
           </div>
-          <p>Loading data...</p>
         </div>
       ) : (
         <div className="table-responsive">
@@ -361,12 +362,12 @@ const TransportRequest = () => {
             <thead className="table">
               <tr>
                 <th>#</th>
-                <th>Start Day</th>
-                <th>Start Time</th>
-                <th>Return Day</th>
-                <th>Destination</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>{mylanguage === "EN" ? "Start Day" : "የመጀመሪያ ቀን"}</th>
+                <th>{mylanguage === "EN" ? "Start Time" : "የመነሻ ጊዜ"}</th>
+                <th>{mylanguage === "EN" ? "Return Day" : "የመመለሻ ቀን"}</th>
+                <th>{mylanguage === "EN" ? "Destination" : "መድረሻ"}</th>
+                <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
+                <th>{mylanguage === "EN" ? "Action" : "ድርጊት"}</th>
               </tr>
             </thead>
             <tbody>
@@ -394,7 +395,9 @@ const TransportRequest = () => {
               ) : (
                 <tr>
                   <td colSpan="7" className="text-center">
-                    No transport requests found.
+                    {mylanguage === "EN"
+                      ? "No transport requests found."
+                      : "ምንም የትራንስፖርት ጥያቄዎች አልተገኙም"}
                   </td>
                 </tr>
               )}

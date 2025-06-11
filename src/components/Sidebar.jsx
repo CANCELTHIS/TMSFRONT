@@ -15,10 +15,9 @@ import {
 import { IoBusiness } from "react-icons/io5";
 import { FaUserCog, FaTools, FaGasPump } from "react-icons/fa";
 import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai";
-import { p, path } from "framer-motion/client";
 import { FaGaugeHigh } from "react-icons/fa6";
 import { Wrench } from "lucide-react";
-
+import { useLanguage } from "../context/LanguageContext";
 const Sidebar = ({ role }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +25,7 @@ const Sidebar = ({ role }) => {
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
-
+  const { mylanguage } = useLanguage();
   const getActiveClass = (path) =>
     location.pathname === path ? "active text-primary fw-bold" : "text-dark";
 
@@ -45,47 +44,56 @@ const Sidebar = ({ role }) => {
     {
       path: "/transport-manager/transport-dashbord",
       icon: <MdOutlineDashboard />,
-      label: "Dashboard",
+      label: mylanguage === "EN" ? "Dashboard" : "ዳሽቦርድ",
     },
     {
       path: "/transport-manager/vehicle-request",
       icon: <MdOutlineRequestPage />,
-      label: "Vehicle Request",
+      label: mylanguage === "EN" ? "Vehicle Request" : "የተሽከርካሪ ጥያቄ",
     },
     {
       path: "/transport-manager/vehicle-management",
       icon: <AiOutlineCar />,
-      label: "Vehicle Management",
+      label: mylanguage === "EN" ? "Vehicle Management" : "የተሽከርካሪ አስተዳደር",
     },
     {
       path: "/transport-manager/maintenance-table",
       icon: <FaTools />,
-      label: "Maintenance",
+      label: mylanguage === "EN" ? "Maintenance" : "ጥገና",
     },
     {
       path: "/transport-manager/refueling",
       icon: <FaGasPump />,
-      label: "Refueling",
+      label: mylanguage === "EN" ? "Refueling" : "እንደገና ማሙላት",
     },
     {
       path: "/transport-manager/high_cost",
       icon: <FaGaugeHigh />,
-      label: "Highcost Vehicle Requests",
+      label:
+        mylanguage === "EN"
+          ? "Highcost Vehicle Requests"
+          : "የከፍተኛ ዋጋ ተሽከርካሪ ጥያቄዎች",
     },
     {
       path: "/transport-manager/report",
       icon: <AiOutlineFileText />,
-      label: "Report",
+      label: mylanguage === "EN" ? "Report" : "ሪፖርት",
     },
     {
       path: "/transport-manager/history",
       icon: <MdOutlineHistory />,
-      label: "History",
+      label: mylanguage === "EN" ? "History" : "ታሪክ",
     },
     {
       path: "/transport-manager/maintenance-request",
       icon: <FaTools />,
-      label: "Create Maintenance Request",
+      label:
+        mylanguage === "EN" ? "Create Maintenance Request" : "የጥገና ጥያቄ ፍጠር",
+    },
+    {
+      path: "/transport-manager/service",
+      icon: <Wrench />,
+      label: mylanguage === "EN" ? "Vehicle Service" : "የተሽከርካሪ አገልግሎት",
     },
   ];
 
@@ -166,6 +174,11 @@ const Sidebar = ({ role }) => {
       icon: <FaTools />,
       label: "Create Maintenance Request",
     },
+    {
+      path: "/finance-manager/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
   ];
 
   const ceoMenus = [
@@ -186,6 +199,11 @@ const Sidebar = ({ role }) => {
       label: "Create Maintenance Request",
     },
     { path: "/ceo/history", icon: <MdOutlineHistory />, label: "History" },
+    {
+      path: "/ceo/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
   ];
   const BudgetManagerMenus = [
     {
@@ -212,6 +230,11 @@ const Sidebar = ({ role }) => {
       path: "/budget-manager/history",
       icon: <MdOutlineHistory />,
       label: "History",
+    },
+    {
+      path: "/budget-manager/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
     },
   ];
 
@@ -241,6 +264,11 @@ const Sidebar = ({ role }) => {
       icon: <MdOutlineHistory />,
       label: "History",
     },
+    {
+      path: "/general-service/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
   ];
 
   const menuMappings = {
@@ -250,7 +278,7 @@ const Sidebar = ({ role }) => {
     "/department-manager": departmentManagerMenus,
     "/finance-manager": financeManagerMenus,
     "/ceo": ceoMenus,
-    "/general-service": GeneralSystemExcuterMenus, // Added Budget Manager menus
+    "/general-service": GeneralSystemExcuterMenus,
     "/budget-manager": BudgetManagerMenus, // Added Budget Officer menus
   };
 

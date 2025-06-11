@@ -6,10 +6,10 @@ import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ENDPOINTS } from "../utilities/endpoints";
-
+import { useLanguage } from "../context/LanguageContext";
 const VehicleManagement = () => {
   const token = localStorage.getItem("authToken");
-
+  const { mylanguage } = useLanguage(); // Use the language context
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -230,9 +230,9 @@ const VehicleManagement = () => {
       <button
         className="btn addve"
         onClick={openAddVehicleModal}
-        style={{ backgroundColor: "#0b455b", color: "#fff", width: "150px" }}
+        style={{ backgroundColor: "#0b455b", color: "#fff", width: "200px" }}
       >
-        + Add Vehicle
+        {mylanguage === "EN" ? " + Add New Vehicle" : "+ አዲስ ተሽከርካሪ ጨምር"}
       </button>
 
       <div className="table-responsive">
@@ -245,7 +245,7 @@ const VehicleManagement = () => {
             }}
             onClick={() => setStatusFilter("all")}
           >
-            All
+            {mylanguage === "EN" ? "All" : "ሁሉም"}
           </span>
           <span
             style={{
@@ -255,7 +255,7 @@ const VehicleManagement = () => {
             }}
             onClick={() => setStatusFilter("available")}
           >
-            Available
+            {mylanguage === "EN" ? "Available" : "ዝግጁ"}
           </span>
           <span
             style={{
@@ -264,7 +264,7 @@ const VehicleManagement = () => {
             }}
             onClick={() => setStatusFilter("in_use")}
           >
-            In Use
+            {mylanguage === "EN" ? "In Use" : "በአጠቃቀም ላይ"}
           </span>
         </div>
 
@@ -272,13 +272,13 @@ const VehicleManagement = () => {
           <thead>
             <tr>
               <th>#</th>
-              <th>Driver</th>
-              <th>License Plate</th>
-              <th>Model</th>
-              <th>Capacity</th>
-              <th>Total KM</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{mylanguage === "EN" ? "Driver" : "አሽከርካሪ"}</th>
+              <th>{mylanguage === "EN" ? "License Plate" : "የተሽከርካሪ ሰሌዳ"}</th>
+              <th>{mylanguage === "EN" ? "Model" : "ሞዴል"}</th>
+              <th>{mylanguage === "EN" ? "Capacity" : "አቅም"}</th>
+              <th>{mylanguage === "EN" ? "Total KM" : "ጠቅላላ ኪ.ሜ"}</th>
+              <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
+              <th>{mylanguage === "EN" ? "Actions" : "ተግባራት"}</th>
             </tr>
           </thead>
           <tbody>
@@ -301,33 +301,40 @@ const VehicleManagement = () => {
                           Number(vehicle.total_km) >= 5000
                             ? "red"
                             : Number(vehicle.total_km) >= 2500
-                            ? "#b8860b" // yellow/darkgoldenrod
+                            ? "#b8860b"
                             : "green",
-                        fontWeight:
-                          Number(vehicle.total_km) >= 5000
-                            ? "bold"
-                            : Number(vehicle.total_km) >= 2500
-                            ? "bold"
-                            : "bold",
+                        fontWeight: "bold",
                       }}
                     >
                       {vehicle.total_km || "0"}
                     </span>
                   </td>
-                  <td>{vehicle.status}</td>
+                  <td>
+                    {mylanguage === "EN"
+                      ? vehicle.status === "available"
+                        ? "Available"
+                        : vehicle.status === "in_use"
+                        ? "In Use"
+                        : vehicle.status
+                      : vehicle.status === "available"
+                      ? "ዝግጁ"
+                      : vehicle.status === "in_use"
+                      ? "በአጠቃቀም ላይ"
+                      : vehicle.status}
+                  </td>
                   <td>
                     <button
                       className="btn btn-sm me-2"
                       onClick={() => handleEdit(vehicle)}
                       style={{ backgroundColor: "#0b455b", color: "#fff" }}
                     >
-                      Edit
+                      {mylanguage === "EN" ? "Edit" : "አስተካክል"}
                     </button>
                     <button
                       className="btn btn-danger btn-sm"
                       onClick={() => handleDeactivate(vehicle.id)}
                     >
-                      Deactivate
+                      {mylanguage === "EN" ? "Deactivate" : "አሰናብት"}
                     </button>
                   </td>
                 </tr>
@@ -352,7 +359,15 @@ const VehicleManagement = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5>{editingVehicle ? "Edit Vehicle" : "Add New Vehicle"}</h5>
+                <h5>
+                  {editingVehicle
+                    ? mylanguage === "EN"
+                      ? "Edit Vehicle"
+                      : "ተሽከርካሪ አስተካክል"
+                    : mylanguage === "EN"
+                    ? "Add New Vehicle"
+                    : "አዲስ ተሽከርካሪ ጨምር"}
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -368,7 +383,7 @@ const VehicleManagement = () => {
                 <form onSubmit={handleSubmit}>
                   <div className="row mb-3">
                     <div className="col-md-6">
-                      <label>Driver</label>
+                      <label>{mylanguage === "EN" ? "Driver" : "አሽከርካሪ"}</label>
                       <select
                         className="form-control"
                         value={newVehicle.driver}
@@ -379,7 +394,11 @@ const VehicleManagement = () => {
                           })
                         }
                       >
-                        <option value="">Select Driver</option>
+                        <option value="">
+                          {mylanguage === "EN"
+                            ? "Select Driver"
+                            : "አሽከርካሪ ይምረጡ"}
+                        </option>
                         {drivers.map((driver) => (
                           <option key={driver.id} value={driver.id}>
                             {driver.full_name}
@@ -388,7 +407,9 @@ const VehicleManagement = () => {
                       </select>
                     </div>
                     <div className="col-md-6">
-                      <label>License Plate</label>
+                      <label>
+                        {mylanguage === "EN" ? "License Plate" : "የተሽከርካሪ ሰሌዳ"}
+                      </label>
                       <input
                         type="text"
                         className="form-control"
@@ -405,7 +426,7 @@ const VehicleManagement = () => {
 
                   <div className="row mb-3">
                     <div className="col-md-6">
-                      <label>Model</label>
+                      <label>{mylanguage === "EN" ? "Model" : "ሞዴል"}</label>
                       <input
                         type="text"
                         className="form-control"
@@ -419,7 +440,7 @@ const VehicleManagement = () => {
                       />
                     </div>
                     <div className="col-md-6">
-                      <label>Capacity</label>
+                      <label>{mylanguage === "EN" ? "Capacity" : "አቅም"}</label>
                       <input
                         type="number"
                         className="form-control"
@@ -437,20 +458,28 @@ const VehicleManagement = () => {
 
                   <div className="row mb-3">
                     <div className="col-md-6">
-                      <label>Source</label>
+                      <label>{mylanguage === "EN" ? "Source" : "ምንጭ"}</label>
                       <select
                         className="form-control"
                         value={newVehicle.source}
                         onChange={handleSourceChange}
                       >
-                        <option value="">Select Source</option>
-                        <option value="owned">Owned</option>
-                        <option value="rented">Rented</option>
+                        <option value="">
+                          {mylanguage === "EN" ? "Select Source" : "ምንጭ ይምረጡ"}
+                        </option>
+                        <option value="owned">
+                          {mylanguage === "EN" ? "Owned" : "የድርጅቱ"}
+                        </option>
+                        <option value="rented">
+                          {mylanguage === "EN" ? "Rented" : "ኪራይ"}
+                        </option>
                       </select>
                     </div>
                     {newVehicle.source === "rented" && (
                       <div className="col-md-6">
-                        <label>Rental Company</label>
+                        <label>
+                          {mylanguage === "EN" ? "Rental Company" : "የኪራይ ኩባንያ"}
+                        </label>
                         <input
                           type="text"
                           className="form-control"
@@ -468,7 +497,9 @@ const VehicleManagement = () => {
 
                   <div className="row mb-3">
                     <div className="col-md-6">
-                      <label>Fuel Type</label>
+                      <label>
+                        {mylanguage === "EN" ? "Fuel Type" : "የነዳጅ አይነት"}
+                      </label>
                       <select
                         className="form-control"
                         value={newVehicle.fuel_type || ""}
@@ -479,13 +510,25 @@ const VehicleManagement = () => {
                           })
                         }
                       >
-                        <option value="">Select Fuel Type</option>
-                        <option value="benzene">benzene</option>
-                        <option value="naphtha">naphtha</option>
+                        <option value="">
+                          {mylanguage === "EN"
+                            ? "Select Fuel Type"
+                            : "የነዳጅ አይነት ይምረጡ"}
+                        </option>
+                        <option value="benzene">
+                          {mylanguage === "EN" ? "benzene" : "ቤንዚን"}
+                        </option>
+                        <option value="naphtha">
+                          {mylanguage === "EN" ? "naphtha" : "ናፍታ"}
+                        </option>
                       </select>
                     </div>
                     <div className="col-md-6">
-                      <label>Fuel Efficiency (km/l)</label>
+                      <label>
+                        {mylanguage === "EN"
+                          ? "Fuel Efficiency (km/l)"
+                          : "የነዳጅ ቅንጅት (ኪ.ሜ/ሊትር)"}
+                      </label>
                       <input
                         type="number"
                         className="form-control"
@@ -496,7 +539,11 @@ const VehicleManagement = () => {
                             fuel_efficiency: e.target.value,
                           })
                         }
-                        placeholder="Enter fuel efficiency (km/l)"
+                        placeholder={
+                          mylanguage === "EN"
+                            ? "Enter fuel efficiency (km/l)"
+                            : "የነዳጅ ቅንጅት ያስገቡ (ኪ.ሜ/ሊትር)"
+                        }
                         min="0"
                         step="0.01"
                       />
@@ -508,7 +555,13 @@ const VehicleManagement = () => {
                     style={{ backgroundColor: "#0B455B", color: "#fff" }}
                     className="btn w-100"
                   >
-                    {editingVehicle ? "Update" : "Save"}
+                    {editingVehicle
+                      ? mylanguage === "EN"
+                        ? "Update"
+                        : "አሻሽል"
+                      : mylanguage === "EN"
+                      ? "Save"
+                      : "አስቀምጥ"}
                   </button>
                 </form>
               </div>

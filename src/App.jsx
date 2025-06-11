@@ -37,7 +37,6 @@ import CEOMaintenanceTable from "./components/CEOMaintenanceTable";
 import FinanceMaintenanceTable from "./components/FinanceMaintenanceTable";
 import TMRefuelingTable from "./components/TMRefuelingTable";
 import HightCost from "./components/HightCost";
-import HighCostRequests from "./components/HighCostDriverSchedule";
 import BUHighCost from "./components/BUHighCost";
 import TMhighcostrequests from "./components/TMhighcostrequests";
 import FIHighCost from "./components/FIHighCost";
@@ -48,7 +47,12 @@ import BUmaintenance from "./components/BUmaintenance";
 import CEOhighcost from "./components/CEOhighcost";
 import { AuthProvider } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
-
+import VehicleServiceTable from "./components/VehicleServiceTable";
+import BMService from "./components/BMService";
+import CEOService from "./components/CEOService";
+import FMService from "./components/FMService";
+import GSservice from "./components/GSservice";
+import TransportManagerDashboard from "./components/TransportManagerDashboard";
 // const PrivateRoute = ({ children, isAuthenticated, redirectTo }) => {
 //   if (!isAuthenticated) {
 //     return <Navigate to={redirectTo} />;
@@ -276,6 +280,7 @@ const App = () => {
                               path="maintenance-request"
                               element={<MaintenanceRequest />}
                             />
+                            <Route path="service" element={<FMService />} />
                           </Routes>
                         </div>
                       </div>
@@ -309,6 +314,7 @@ const App = () => {
                               path="history"
                               element={<RequestHistory />}
                             />
+                            <Route path="service" element={<CEOService />} />
                           </Routes>
                         </div>
                       </div>
@@ -402,7 +408,7 @@ const App = () => {
                             />
                             <Route
                               path="transport-dashbord"
-                              element={<TransportManagerDashbord />}
+                              element={<TransportManagerDashboard />}
                             />
                             <Route
                               path="refueling"
@@ -420,6 +426,10 @@ const App = () => {
                             <Route
                               path="maintenance-request"
                               element={<MaintenanceRequest />}
+                            />
+                            <Route
+                              path="service"
+                              element={<VehicleServiceTable />}
                             />
                           </Routes>
                         </div>
@@ -455,6 +465,7 @@ const App = () => {
                               path="history"
                               element={<RequestHistory />}
                             />
+                            <Route path="service" element={<BMService />} />
                           </Routes>
                         </div>
                       </div>
@@ -472,6 +483,7 @@ const App = () => {
                         <div className="container">
                           <Routes>
                             <Route path="high_cost" element={<CEOhighcost />} />
+
                             <Route
                               path="refueling"
                               element={<RefuelingTable />}
@@ -485,6 +497,7 @@ const App = () => {
                               path="history"
                               element={<RequestHistory />}
                             />
+                            <Route path="service" element={<GSservice />} />
                           </Routes>
                         </div>
                       </div>

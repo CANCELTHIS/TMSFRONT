@@ -92,4 +92,24 @@ export const ENDPOINTS = {
   SUBMIT_MAINTENANCE_FILES: (request_id) =>
     `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
   MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`, // List current user's maintenance requests
+
+  // Report endpoints (corrected and explicit)
+  REPORT_LIST: `${BASE_URL}report/`, // GET method, returns JSON, no params
+  REPORT_TRANSPORT: `${BASE_URL}report/?request_type=Transport`,
+  REPORT_MAINTENANCE: `${BASE_URL}report/?request_type=Maintenance`,
+  REPORT_REFUELING: `${BASE_URL}report/?request_type=Refueling`,
+  REPORT_HIGHCOST: `${BASE_URL}report/?request_type=HighCost`,
+  REPORT_BY_MONTH: (year, month) => `${BASE_URL}report/?month=${year}-${month}`, // e.g. 2025-01
+  SERVICE_LIST: `${BASE_URL}service-requests/vehicles_list/`,
+  MARK_VEHICLE_SERVICE: (vehicle_id) =>
+    `${BASE_URL}service-requests/${vehicle_id}/mark-service/`,
+  VEHICLES_LIST: `${BASE_URL}service-requests/vehicles_list/`,
+  MARK_SERVICE: (vehicleId) =>
+    `${BASE_URL}service-requests/${vehicleId}/mark-service/`,
+  LIST_SERVICE_REQUESTS: `${BASE_URL}service-requests/list/`,
+  SUBMIT_SERVICE_FILES: (request_id) =>
+    `${BASE_URL}service-requests/${request_id}/submit-files/`,
+  SERVICE_REQUEST_ACTION: (request_id) =>
+    `${BASE_URL}service-requests/${request_id}/action/`,
+  SERVICE_REQUEST_DETAIL: (pk) => `${BASE_URL}service-requests/${pk}/`,
 };

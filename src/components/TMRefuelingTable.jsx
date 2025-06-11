@@ -5,8 +5,9 @@ import { MdOutlineClose } from "react-icons/md"; // Updated import
 import { toast, ToastContainer } from "react-toastify"; // Import toast
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import CustomPagination from "./CustomPagination";
-
+import { useLanguage } from "../context/LanguageContext";
 const TMRefuelingTable = () => {
+  const { mylanguage } = useLanguage(); // Use the language context
   const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -347,14 +348,21 @@ const TMRefuelingTable = () => {
 
   return (
     <div className="container mt-5">
-      <ToastContainer /> {/* Add ToastContainer */}
-      <h2 className="text-center mb-4">Refueling Requests</h2>
+      <h2 className="text-center mb-4">
+        {mylanguage === "EN" ? "Refueling" : "የነዳጅ መሙላት ጥያቄዎች"}
+      </h2>
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">
+              {mylanguage === "EN" ? "Loading..." : "በመጫን ላይ..."}
+            </span>
           </div>
-          <p>Loading refueling requests...</p>
+          <p>
+            {mylanguage === "EN"
+              ? "Loading refueling requests..."
+              : "የነዳጅ መሙላት ጥያቄዎችን በመጫን ላይ..."}
+          </p>
         </div>
       ) : (
         <div className="table-responsive">
@@ -362,11 +370,11 @@ const TMRefuelingTable = () => {
             <thead className="thead-dark">
               <tr>
                 <th>#</th>
-                <th>Date</th>
-                <th>Destination</th>
-                <th>Driver</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th>{mylanguage === "EN" ? "Date" : "ቀን"}</th>
+                <th>{mylanguage === "EN" ? "Destination" : "መድረሻ"}</th>
+                <th>{mylanguage === "EN" ? "Driver" : "አሽከርካሪ"}</th>
+                <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
+                <th>{mylanguage === "EN" ? "Action" : "ተግባር"}</th>
               </tr>
             </thead>
             <tbody>
@@ -376,16 +384,25 @@ const TMRefuelingTable = () => {
                     <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>{" "}
                     {/* Correct numbering */}
                     <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                    <td>{request.destination || "N/A"}</td>
-                    <td>{request.requester_name || "N/A"}</td>
-                    <td>{request.status || "N/A"}</td>
+                    <td>
+                      {request.destination ||
+                        (mylanguage === "EN" ? "N/A" : "አይታወቅም")}
+                    </td>
+                    <td>
+                      {request.requester_name ||
+                        (mylanguage === "EN" ? "N/A" : "አይታወቅም")}
+                    </td>
+                    <td>
+                      {request.status ||
+                        (mylanguage === "EN" ? "N/A" : "አይታወቅም")}
+                    </td>
                     <td>
                       <button
                         className="btn btn-sm"
                         style={{ backgroundColor: "#181E4B", color: "white" }}
                         onClick={() => fetchRequestDetail(request.id)} // Fetch and show details
                       >
-                        View Detail
+                        {mylanguage === "EN" ? "View Detail" : "ዝርዝር አሳይ"}
                       </button>
                     </td>
                   </tr>
@@ -393,7 +410,9 @@ const TMRefuelingTable = () => {
               ) : (
                 <tr>
                   <td colSpan="6" className="text-center">
-                    No refueling requests found.
+                    {mylanguage === "EN"
+                      ? "No refueling requests found."
+                      : "ምንም የነዳጅ መሙላት ጥያቄዎች አልተገኙም።"}
                   </td>
                 </tr>
               )}
