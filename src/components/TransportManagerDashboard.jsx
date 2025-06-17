@@ -1,90 +1,92 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend,
-  PieChart, Pie, Cell, ResponsiveContainer
-} from 'recharts';
-import { useSpring, animated } from '@react-spring/web';
+  Fuel,
+  Wrench,
+  Wallet,
+  Blocks,
+  Car,
+  Bus,
+  ShieldQuestion,
+} from "lucide-react";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
+
+import { useSpring, animated } from "@react-spring/web";
+import axios from "axios";
+import { ENDPOINTS } from "../utilities/endpoints";
 
 const REQUEST_TYPES = [
-  { key: 'refueling', label: 'Refueling Requests', color: '#36A2EB', icon: '⛽' },
-  { key: 'maintenance', label: 'Maintenance Requests', color: '#FF6384', icon: '🛠️' },
-  { key: 'hicost', label: 'High Cost Requests', color: '#FFCE56', icon: '💰' },
-  { key: 'service', label: 'Service Requests', color: '#4BC0C0', icon: '🧰' },
+  {
+    key: "refueling",
+    label: "Refueling Requests",
+    color: "#072a36",
+    icon: <Fuel size={30} />,
+  },
+  {
+    key: "maintenance",
+    label: "Maintenance Requests",
+    color: "#670e80",
+    icon: <Wrench size={30} />,
+  },
+  {
+    key: "high_cost",
+    label: "High Cost Requests",
+    color: "#c4430c",
+    icon: <Wallet size={30} />,
+  },
+  {
+    key: "service",
+    label: "Service Requests",
+    color: "#4BC0C0",
+    icon: <Blocks size={30} />,
+  },
 ];
-
-// Dummy summary data
-const summaryData = {
-  refueling: 124,
-  maintenance: 32,
-  hicost: 8,
-  service: 46,
-};
-
-// Vehicle status summary data
-const vehicleStatusData = {
-  active: 117,
-  underMaintenance: 14,
-  underService: 9,
-  rental: 75,
-};
 
 const monthsList = [
-  "All", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-  "Aug", "Sep", "Oct", "Nov", "Dec"
+  "All",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
-// Bar chart data (monthly trends)
-const barData = [
-  { month: 'Jan', refueling: 10, maintenance: 5, hicost: 1, service: 3 },
-  { month: 'Feb', refueling: 12, maintenance: 4, hicost: 2, service: 6 },
-  { month: 'Mar', refueling: 14, maintenance: 7, hicost: 1, service: 4 },
-  { month: 'Apr', refueling: 16, maintenance: 3, hicost: 0, service: 5 },
-  { month: 'May', refueling: 11, maintenance: 8, hicost: 2, service: 7 },
-  { month: 'Jun', refueling: 18, maintenance: 5, hicost: 1, service: 6 },
-  { month: 'Jul', refueling: 13, maintenance: 6, hicost: 1, service: 5 },
-  { month: 'Aug', refueling: 9, maintenance: 7, hicost: 2, service: 4 },
-  { month: 'Sep', refueling: 15, maintenance: 6, hicost: 1, service: 6 },
-  { month: 'Oct', refueling: 17, maintenance: 5, hicost: 0, service: 7 },
-  { month: 'Nov', refueling: 10, maintenance: 8, hicost: 2, service: 8 },
-  { month: 'Dec', refueling: 13, maintenance: 7, hicost: 1, service: 5 },
-];
+const COLORS = REQUEST_TYPES.map((rt) => rt.color);
 
-// Pie chart data (annual proportions)
-const getAnnualPieData = () => REQUEST_TYPES.map(rt => ({
-  name: rt.label,
-  value: barData.reduce((sum, monthObj) => sum + (monthObj[rt.key] || 0), 0),
-}));
-
-// Pie chart data (monthly proportions)
-const getMonthlyPieData = (month) => {
-  const found = barData.find(d => d.month === month);
-  if (!found) return [];
-  return REQUEST_TYPES.map(rt => ({
-    name: rt.label,
-    value: found[rt.key] || 0,
-  }));
-};
-
-// Recent vehicles table data
-const recentVehicles = [
-  { id: 1, vehicle: 'Toyota Camry', type: 'refueling', status: 'Completed', date: '2025-06-08' },
-  { id: 2, vehicle: 'Nissan Altima', type: 'maintenance', status: 'In Progress', date: '2025-06-07' },
-  { id: 3, vehicle: 'Honda Accord', type: 'hicost', status: 'Pending', date: '2025-06-06' },
-  { id: 4, vehicle: 'Ford Focus', type: 'service', status: 'Completed', date: '2025-06-05' },
-  { id: 5, vehicle: 'Kia Rio', type: 'maintenance', status: 'Pending', date: '2025-06-04' },
-];
-
-const COLORS = REQUEST_TYPES.map(rt => rt.color);
-
-const ProgressBar = ({ value, color = '#007bff' }) => {
+const ProgressBar = ({ value, color = "#007bff" }) => {
   const props = useSpring({
     width: `${value}%`,
-    from: { width: '0%' },
+    from: { width: "0%" },
     config: { tension: 200, friction: 20 },
   });
 
   return (
-    <div style={{ background: "#e9ecef", borderRadius: 6, overflow: 'hidden', height: 18 }}>
+    <div
+      style={{
+        background: "#e9ecef",
+        borderRadius: 6,
+        overflow: "hidden",
+        height: 18,
+      }}
+    >
       <animated.div
         style={{
           ...props,
@@ -105,38 +107,212 @@ const ProgressBar = ({ value, color = '#007bff' }) => {
   );
 };
 
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+}) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   return (
-    <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize="12px" fontWeight="bold">
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize="12px"
+      fontWeight="bold"
+    >
       {(percent * 100).toFixed(0)}%
     </text>
   );
 };
 
 const Dashboard = () => {
-  // Month filter state for bar chart
   const [selectedMonth, setSelectedMonth] = useState("All");
-  // Pie chart filter type: "Annual" or "Monthly"
   const [pieFilter, setPieFilter] = useState("Annual");
-  // Month filter for pie chart (if Monthly selected)
   const [pieMonth, setPieMonth] = useState("Jan");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Filter data based on month selection for bar chart
-  const filteredBarData = selectedMonth === "All"
-    ? barData
-    : barData.filter(item => item.month === selectedMonth);
+  // State for dashboard data
+  const [overviewData, setOverviewData] = useState({
+    active_vehicles: 0,
+    under_maintenance: 0,
+    under_service: 0,
+    total_rental_vehicles: 0,
+    refueling_requests: 0,
+    maintenance_requests: 0,
+    high_cost_requests: 0,
+    service_requests: 0,
+  });
 
-  // Pie data selection logic
-  let pieChartData;
-  if (pieFilter === "Annual") {
-    pieChartData = getAnnualPieData();
-  } else {
-    pieChartData = getMonthlyPieData(pieMonth);
+  const [recentVehicles, setRecentVehicles] = useState([]);
+  const [monthlyTrends, setMonthlyTrends] = useState([]);
+  const [typeDistribution, setTypeDistribution] = useState({});
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Get the access token from wherever you store it (localStorage, context, etc.)
+        const token = localStorage.getItem("authToken"); // or from your auth context
+
+        if (!token) {
+          throw new Error("No access token found");
+        }
+
+        // Create axios instance with authorization header
+        const api = axios.create({
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        // Fetch all dashboard data in parallel
+        const [overviewRes, recentRes, trendsRes, distributionRes] =
+          await Promise.all([
+            api.get(ENDPOINTS.DASHBOARD_OVERVIEW),
+            api.get(ENDPOINTS.DASHBOARD_RECENT_VEHICLES),
+            api.get(ENDPOINTS.DASHBOARD_MONTHLY_TRENDS),
+            api.get(ENDPOINTS.DASHBOARD_TYPE_DISTRIBUTION),
+          ]);
+
+        setOverviewData(overviewRes.data);
+        setRecentVehicles(recentRes.data.results || []);
+
+        // Transform monthly trends data for the chart
+        const transformedTrends = transformMonthlyTrends(trendsRes.data);
+        setMonthlyTrends(transformedTrends);
+
+        // Transform type distribution data for the chart
+        setTypeDistribution(distributionRes.data);
+
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+
+        if (err.response) {
+          // Handle different HTTP status codes
+          if (err.response.status === 401) {
+            setError("Session expired. Please login again.");
+            // Optionally: redirect to login or refresh token
+          } else if (err.response.status === 403) {
+            setError("You do not have permission to view this data.");
+          } else {
+            setError(
+              err.response.data.message || "Failed to fetch dashboard data"
+            );
+          }
+        } else if (err.message === "No access token found") {
+          setError("Please login to view the dashboard");
+          // Optionally redirect to login
+        } else {
+          setError(err.message || "Failed to fetch dashboard data");
+        }
+
+        console.error("Error fetching dashboard data:", err);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Transform monthly trends data from API to chart format
+  const transformMonthlyTrends = (apiData) => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // Initialize empty data structure
+    const result = months.map((month) => ({
+      month,
+      refueling: 0,
+      maintenance: 0,
+      high_cost: 0,
+      service: 0,
+    }));
+
+    // Fill in the data from API
+    Object.keys(apiData).forEach((type) => {
+      apiData[type].forEach((item) => {
+        const date = new Date(item.month);
+        const monthIndex = date.getMonth();
+        const monthName = months[monthIndex];
+
+        const foundMonth = result.find((m) => m.month === monthName);
+        if (foundMonth) {
+          foundMonth[type] = item.count;
+        }
+      });
+    });
+
+    return result;
+  };
+
+  // Get pie chart data based on filter
+  const getPieChartData = () => {
+    if (pieFilter === "Annual") {
+      return REQUEST_TYPES.map((rt) => ({
+        name: rt.label,
+        value: typeDistribution[rt.key] || 0,
+      }));
+    } else {
+      const monthData = monthlyTrends.find((d) => d.month === pieMonth);
+      if (!monthData) return [];
+
+      return REQUEST_TYPES.map((rt) => ({
+        name: rt.label,
+        value: monthData[rt.key] || 0,
+      }));
+    }
+  };
+
+  // Filter bar data based on month selection
+  const filteredBarData =
+    selectedMonth === "All"
+      ? monthlyTrends
+      : monthlyTrends.filter((item) => item.month === selectedMonth);
+
+  if (loading) {
+    return (
+      <div className="container mt-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading dashboard data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger" role="alert">
+          Error loading dashboard: {error}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -148,40 +324,52 @@ const Dashboard = () => {
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm border-0">
             <div className="card-body">
-              <span style={{ fontSize: 32 }}>🚗</span>
+              <span style={{ fontSize: 30 }}>
+                <Car size={30} />
+              </span>
               <h5 className="card-title mt-2">Active Vehicles</h5>
-              <h3 style={{ fontWeight: 'bold', color: '#36A2EB' }}>{vehicleStatusData.active}</h3>
-              <button className="btn btn-outline-primary btn-sm mt-2">View More</button>
+              <h3 style={{ fontWeight: "bold", color: "#36A2EB" }}>
+                {overviewData.active_vehicles}
+              </h3>
             </div>
           </div>
         </div>
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm border-0">
             <div className="card-body">
-              <span style={{ fontSize: 32 }}>🛠️</span>
+              <span style={{ fontSize: 30 }}>
+                <Wrench size={30} />
+              </span>
               <h5 className="card-title mt-2">Under Maintenance</h5>
-              <h3 style={{ fontWeight: 'bold', color: '#FF6384' }}>{vehicleStatusData.underMaintenance}</h3>
-              <button className="btn btn-outline-primary btn-sm mt-2">View More</button>
+              <h3 style={{ fontWeight: "bold", color: "#FF6384" }}>
+                {overviewData.under_maintenance}
+              </h3>
             </div>
           </div>
         </div>
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm border-0">
             <div className="card-body">
-              <span style={{ fontSize: 32 }}>🧰</span>
+              <span style={{ fontSize: 30 }}>
+                <Blocks size={30} />
+              </span>
               <h5 className="card-title mt-2">Under Service</h5>
-              <h3 style={{ fontWeight: 'bold', color: '#4BC0C0' }}>{vehicleStatusData.underService}</h3>
-              <button className="btn btn-outline-primary btn-sm mt-2">View More</button>
+              <h3 style={{ fontWeight: "bold", color: "#4BC0C0" }}>
+                {overviewData.under_service}
+              </h3>
             </div>
           </div>
         </div>
         <div className="col-md-3 mb-3">
           <div className="card shadow-sm border-0">
             <div className="card-body">
-              <span style={{ fontSize: 32 }}>🚙</span>
+              <span style={{ fontSize: 30 }}>
+                <Bus size={30} />
+              </span>
               <h5 className="card-title mt-2">Total Rental Vehicles</h5>
-              <h3 style={{ fontWeight: 'bold', color: '#FFCE56' }}>{vehicleStatusData.rental}</h3>
-              <button className="btn btn-outline-primary btn-sm mt-2">View More</button>
+              <h3 style={{ fontWeight: "bold", color: "#FFCE56" }}>
+                {overviewData.total_rental_vehicles}
+              </h3>
             </div>
           </div>
         </div>
@@ -193,10 +381,11 @@ const Dashboard = () => {
           <div className="col-md-3 mb-3" key={rt.key}>
             <div className="card shadow-sm border-0">
               <div className="card-body">
-                <span style={{ fontSize: 32 }}>{rt.icon}</span>
+                <span style={{ fontSize: 30 }}>{rt.icon}</span>
                 <h5 className="card-title mt-2">{rt.label}</h5>
-                <h3 style={{ fontWeight: 'bold', color: rt.color }}>{summaryData[rt.key]}</h3>
-                <button className="btn btn-primary mt-2 btn-sm">View More</button>
+                <h3 style={{ fontWeight: "bold", color: rt.color }}>
+                  {overviewData[`${rt.key}_requests`]}
+                </h3>
               </div>
             </div>
           </div>
@@ -217,19 +406,26 @@ const Dashboard = () => {
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                 >
-                  {monthsList.map(m => (
-                    <option value={m} key={m}>{m}</option>
+                  {monthsList.map((m) => (
+                    <option value={m} key={m}>
+                      {m}
+                    </option>
                   ))}
                 </select>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={filteredBarData}>
                   <XAxis dataKey="month" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
                   <Legend />
                   {REQUEST_TYPES.map((rt) => (
-                    <Bar key={rt.key} dataKey={rt.key} name={rt.label} fill={rt.color} />
+                    <Bar
+                      key={rt.key}
+                      dataKey={rt.key}
+                      name={rt.label}
+                      fill={rt.color}
+                    />
                   ))}
                 </BarChart>
               </ResponsiveContainer>
@@ -258,24 +454,29 @@ const Dashboard = () => {
                       value={pieMonth}
                       onChange={(e) => setPieMonth(e.target.value)}
                     >
-                      {barData.map(d => (
-                        <option value={d.month} key={d.month}>{d.month}</option>
+                      {monthlyTrends.map((d) => (
+                        <option value={d.month} key={d.month}>
+                          {d.month}
+                        </option>
                       ))}
                     </select>
                   )}
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie 
-                    data={pieChartData}
+                  <Pie
+                    data={getPieChartData()}
                     dataKey="value"
                     outerRadius={110}
                     labelLine={false}
                     label={renderCustomizedLabel}
                   >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {getPieChartData().map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -304,17 +505,39 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentVehicles.map(vehicle => (
-                  <tr key={vehicle.id}>
+                {recentVehicles.map((vehicle, index) => (
+                  <tr key={index}>
                     <td>{vehicle.vehicle}</td>
                     <td>
-                      <span className="me-1" style={{ color: REQUEST_TYPES.find(rt => rt.key === vehicle.type).color }}>
-                        {REQUEST_TYPES.find(rt => rt.key === vehicle.type).icon}
+                      <span
+                        className="me-1"
+                        style={{
+                          color:
+                            REQUEST_TYPES.find(
+                              (rt) =>
+                                rt.key ===
+                                vehicle.type.toLowerCase().replace(" ", "_")
+                            )?.color || "#000",
+                        }}
+                      >
+                        {REQUEST_TYPES.find(
+                          (rt) =>
+                            rt.key ===
+                            vehicle.type.toLowerCase().replace(" ", "_")
+                        )?.icon || <ShieldQuestion color="#0d1a4d" />}
                       </span>
-                      {REQUEST_TYPES.find(rt => rt.key === vehicle.type).label}
+                      {vehicle.type}
                     </td>
                     <td>
-                      <span className={`badge ${vehicle.status === 'Completed' ? 'bg-success' : vehicle.status === 'Pending' ? 'bg-warning' : 'bg-info'}`}>
+                      <span
+                        className={`badge ${
+                          vehicle.status === "Completed"
+                            ? "bg-success"
+                            : vehicle.status === "Pending"
+                            ? "bg-warning"
+                            : "bg-info"
+                        }`}
+                      >
                         {vehicle.status}
                       </span>
                     </td>

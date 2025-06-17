@@ -53,12 +53,6 @@ import CEOService from "./components/CEOService";
 import FMService from "./components/FMService";
 import GSservice from "./components/GSservice";
 import TransportManagerDashboard from "./components/TransportManagerDashboard";
-// const PrivateRoute = ({ children, isAuthenticated, redirectTo }) => {
-//   if (!isAuthenticated) {
-//     return <Navigate to={redirectTo} />;
-//   }
-//   return children;
-// };
 
 const App = () => {
   const [modalType, setModalType] = useState(null);

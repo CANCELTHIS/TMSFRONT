@@ -112,4 +112,10 @@ export const ENDPOINTS = {
   SERVICE_REQUEST_ACTION: (request_id) =>
     `${BASE_URL}service-requests/${request_id}/action/`,
   SERVICE_REQUEST_DETAIL: (pk) => `${BASE_URL}service-requests/${pk}/`,
+
+  // Dashboard endpoints
+  DASHBOARD_RECENT_VEHICLES: `${BASE_URL}dashboard/recent-vehicles/`,
+  DASHBOARD_OVERVIEW: `${BASE_URL}dashboard/overview/`,
+  DASHBOARD_MONTHLY_TRENDS: `${BASE_URL}dashboard/monthly-trends/`,
+  DASHBOARD_TYPE_DISTRIBUTION: `${BASE_URL}dashboard/type-distribution/`,
 };
