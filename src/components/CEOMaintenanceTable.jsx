@@ -425,13 +425,14 @@ const CEOMaintenanceTable = () => {
                 >
                   Resend OTP
                 </button>
-                <button
-                  className="btn btn-primary"
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={() => handleOtpAction(otpValue, otpAction)}
-                >
-                  {otpAction === "forward" ? "Forward" : "Rejection"}
-                </button>
+<button
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  disabled={otpLoading || otpValue.length !== 6}
+  onClick={() => handleOtpAction(otpValue, otpAction)}
+>
+  {otpAction === "forward" ? "Forward" : "Rejection"}
+</button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => {

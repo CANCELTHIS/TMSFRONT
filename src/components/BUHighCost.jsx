@@ -281,10 +281,11 @@ const BUHighCost = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-success"
-                  onClick={() => sendOtp("approve")}
-                >
-                  Approve (with OTP)
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  onClick={() => sendOtp("approve")}
+>
+  Approve 
                 </button>
                 <button
                   className="btn btn-danger"
@@ -377,17 +378,18 @@ const BUHighCost = () => {
                   Cancel
                 </button>
                 <button
-                  type="button"
-                  className="btn btn-primary"
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={handleOtpAction}
-                >
-                  {otpLoading
-                    ? "Processing..."
-                    : otpAction === "approve"
-                    ? "Approve"
-                    : "Reject"}
-                </button>
+  type="button"
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  disabled={otpLoading || otpValue.length !== 6}
+  onClick={handleOtpAction}
+>
+  {otpLoading
+    ? "Processing..."
+    : otpAction === "approve"
+    ? "Approve"
+    : "Reject"}
+</button>
               </div>
             </div>
           </div>

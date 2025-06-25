@@ -284,16 +284,17 @@ const CEOService = () => {
                 >
                   Close
                 </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => {
-                    setOtpAction("forward");
-                    sendOtp("forward");
-                  }}
-                  disabled={actionLoading || detailLoading}
-                >
-                  Forward (with OTP)
-                </button>
+<button
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  onClick={() => {
+    setOtpAction("forward");
+    sendOtp("forward");
+  }}
+  disabled={actionLoading || detailLoading}
+>
+  Forward 
+</button>
                 <button
                   className="btn btn-danger"
                   onClick={() => {
@@ -372,17 +373,18 @@ const CEOService = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className={`btn btn-primary`}
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={handleOtpAction}
-                >
-                  {otpLoading
-                    ? "Processing..."
-                    : otpAction === "forward"
-                    ? "Forward"
-                    : "Reject"}
-                </button>
+<button
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  disabled={otpLoading || otpValue.length !== 6}
+  onClick={handleOtpAction}
+>
+  {otpLoading
+    ? "Processing..."
+    : otpAction === "forward"
+    ? "Forward"
+    : "Reject"}
+</button>
               </div>
             </div>
           </div>

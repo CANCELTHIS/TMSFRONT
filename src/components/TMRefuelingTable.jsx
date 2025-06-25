@@ -432,7 +432,7 @@ const TMRefuelingTable = () => {
                         await sendOtp();
                       }}
                     >
-                      Forward (with OTP)
+                      Forward 
                     </button>
                     <button
                       className="btn btn-danger"
@@ -442,7 +442,7 @@ const TMRefuelingTable = () => {
                         await sendOtp();
                       }}
                     >
-                      Reject (with OTP)
+                      Reject 
                     </button>
                   </>
                 )}

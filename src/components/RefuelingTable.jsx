@@ -254,14 +254,14 @@ const RefuelingTable = () => {
                   onClick={() => handleActionWithOtp("forward")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Forward (with OTP)"}
+                  {actionLoading ? "Processing..." : "Forward "}
                 </button>
                 <button
                   className="btn btn-danger"
                   onClick={() => handleActionWithOtp("reject")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Reject (with OTP)"}
+                  {actionLoading ? "Processing..." : "Reject"}
                 </button>
                 <button
                   className="btn btn-secondary"
@@ -343,9 +343,8 @@ const RefuelingTable = () => {
                   Cancel
                 </button>
                 <button
-                  className={`btn ${
-                    otpAction === "forward" ? "btn-primary" : "btn-danger"
-                  }`}
+                  className={`btn ${otpAction === "forward" ? "" : "btn-danger"}`}
+                  style={otpAction === "forward" ? { backgroundColor: "#181E4B", color: "white" } : {}}
                   disabled={otpLoading || otpValue.length !== 6}
                   onClick={() => handleOtpAction(otpValue, otpAction)}
                 >

@@ -279,13 +279,13 @@ const CEOhighcost = () => {
                   style={{ backgroundColor: "#181E4B", color: "white", width: "120px" }}
                   onClick={() => handleActionWithOtp("forward")}
                 >
-                  Forward (with OTP)
+                  Forward 
                 </button>
                 <button
                   className="btn btn-danger"
                   onClick={() => handleActionWithOtp("reject")}
                 >
-                  Reject (with OTP)
+                  Reject 
                 </button>
               </div>
             </div>
@@ -362,9 +362,8 @@ const CEOhighcost = () => {
                   Cancel
                 </button>
                 <button
-                  className={`btn ${
-                    otpAction === "forward" ? "btn-primary" : "btn-danger"
-                  }`}
+                  className={`btn ${otpAction === "forward" ? "" : "btn-danger"}`}
+                  style={otpAction === "forward" ? { backgroundColor: "#181E4B", color: "white" } : {}}
                   disabled={otpLoading || otpValue.length !== 6}
                   onClick={() => handleOtpAction(otpValue, otpAction)}
                 >
