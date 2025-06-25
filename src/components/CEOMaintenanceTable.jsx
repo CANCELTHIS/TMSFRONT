@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
-import CustomPagination from './CustomPagination';
-import { toast, ToastContainer } from "react-toastify"; // Import toast
-import "react-toastify/dist/ReactToastify.css"; // Import toast styles
+import CustomPagination from "./CustomPagination";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CEOMaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -17,6 +17,11 @@ const CEOMaintenanceTable = () => {
   const [pendingAction, setPendingAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
+  const [otpSent, setOtpSent] = useState(false);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -49,9 +54,86 @@ const CEOMaintenanceTable = () => {
       setMaintenanceRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
-      toast.error("Failed to fetch maintenance requests."); 
+      toast.error("Failed to fetch maintenance requests.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Send OTP using backend endpoint
+  const sendOtp = async () => {
+    setOtpLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(ENDPOINTS.OTP_REQUEST, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send OTP");
+      }
+
+      setOtpSent(true);
+      toast.success("OTP sent to your phone");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Handle OTP verification and action (forward or reject)
+  const handleOtpAction = async (otp, action) => {
+    setOtpLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      let payload = { action, otp_code: otp };
+      if (action === "reject") {
+        if (!rejectionMessage.trim()) {
+          toast.error("Rejection message cannot be empty.");
+          setOtpLoading(false);
+          return;
+        }
+        payload.rejection_message = rejectionMessage;
+      }
+
+      const response = await fetch(
+        ENDPOINTS.MAINTENANCE_REQUEST_ACTION(selectedRequest.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || `Failed to ${action} request`);
+      }
+
+      toast.success(
+        action === "forward" ? "Request forwarded!" : "Request rejected!"
+      );
+
+      setSelectedRequest(null);
+      setOtpModalOpen(false);
+      setOtpValue("");
+      setOtpSent(false);
+      setOtpAction(null);
+      setRejectionMessage("");
+      fetchMaintenanceRequests();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -86,7 +168,11 @@ const CEOMaintenanceTable = () => {
 
       fetchMaintenanceRequests(); // Refresh the list after action
       setSelectedRequest(null);
-      toast.success(`Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`); // Success toast
+      toast.success(
+        `Request ${
+          action === "forward" ? "forwarded" : "rejected"
+        } successfully!`
+      ); // Success toast
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
       toast.error(`Failed to ${action} the request.`); // Error toast
@@ -117,7 +203,7 @@ const CEOMaintenanceTable = () => {
 
   return (
     <div className="container mt-5">
-      <ToastContainer /> {/* Add ToastContainer */}
+      <ToastContainer />
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       {loading ? (
@@ -172,7 +258,10 @@ const CEOMaintenanceTable = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -186,51 +275,175 @@ const CEOMaintenanceTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
-                <p><strong>Current Approver Role:</strong> {selectedRequest.current_approver_role}</p>
-                <p><strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB</p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedRequest.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </p>
+                <p>
+                  <strong>Requester Name:</strong>{" "}
+                  {selectedRequest.requester_name}
+                </p>
+                <p>
+                  <strong>Requester's Car:</strong>{" "}
+                  {selectedRequest.requesters_car_name}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedRequest.status}
+                </p>
+                <p>
+                  <strong>Current Approver Role:</strong>{" "}
+                  {selectedRequest.current_approver_role}
+                </p>
+                <p>
+                  <strong>Maintenance Total Cost:</strong>{" "}
+                  {selectedRequest.maintenance_total_cost} ETB
+                </p>
                 <p>
                   <strong>Maintenance Letter:</strong>{" "}
-                  <a href={selectedRequest.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={selectedRequest.maintenance_letter}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View Maintenance Letter
                   </a>
                 </p>
                 <p>
                   <strong>Receipt File:</strong>{" "}
-                  <a href={selectedRequest.receipt_file} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={selectedRequest.receipt_file}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     View Receipt
                   </a>
                 </p>
-                <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message || "N/A"}</p>
+                <p>
+                  <strong>Rejection Message:</strong>{" "}
+                  {selectedRequest.rejection_message || "N/A"}
+                </p>
               </div>
               <div className="modal-footer">
+                <button
+                  className="btn"
+                  style={{
+                    backgroundColor: "rgba(31, 41, 55, 0.9)",
+                    color: "white",
+                  }}
+                  onClick={async () => {
+                    setOtpAction("forward");
+                    setOtpModalOpen(true);
+                    await sendOtp();
+                  }}
+                  disabled={actionLoading}
+                >
+                  Forward
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={async () => {
+                    setOtpAction("reject");
+                    setOtpModalOpen(true);
+                    await sendOtp();
+                  }}
+                  disabled={actionLoading}
+                >
+                  Reject
+                </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OTP Modal */}
+      {otpModalOpen && (
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Enter OTP and confirm{" "}
+                  {otpAction === "forward" ? "approval" : "rejection"}
+                </h5>
                 <button
-                  className="btn btn-primary"
+                  type="button"
+                  className="btn-close"
                   onClick={() => {
-                    setPendingAction("forward");
-                    setShowConfirmModal(true);
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpSent(false);
+                    setOtpAction(null);
+                    setRejectionMessage("");
                   }}
+                  disabled={otpLoading}
                 >
-                  Approve
+                  <IoClose />
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>Enter the OTP code sent to your phone number.</p>
+                <input
+                  type="text"
+                  className="form-control"
+                  maxLength={6}
+                  value={otpValue}
+                  onChange={(e) =>
+                    setOtpValue(e.target.value.replace(/\D/g, ""))
+                  }
+                  disabled={otpLoading}
+                  placeholder="Enter OTP"
+                />
+                {otpAction === "reject" && (
+                  <textarea
+                    className="form-control mt-3"
+                    rows={2}
+                    value={rejectionMessage}
+                    onChange={(e) => setRejectionMessage(e.target.value)}
+                    placeholder="Reason for rejection"
+                    disabled={otpLoading}
+                  />
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-link"
+                  onClick={() => sendOtp()}
+                  disabled={otpLoading}
+                >
+                  Resend OTP
                 </button>
                 <button
-                  className="btn btn-danger"
-                  onClick={() => {
-                    setPendingAction("reject");
-                    setShowRejectModal(true);
-                  }}
+                  className="btn btn-primary"
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={() => handleOtpAction(otpValue, otpAction)}
                 >
-                  Reject
+                  {otpAction === "forward" ? "Forward" : "Rejection"}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpSent(false);
+                    setOtpAction(null);
+                    setRejectionMessage("");
+                  }}
+                  disabled={otpLoading}
+                >
+                  Cancel
                 </button>
               </div>
             </div>
@@ -240,7 +453,10 @@ const CEOMaintenanceTable = () => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -277,7 +493,10 @@ const CEOMaintenanceTable = () => {
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -305,10 +524,7 @@ const CEOMaintenanceTable = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRejectAction}
-                >
+                <button className="btn btn-danger" onClick={handleRejectAction}>
                   Reject
                 </button>
               </div>

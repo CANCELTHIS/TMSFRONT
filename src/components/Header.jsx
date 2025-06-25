@@ -6,40 +6,147 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../utilities/endpoints";
-
-const Header = ({ role, userId, onResubmit }) => {
+import "../index.css"; // Ensure you have the correct path to your CSS file
+const Header = ({ setRole, onResubmit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: "",
-    phoneNumber: "",
+    full_name: "",
+    phone_number: "",
     password: "",
   });
+  const [signature, setSignature] = useState(null);
+  const [signaturePreview, setSignaturePreview] = useState(null);
+  const [initialUserData, setInitialUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Notification states
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const navigate = useNavigate();
-  const fetchCurrentUser = () => {
-    axios
-      .get(ENDPOINTS.CURRENT_USER, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      })
-      .then((response) => {
-        const user = response.data;
-        console.log("Current user fetched:", user);
-        setRole(user.role); // Set the user's role
-      })
-      .catch((error) => console.error("Error fetching current user:", error));
-  };
 
+  // Fetch current user data when component mounts
   useEffect(() => {
-    fetchCurrentUser();
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(ENDPOINTS.CURRENT_USER, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+        const user = response.data;
+        setInitialUserData(user);
+
+        if (setRole) setRole(user.role);
+
+        // Prefill form data with user info
+        setFormData({
+          full_name: user.full_name || "",
+          phone_number: user.phone_number || "",
+          password: "",
+        });
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+
+    fetchUserData();
     fetchNotifications();
     fetchUnreadCount();
-  }, [userId]);
+    // eslint-disable-next-line
+  }, []);
 
+  // Helper function to construct full signature URL
+  const getFullSignatureUrl = (signaturePath) => {
+    if (!signaturePath) return null;
+    if (signaturePath.startsWith("http")) return signaturePath;
+    if (signaturePath.startsWith("/")) {
+      return `https://tms-api-23gs.onrender.com${signaturePath}`;
+    }
+    return `https://tms-api-23gs.onrender.com/${signaturePath}`;
+  };
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle signature upload and preview
+  const handleSignatureChange = (e) => {
+    const file = e.target.files[0];
+    setSignature(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSignaturePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setSignaturePreview(
+        initialUserData?.signature_image
+          ? getFullSignatureUrl(initialUserData.signature_image)
+          : null
+      );
+    }
+  };
+
+  // Handle form submission with FormData for file upload
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("full_name", formData.full_name);
+      formDataToSend.append("phone_number", formData.phone_number);
+
+      if (formData.password) {
+        formDataToSend.append("password", formData.password);
+      }
+
+      if (signature) {
+        formDataToSend.append("signature_image", signature);
+      }
+
+      const response = await axios.put(ENDPOINTS.CURRENT_USER, formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+
+      const updatedUser = response.data;
+      setInitialUserData(updatedUser);
+
+      setSignaturePreview(
+        updatedUser.signature_image
+          ? getFullSignatureUrl(updatedUser.signature_image)
+          : null
+      );
+
+      setIsEditing(false);
+      setSignature(null);
+      setFormData((prev) => ({
+        ...prev,
+        password: "",
+      }));
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("refresh_token");
+    navigate("/");
+  };
+
+  // --- Notification logic ---
   const fetchNotifications = () => {
     axios
       .get(ENDPOINTS.REQUEST_NOTIFICATIONS, {
@@ -49,9 +156,8 @@ const Header = ({ role, userId, onResubmit }) => {
         },
       })
       .then((response) => {
-        console.log("Notifications fetched:", response.data);
-        setNotifications(response.data.results);
-        setUnreadCount(response.data.unread_count);
+        setNotifications(response.data.results || []);
+        setUnreadCount(response.data.unread_count || 0);
       })
       .catch((error) => console.error("Error fetching notifications:", error));
   };
@@ -59,14 +165,12 @@ const Header = ({ role, userId, onResubmit }) => {
   const fetchUnreadCount = () => {
     axios
       .get(ENDPOINTS.UNREADOUNT, {
-        params: { user_id: userId },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       })
       .then((response) => {
-        console.log("Unread count fetched:", response.data);
-        setUnreadCount(response.data.unread_count);
+        setUnreadCount(response.data.unread_count || 0);
       })
       .catch((error) => console.error("Error fetching unread count:", error));
   };
@@ -104,39 +208,8 @@ const Header = ({ role, userId, onResubmit }) => {
   };
 
   const handleResubmit = (requestId) => {
-    onResubmit(requestId); // Call the parent's resubmit function
-    setShowNotifications(false); // Close notifications
-  };
-
-  const handleLogout = async () => {
-    try {
-      const refreshToken = localStorage.getItem("refresh_token");
-      if (refreshToken) {
-        await axios.post(ENDPOINTS.LOGOUT, { refresh: refreshToken });
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refresh_token");
-      navigate("/");
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    axios
-      .put(ENDPOINTS.USER_DETAIL, formData)
-      .then(() => {
-        console.log("Profile updated successfully");
-        setIsEditing(false);
-      })
-      .catch((error) => console.error("Error updating profile:", error));
+    if (onResubmit) onResubmit(requestId);
+    setShowNotifications(false);
   };
 
   const renderNotificationContent = (notification) => {
@@ -245,6 +318,7 @@ const Header = ({ role, userId, onResubmit }) => {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light px-4 shadow-sm">
       <div className="ms-auto d-flex align-items-center position-relative">
+        {/* Notification Bell */}
         <div className="position-relative">
           <IoIosNotificationsOutline
             size={30}
@@ -274,6 +348,7 @@ const Header = ({ role, userId, onResubmit }) => {
           )}
         </div>
 
+        {/* Notification Dropdown */}
         {showNotifications && (
           <div
             className="dropdown-menu show position-absolute end-0 mt-2 shadow rounded p-3 bg-white"
@@ -306,10 +381,21 @@ const Header = ({ role, userId, onResubmit }) => {
           </div>
         )}
 
-        <div className="user-menu" onClick={() => setIsEditing(!isEditing)}>
-          <MdAccountCircle size={32} style={{ cursor: "pointer" }} />
+        {/* Profile Icon with user info */}
+        <div
+          className="user-menu d-flex align-items-center"
+          onClick={() => setIsEditing(!isEditing)}
+          style={{ cursor: "pointer" }}
+        >
+          <MdAccountCircle size={32} className="me-2" />
+          {initialUserData && (
+            <span className="d-none d-md-inline">
+              {initialUserData.full_name || "My Account"}
+            </span>
+          )}
         </div>
 
+        {/* Edit Profile Dropdown */}
         {isEditing && (
           <div
             className="dropdown-menu show position-absolute end-0 mt-2 shadow rounded p-3 bg-white"
@@ -323,13 +409,15 @@ const Header = ({ role, userId, onResubmit }) => {
               <FaArrowLeft size={16} className="me-2" />
               <span>Back</span>
             </button>
+
             <h5 className="mb-3 text-center" style={{ fontSize: "16px" }}>
               Edit Profile
             </h5>
+
             <form onSubmit={handleFormSubmit}>
               <div className="mb-2">
                 <label
-                  htmlFor="fullName"
+                  htmlFor="full_name"
                   className="form-label"
                   style={{ fontSize: "12px" }}
                 >
@@ -338,15 +426,17 @@ const Header = ({ role, userId, onResubmit }) => {
                 <input
                   type="text"
                   className="form-control form-control-sm"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
+                  id="full_name"
+                  name="full_name"
+                  value={formData.full_name}
                   onChange={handleChange}
+                  required
                 />
               </div>
+
               <div className="mb-2">
                 <label
-                  htmlFor="phoneNumber"
+                  htmlFor="phone_number"
                   className="form-label"
                   style={{ fontSize: "12px" }}
                 >
@@ -355,12 +445,14 @@ const Header = ({ role, userId, onResubmit }) => {
                 <input
                   type="tel"
                   className="form-control form-control-sm"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
+                  id="phone_number"
+                  name="phone_number"
+                  value={formData.phone_number}
                   onChange={handleChange}
+                  required
                 />
               </div>
+
               <div className="mb-2">
                 <label
                   htmlFor="password"
@@ -376,25 +468,66 @@ const Header = ({ role, userId, onResubmit }) => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  autoComplete="new-password"
+                  placeholder="Leave blank to keep current"
                 />
               </div>
+
+              <div className="mb-2">
+                <label
+                  htmlFor="signature_image"
+                  className="form-label"
+                  style={{ fontSize: "12px" }}
+                >
+                  Signature (Image)
+                </label>
+                <input
+                  type="file"
+                  className="form-control form-control-sm"
+                  id="signature_image"
+                  name="signature_image"
+                  accept="image/*"
+                  onChange={handleSignatureChange}
+                />
+                {signaturePreview && (
+                  <div className="mt-2 text-center">
+                    <img
+                      src={signaturePreview}
+                      alt="Signature preview"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "80px",
+                        border: "1px solid #ddd",
+                      }}
+                      onError={(e) => {
+                        console.error("Error loading signature image");
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="d-flex justify-content-between mt-3">
                 <button
                   type="submit"
                   style={{ backgroundColor: "#0B455B" }}
                   className="btn w-90 text-white"
+                  disabled={isLoading}
                 >
-                  Save
+                  {isLoading ? "Saving..." : "Save"}
                 </button>
                 <button
                   onClick={handleLogout}
                   className="btn btn-link text-danger p-0"
                   style={{ fontSize: "12px" }}
+                  type="button"
                 >
                   <FaSignOutAlt className="me-2" />
                   Logout
                 </button>
               </div>
+              <div className="d-flex justify-content-center mt-2"></div>
             </form>
           </div>
         )}

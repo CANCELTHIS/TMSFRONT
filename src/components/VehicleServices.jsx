@@ -4,6 +4,8 @@ import { IoClose } from "react-icons/io5";
 import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const VehicleServices = () => {
   const [showForm, setShowForm] = useState(false);
@@ -13,81 +15,49 @@ const VehicleServices = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [inlineError, setInlineError] = useState(""); // <-- Add this line
+  const [inlineError, setInlineError] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [kilometerLogs, setKilometerLogs] = useState([]);
 
-  useEffect(() => {
-    const fetchVehicleServices = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await axios.get(ENDPOINTS.ADD_MONTHLY_KILOMETERS, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        });
-        console.log("Vehicle services data:", response.data);
-      } catch (error) {
-        console.error("Error fetching vehicle services data:", error);
-        setError("Failed to load vehicle services");
-        if (error.response?.status === 403) {
-          console.error("Access denied. Please check your permissions.");
-        }
-      } finally {
-        setLoading(false);
+  // Fetch kilometer logs
+  const fetchKilometerLogs = async () => {
+    try {
+      const response = await axios.get(ENDPOINTS.KILOMETER_LOGS, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      setKilometerLogs(response.data.results || []);
+    } catch (error) {
+      console.error("Error fetching kilometer logs:", error);
+      if (error.response?.status === 403) {
+        toast.error("Access denied to kilometer logs");
       }
-    };
+    }
+  };
 
-    fetchVehicleServices();
-  }, []);
+  // Fetch user vehicles
+  const fetchUserVehicles = async () => {
+    try {
+      const response = await axios.get(ENDPOINTS.CURRENT_USER_VEHICLES, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      const vehiclesData = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
+      setVehicles(vehiclesData);
+      if (vehiclesData.length > 0) setSelectedVehicleId(vehiclesData[0].id);
+    } catch (error) {
+      console.error("Error fetching user vehicles:", error);
+      toast.error("Failed to load vehicles");
+    }
+  };
 
   useEffect(() => {
-    const fetchKilometerLogs = async () => {
-      try {
-        const response = await axios.get(ENDPOINTS.KILOMETER_LOGS, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        });
-        // Save results to state
-        setKilometerLogs(response.data.results || []);
-        console.log("data fetched from KILOMETER_LOGS:", response.data);
-      } catch (error) {
-        console.error("Error fetching kilometer logs:", error);
-        if (error.response?.status === 403) {
-          console.error(
-            "Access denied to kilometer logs. Please check your permissions."
-          );
-        }
-      }
-    };
     fetchKilometerLogs();
-  }, []);
-
-  useEffect(() => {
-    const fetchUserVehicles = async () => {
-      try {
-        const response = await axios.get(ENDPOINTS.CURRENT_USER_VEHICLES, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        });
-        // If the response is a single vehicle, wrap it in an array
-        const vehiclesData = Array.isArray(response.data)
-          ? response.data
-          : [response.data];
-        setVehicles(vehiclesData);
-        // Optionally set the first vehicle as selected by default
-        if (vehiclesData.length > 0) setSelectedVehicleId(vehiclesData[0].id);
-
-        // Log the fetched vehicles
-        console.log("Current user vehicles:", vehiclesData);
-      } catch (error) {
-        console.error("Error fetching user vehicles:", error);
-      }
-    };
     fetchUserVehicles();
   }, []);
 
@@ -97,36 +67,20 @@ const VehicleServices = () => {
     // Convert "2025-05" to "May 2025"
     const [year, monthNum] = formData.month.split("-");
     const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
     ];
     const formattedMonth = `${monthNames[parseInt(monthNum, 10) - 1]} ${year}`;
 
-    // Check if already exists for this month
-    const alreadyExists = kilometerLogs.some(
-      (log) => log.month === formattedMonth
-    );
-    if (alreadyExists) {
-      setInlineError(
-        "You have already added a service request for this month."
-      );
+    // Check for duplicate month
+    if (kilometerLogs.some(log => log.month === formattedMonth)) {
+      setInlineError("You have already added a log for this month");
       return;
-    } else {
-      setInlineError(""); // Clear error if not duplicate
     }
 
     try {
-      const response = await axios.post(
+      setLoading(true);
+      await axios.post(
         ENDPOINTS.ADD_MONTHLY_KILOMETERS(selectedVehicleId),
         {
           month: formattedMonth,
@@ -138,23 +92,33 @@ const VehicleServices = () => {
           },
         }
       );
-      console.log("Service added successfully:", response.data);
+
+      // Refetch the updated logs to get complete data
+      await fetchKilometerLogs();
+      
       setShowForm(false);
       setFormData({ month: "", kilometers_driven: "" });
-      setInlineError(""); // Clear error on success
-      // Optionally, refresh logs here
+      setInlineError("");
+      toast.success("Kilometer log added successfully!");
     } catch (error) {
       console.error("Error adding service:", error);
+      toast.error("Failed to add kilometer log");
       if (error.response?.status === 403) {
-        console.error(
-          "Access denied. You don't have permission to add services."
-        );
+        toast.error("You don't have permission to add logs");
       }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (
     <div className="container mt-5">
+      <ToastContainer position="top-right" autoClose={3000} />
       <h2 className="text-center mb-4">Vehicle Kilometer Logs</h2>
 
       {loading && <div className="alert alert-info">Loading data...</div>}
@@ -165,17 +129,15 @@ const VehicleServices = () => {
           className="btn"
           style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
           onClick={() => setShowForm(true)}
+          disabled={loading}
         >
-          Add Monthly Kilometers
+          {loading ? "Processing..." : "Add Monthly Kilometers"}
         </button>
       </div>
 
       {/* Form Modal */}
       {showForm && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -184,8 +146,9 @@ const VehicleServices = () => {
                   className="btn-close"
                   onClick={() => {
                     setShowForm(false);
-                    setInlineError(""); // Clear error when closing
+                    setInlineError("");
                   }}
+                  disabled={loading}
                 >
                   <IoClose />
                 </button>
@@ -202,10 +165,9 @@ const VehicleServices = () => {
                       id="month"
                       name="month"
                       value={formData.month}
-                      onChange={(e) =>
-                        setFormData({ ...formData, month: e.target.value })
-                      }
+                      onChange={handleInputChange}
                       required
+                      disabled={loading}
                     />
                   </div>
 
@@ -219,22 +181,18 @@ const VehicleServices = () => {
                       id="kilometers_driven"
                       name="kilometers_driven"
                       value={formData.kilometers_driven}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          kilometers_driven: e.target.value,
-                        })
-                      }
+                      onChange={handleInputChange}
                       placeholder="Enter kilometers driven"
                       required
                       min="0"
+                      disabled={loading}
                     />
                   </div>
+
                   {inlineError && (
-                    <div className="alert alert-warning py-2">
-                      {inlineError}
-                    </div>
+                    <div className="alert alert-warning py-2">{inlineError}</div>
                   )}
+
                   <button
                     type="submit"
                     className="btn"
@@ -243,8 +201,9 @@ const VehicleServices = () => {
                       backgroundColor: "#181E4B",
                       color: "white",
                     }}
+                    disabled={loading}
                   >
-                    Submit
+                    {loading ? "Submitting..." : "Submit"}
                   </button>
                 </form>
               </div>
@@ -278,9 +237,9 @@ const VehicleServices = () => {
                   <td>{idx + 1}</td>
                   <td>{log.month}</td>
                   <td>{log.kilometers_driven}</td>
-                  <td>{log.vehicle}</td>
-                  <td>{log.recorded_by}</td>
-                  <td>{new Date(log.created_at).toLocaleString()}</td>
+                  <td>{log.vehicle || "Loading..."}</td>
+                  <td>{log.recorded_by || "Loading..."}</td>
+                  <td>{log.created_at ? new Date(log.created_at).toLocaleString() : "Loading..."}</td>
                 </tr>
               ))
             )}

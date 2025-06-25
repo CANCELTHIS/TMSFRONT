@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import CustomPagination from './CustomPagination';
-import { toast, ToastContainer } from "react-toastify"; // Import toast
-import "react-toastify/dist/ReactToastify.css"; // Import toast styles
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Logo from "../assets/Logo.jpg"; // Import your logo here
 
-const FinanceMaintenanceTable = () => {
+const CEOMaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [rejectionMessage, setRejectionMessage] = useState("");
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 5;
+  const printDetailRef = useRef();
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -45,17 +43,18 @@ const FinanceMaintenanceTable = () => {
       }
 
       const data = await response.json();
-      console.log("Fetched maintenance requests:", data.results);
       setMaintenanceRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
-      toast.error("Failed to fetch maintenance requests."); 
+      toast.error("Failed to fetch maintenance requests.");
     } finally {
       setLoading(false);
     }
   };
 
-
+  const handlePrintDetail = () => {
+    window.print();
+  };
 
   useEffect(() => {
     fetchMaintenanceRequests();
@@ -63,7 +62,7 @@ const FinanceMaintenanceTable = () => {
 
   return (
     <div className="container mt-5">
-      <ToastContainer /> {/* Add ToastContainer */}
+      <ToastContainer />
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       {loading ? (
@@ -119,10 +118,14 @@ const FinanceMaintenanceTable = () => {
       {/* Modal for Viewing Details */}
       {selectedRequest && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Maintenance Request Details</h5>
+              {/* Print Logo and Title - Only Visible in Print */}
+              <div className="modal-header d-print-none">
+                <div className="d-flex align-items-center">
+                  <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                  <h5 className="modal-title">Maintenance Request</h5>
+                </div>
                 <button
                   type="button"
                   className="btn-close"
@@ -131,114 +134,99 @@ const FinanceMaintenanceTable = () => {
                   <IoClose />
                 </button>
               </div>
-              <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
-                <p><strong>Current Approver Role:</strong> {selectedRequest.current_approver_role}</p>
-                <p><strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB</p>
-                <p>
-                  <strong>Maintenance Letter:</strong>{" "}
-                  <a href={selectedRequest.maintenance_letter} target="_blank" rel="noopener noreferrer">
-                    View Maintenance Letter
-                  </a>
-                </p>
-                <p>
-                  <strong>Receipt File:</strong>{" "}
-                  <a href={selectedRequest.receipt_file} target="_blank" rel="noopener noreferrer">
-                    View Receipt
-                  </a>
-                </p>
-                <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message || "N/A"}</p>
+              <div className="modal-body" ref={printDetailRef}>
+                {/* Print logo and title for print only */}
+                <div className="d-none d-print-block text-center mb-3">
+                  <img src={Logo} alt="Logo" style={{ width: "150px", height: "100px" }} />
+                  <div style={{ marginTop: "10px", fontWeight: "bold", fontSize: "1.3rem" }}>Maintenance Request Details</div>
+                </div>
+                <div className="container-fluid">
+                  <div className="row">
+                    <div className="col-md-6">
+                      <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
+                      <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                      <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
+                      <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
+                      <p><strong>Status:</strong> {selectedRequest.status}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>Current Approver Role:</strong> {selectedRequest.current_approver_role}</p>
+                      <p><strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB</p>
+                      <p>
+                        <strong>Maintenance Letter:</strong>{" "}
+                        <a href={selectedRequest.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                          View Maintenance Letter
+                        </a>
+                      </p>
+                      <p>
+                        <strong>Receipt File:</strong>{" "}
+                        <a href={selectedRequest.receipt_file} target="_blank" rel="noopener noreferrer">
+                          View Receipt
+                        </a>
+                      </p>
+                      <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Signature section for print only */}
+                <div className="d-none d-print-block mt-5" style={{ width: "100%" }}>
+                  <div style={{ marginTop: "60px", textAlign: "center" }}>
+                    <div>Signature</div>
+                    <div style={{ borderBottom: "1px solid #000", margin: "40px auto 0 auto", width: "300px" }}></div>
+                    <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                  </div>
+                </div>
               </div>
-              
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Action</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowConfirmModal(false)}
-                >
-                  <IoClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to forward this request?</p>
-              </div>
-              <div className="modal-footer">
+              <div className="modal-footer d-print-none">
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setShowConfirmModal(false)}
+                  onClick={() => setSelectedRequest(null)}
                 >
-                  Cancel
+                  Close
                 </button>
                 <button
                   className="btn btn-primary"
-                  onClick={handleConfirmAction}
+                  onClick={handlePrintDetail}
                 >
-                  Confirm
+                  Print
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Rejection Modal */}
-      {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Reject Request</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowRejectModal(false)}
-                >
-                  <IoClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  className="form-control"
-                  placeholder="Enter rejection reason"
-                  value={rejectionMessage}
-                  onChange={(e) => setRejectionMessage(e.target.value)}
-                />
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowRejectModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRejectAction}
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Print styles for detail modal */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          .modal-content, .modal-content * {
+            visibility: visible !important;
+          }
+          .modal-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            background: white;
+            box-shadow: none;
+            border: none;
+          }
+          .btn, .pagination, .modal-footer, .Toastify__toast-container, .btn-close, .d-print-none, .modal-header.d-print-none {
+            display: none !important;
+          }
+          .d-print-block {
+            display: block !important;
+          }
+          /* Hide Vite/React print footer if present */
+          [data-testid="vite-react-info"], .vite-powered, .vite-react-footer {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
-export default FinanceMaintenanceTable;
+export default CEOMaintenanceTable;

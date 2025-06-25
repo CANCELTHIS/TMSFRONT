@@ -15,7 +15,6 @@ const RequestHistory = () => {
     error: null,
   });
 
-  // Update filter options to match backend values
   const filterOptions = [
     { label: "All", value: "all" },
     { label: "Refueling Request", value: "refuelingrequest" },
@@ -42,11 +41,9 @@ const RequestHistory = () => {
         }
 
         const data = await response.json();
-        console.log("Fetched history records:", data);
         setHistoryRecords(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
         setError(err.message);
-        console.error("Error fetching history records:", err);
       } finally {
         setLoading(false);
       }
@@ -55,13 +52,11 @@ const RequestHistory = () => {
     fetchHistoryRecords();
   }, []);
 
-  // Filter logic (use request_type directly)
   const filteredRequests = historyRecords.filter((record) => {
     if (filter === "all") return true;
     return record.request_type === filter;
   });
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentPageRequests = filteredRequests.slice(
@@ -81,12 +76,10 @@ const RequestHistory = () => {
     }
   };
 
-  // Reset to first page on filter change
   useEffect(() => {
     setCurrentPage(1);
   }, [filter]);
 
-  // View detail handler
   const handleViewDetail = async (pk) => {
     setDetailModal({ open: true, data: null, loading: true, error: null });
     try {
@@ -102,7 +95,6 @@ const RequestHistory = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Fetched detail data:", data);
       setDetailModal({ open: true, data, loading: false, error: null });
     } catch (err) {
       setDetailModal({
@@ -118,7 +110,258 @@ const RequestHistory = () => {
     setDetailModal({ open: false, data: null, loading: false, error: null });
   };
 
-  // UI
+  // Universal standard and mandatory fields to show for all request types
+  function renderStandardDetailFields(detail) {
+    return (
+      <>
+        <p>
+          <strong>Action:</strong> {detail.action || "N/A"}
+        </p>
+        <p>
+          <strong>Action By:</strong> {detail.action_by || "N/A"}
+        </p>
+        <p>
+          <strong>Role:</strong> {detail.role_display || "N/A"}
+        </p>
+        <p>
+          <strong>Status at Time:</strong> {detail.status_at_time || "N/A"}
+        </p>
+        <p>
+          <strong>Date:</strong>{" "}
+          {detail.timestamp
+            ? new Date(detail.timestamp).toLocaleString()
+            : detail.date
+            ? new Date(detail.date).toLocaleString()
+            : "N/A"}
+        </p>
+        <p>
+          <strong>Request Type:</strong>{" "}
+          {detail.request_type || "N/A"}
+        </p>
+        <p>
+          <strong>Request ID:</strong> {detail.request_id || "N/A"}
+        </p>
+        {detail.remarks && (
+          <p>
+            <strong>Remarks:</strong> {detail.remarks}
+          </p>
+        )}
+      </>
+    );
+  }
+
+  // Specific fields by request type
+  function renderRequestObjectFields(detail) {
+    if (!detail || !detail.request_object) return null;
+    const ro = detail.request_object;
+    switch (detail.request_type) {
+      case "transportrequest":
+        return (
+          <>
+            <h6>Transport Request Detail</h6>
+            <p>
+              <strong>Destination:</strong> {ro.destination ?? "N/A"}
+            </p>
+            <p>
+              <strong>Employees:</strong>{" "}
+              {Array.isArray(ro.employees)
+                ? ro.employees.length > 0
+                  ? ro.employees.join(", ")
+                  : "N/A"
+                : ro.employees ?? "N/A"}
+            </p>
+            <p>
+              <strong>Start Day:</strong> {ro.start_day ?? "N/A"}
+            </p>
+            <p>
+              <strong>Start Time:</strong> {ro.start_time ?? "N/A"}
+            </p>
+            <p>
+              <strong>Return Day:</strong> {ro.return_day ?? "N/A"}
+            </p>
+            <p>
+              <strong>Reason:</strong> {ro.reason ?? "N/A"}
+            </p>
+            <p>
+              <strong>Status:</strong> {ro.status ?? "N/A"}
+            </p>
+            {ro.rejection_message && (
+              <p>
+                <strong>Rejection Message:</strong> {ro.rejection_message}
+              </p>
+            )}
+            <p>
+              <strong>Trip Completed:</strong>{" "}
+              {"trip_completed" in ro ? (ro.trip_completed ? "Yes" : "No") : "N/A"}
+            </p>
+            <p>
+              <strong>Created At:</strong>{" "}
+              {ro.created_at
+                ? new Date(ro.created_at).toLocaleString()
+                : "N/A"}
+            </p>
+            <p>
+              <strong>Updated At:</strong>{" "}
+              {ro.updated_at
+                ? new Date(ro.updated_at).toLocaleString()
+                : "N/A"}
+            </p>
+          </>
+        );
+      case "refuelingrequest":
+        return (
+          <>
+            <h6>Refueling Request Detail</h6>
+            <p>
+              <strong>Created At:</strong>{" "}
+              {ro.created_at ? new Date(ro.created_at).toLocaleString() : "N/A"}
+            </p>
+            <p>
+              <strong>Date:</strong>{" "}
+              {ro.date ? new Date(ro.date).toLocaleString() : "N/A"}
+            </p>
+            <p>
+              <strong>Destination:</strong> {ro.destination ?? "N/A"}
+            </p>
+            <p>
+              <strong>Estimated Distance (km):</strong> {ro.estimated_distance_km ?? "N/A"}
+            </p>
+            <p>
+              <strong>Fuel Efficiency:</strong> {ro.fuel_efficiency ?? "N/A"}
+            </p>
+            <p>
+              <strong>Fuel Needed (Liters):</strong> {ro.fuel_needed_liters ?? "N/A"}
+            </p>
+            <p>
+              <strong>Fuel Price per Liter:</strong> {ro.fuel_price_per_liter ?? "N/A"}
+            </p>
+            <p>
+              <strong>Fuel Type:</strong> {ro.fuel_type ?? "N/A"}
+            </p>
+            <p>
+              <strong>Total Cost:</strong> {ro.total_cost ?? "N/A"}
+            </p>
+            <p>
+              <strong>Requester Name:</strong> {ro.requester_name ?? "N/A"}
+            </p>
+            <p>
+              <strong>Requester's Car:</strong> {ro.requesters_car_name ?? "N/A"}
+            </p>
+            <p>
+              <strong>Status:</strong> {ro.status ?? "N/A"}
+            </p>
+          </>
+        );
+      case "maintenancerequest":
+        return (
+          <>
+            <h6>Maintenance Request Detail</h6>
+            <p>
+              <strong>Date:</strong>{" "}
+              {ro.date ? new Date(ro.date).toLocaleDateString() : "N/A"}
+            </p>
+            <p>
+              <strong>Requester Name:</strong> {ro.requester_name ?? "N/A"}
+            </p>
+            <p>
+              <strong>Requester's Car:</strong> {ro.requesters_car_name ?? "N/A"}
+            </p>
+            <p>
+              <strong>Reason:</strong> {ro.reason ?? "N/A"}
+            </p>
+            <p>
+              <strong>Maintenance Letter:</strong>{" "}
+              {ro.maintenance_letter ? (
+                <a href={ro.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                  Download
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </p>
+            <p>
+              <strong>Maintenance Total Cost:</strong> {ro.maintenance_total_cost ?? "N/A"}
+            </p>
+            <p>
+              <strong>Receipt File:</strong>{" "}
+              {ro.receipt_file ? (
+                <a href={ro.receipt_file} target="_blank" rel="noopener noreferrer">
+                  Download
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </p>
+            <p>
+              <strong>Status:</strong> {ro.status ?? "N/A"}
+            </p>
+            {ro.rejection_message && (
+              <p>
+                <strong>Rejection Message:</strong> {ro.rejection_message}
+              </p>
+            )}
+          </>
+        );
+      case "highcosttransportrequest":
+        return (
+          <>
+            <h6>High Cost Transport Request Detail</h6>
+            <p>
+              <strong>Created At:</strong>{" "}
+              {ro.created_at ? new Date(ro.created_at).toLocaleString() : "N/A"}
+            </p>
+            <p>
+              <strong>Updated At:</strong>{" "}
+              {ro.updated_at ? new Date(ro.updated_at).toLocaleString() : "N/A"}
+            </p>
+            <p>
+              <strong>Destination:</strong> {ro.destination ?? "N/A"}
+            </p>
+            <p>
+              <strong>Employees:</strong>{" "}
+              {Array.isArray(ro.employees)
+                ? ro.employees.join(", ")
+                : ro.employees ?? "N/A"}
+            </p>
+            <p>
+              <strong>Start Day:</strong> {ro.start_day ?? "N/A"}
+            </p>
+            <p>
+              <strong>Start Time:</strong> {ro.start_time ?? "N/A"}
+            </p>
+            <p>
+              <strong>Return Day:</strong> {ro.return_day ?? "N/A"}
+            </p>
+            <p>
+              <strong>Reason:</strong> {ro.reason ?? "N/A"}
+            </p>
+            <p>
+              <strong>Status:</strong> {ro.status ?? "N/A"}
+            </p>
+            <p>
+              <strong>Trip Completed:</strong>{" "}
+              {"trip_completed" in ro ? (ro.trip_completed ? "Yes" : "No") : "N/A"}
+            </p>
+            {ro.rejection_message && (
+              <p>
+                <strong>Rejection Message:</strong> {ro.rejection_message}
+              </p>
+            )}
+          </>
+        );
+      default:
+        return (
+          <>
+            <h6>Request Object Detail</h6>
+            <pre style={{ whiteSpace: "pre-wrap" }}>
+              {JSON.stringify(detail.request_object, null, 2)}
+            </pre>
+          </>
+        );
+    }
+  }
+
+  // Main UI rendering
   if (loading) {
     return (
       <div
@@ -176,7 +419,6 @@ const RequestHistory = () => {
 
       <div className="card shadow-sm">
         <div className="card-body">
-          {/* Responsive Table */}
           <div className="table-responsive">
             <table className="table table-hover align-middle">
               <thead className="table-light">
@@ -184,7 +426,6 @@ const RequestHistory = () => {
                   <th>#</th>
                   <th>Name</th>
                   <th>Request Type</th>
-
                   <th>Date</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -197,7 +438,6 @@ const RequestHistory = () => {
                       <td>{startIndex + index + 1}</td>
                       <td>{record.role_display || record.name || "N/A"}</td>
                       <td>{record.request_type || "N/A"}</td>
-
                       <td>
                         {record.timestamp
                           ? new Date(record.timestamp).toLocaleString()
@@ -288,90 +528,10 @@ const RequestHistory = () => {
                   <div className="alert alert-danger">{detailModal.error}</div>
                 )}
                 {detailModal.data && (
-                  <div>
-                    <p>
-                      <strong>Request Type:</strong>{" "}
-                      {detailModal.data.request_type || "N/A"}
-                    </p>
-
-                    <p>
-                      <strong>Date:</strong>{" "}
-                      {detailModal.data.timestamp
-                        ? new Date(detailModal.data.timestamp).toLocaleString()
-                        : detailModal.data.date
-                        ? new Date(detailModal.data.date).toLocaleString()
-                        : "N/A"}
-                    </p>
-
-                    {/* --- Show request_object details if present --- */}
-                    {detailModal.data.request_object && (
-                      <div className="mt-3">
-                        <p>
-                          <strong>Created At:</strong>{" "}
-                          {detailModal.data.request_object.created_at
-                            ? new Date(
-                                detailModal.data.request_object.created_at
-                              ).toLocaleString()
-                            : "N/A"}
-                        </p>
-                        <p>
-                          <strong>Updated At:</strong>{" "}
-                          {detailModal.data.request_object.updated_at
-                            ? new Date(
-                                detailModal.data.request_object.updated_at
-                              ).toLocaleString()
-                            : "N/A"}
-                        </p>
-
-                        <p>
-                          <strong>Destination:</strong>{" "}
-                          {detailModal.data.request_object.destination ?? "N/A"}
-                        </p>
-                        <p>
-                          <strong>Start Day:</strong>{" "}
-                          {detailModal.data.request_object.start_day ?? "N/A"}
-                        </p>
-                        <p>
-                          <strong>Start Time:</strong>{" "}
-                          {detailModal.data.request_object.start_time ?? "N/A"}
-                        </p>
-                        <p>
-                          <strong>Return Day:</strong>{" "}
-                          {detailModal.data.request_object.return_day ?? "N/A"}
-                        </p>
-                        <p>
-                          <strong>Employees:</strong>{" "}
-                          {Array.isArray(
-                            detailModal.data.request_object.employees
-                          )
-                            ? detailModal.data.request_object.employees.join(
-                                ", "
-                              )
-                            : detailModal.data.request_object.employees ??
-                              "N/A"}
-                        </p>
-
-                        <p>
-                          <strong>Reason:</strong>{" "}
-                          {detailModal.data.request_object.reason ?? "N/A"}
-                        </p>
-
-                        <p>
-                          <strong>Trip Completed:</strong>{" "}
-                          {detailModal.data.request_object.trip_completed ===
-                          true
-                            ? "Yes"
-                            : "No"}
-                        </p>
-                        {detailModal.data.request_object.rejection_message && (
-                          <p>
-                            <strong>Rejection Message:</strong>{" "}
-                            {detailModal.data.request_object.rejection_message}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <>
+                    {renderStandardDetailFields(detailModal.data)}
+                    {renderRequestObjectFields(detailModal.data)}
+                  </>
                 )}
               </div>
               <div className="modal-footer">

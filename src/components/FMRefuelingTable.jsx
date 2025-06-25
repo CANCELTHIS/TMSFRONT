@@ -2,15 +2,17 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Logo from "../assets/Logo.jpg";
 
-const FMRefuelingTable = () => {
+const RefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false); 
-  const [rejectionMessage, setRejectionMessage] = useState(""); 
-  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
 
+  // Fetches the list of requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
@@ -33,69 +35,53 @@ const FMRefuelingTable = () => {
       }
 
       const data = await response.json();
-      console.log("Fetched Refueling Requests:", data); // Log fetched data
       setRefuelingRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching refueling requests:", error);
+      toast.error("Failed to fetch refueling requests.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle actions (approve, reject, forward)
-  const handleAction = async (id, action) => {
+  // Fetch detail for a single request
+  const fetchRequestDetail = async (id) => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
 
-    setActionLoading(true);
+    setDetailLoading(true);
     try {
-      const body = { action, rejection_message: rejectionMessage }; // Include rejection_message for all actions
-
-      const response = await fetch(ENDPOINTS.APPREJ_REFUELING_REQUEST(id), {
-        method: "POST",
+      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_DETAIL(id), {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
       });
-
       if (!response.ok) {
-        throw new Error(`Failed to ${action} the refueling request`);
+        throw new Error("Failed to fetch refueling request detail");
       }
-
-      console.log(`Refueling request ${action}d successfully`);
-      fetchRefuelingRequests(); // Refresh the list after action
-      setSelectedRequest(null); // Close the detail view
+      const data = await response.json();
+      setSelectedRequest(data);
     } catch (error) {
-      console.error(`Error performing ${action} action:`, error);
+      console.error("Error fetching request details:", error);
+      toast.error("Failed to fetch request details.");
     } finally {
-      setActionLoading(false);
+      setDetailLoading(false);
     }
   };
 
-  const handleRejectAction = () => {
-    if (rejectionMessage.trim() && selectedRequest) {
-      handleAction(selectedRequest.id, "reject");
-      setShowRejectModal(false);
-    } else {
-      alert("Rejection message cannot be empty.");
-    }
-  };
-
-  // Fetch data when the component mounts
   useEffect(() => {
     fetchRefuelingRequests();
   }, []);
 
   return (
     <div className="container mt-5">
+      <ToastContainer />
       <h2 className="text-center mb-4">Refueling Requests</h2>
-
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
@@ -122,14 +108,13 @@ const FMRefuelingTable = () => {
                   <td>{index + 1}</td>
                   <td>{new Date(request.created_at).toLocaleDateString()}</td>
                   <td>{request.destination || "N/A"}</td>
-                  <th>{request.requester_name || "N/A"}</th>
-                  
+                  <td>{request.requester_name || "N/A"}</td>
                   <td>{request.status || "N/A"}</td>
                   <td>
                     <button
                       className="btn btn-sm"
                       style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => setSelectedRequest(request)}
+                      onClick={() => fetchRequestDetail(request.id)}
                     >
                       View Detail
                     </button>
@@ -144,9 +129,11 @@ const FMRefuelingTable = () => {
       {/* Modal for Viewing Details */}
       {selectedRequest && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
+              {/* Modal Header (not printed) */}
+              <div className="modal-header d-print-none">
+                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
                 <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"
@@ -157,69 +144,97 @@ const FMRefuelingTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                {/* Print header for print only */}
+                <div className="d-none d-print-block text-center mb-3">
+                  <img src={Logo} alt="Logo" style={{ width: "150px", height: "100px" }} />
+                  <div style={{ marginTop: "10px", fontWeight: "bold", fontSize: "1.3rem" }}>Refueling Request Details</div>
+                </div>
+                {detailLoading ? (
+                  <div className="text-center">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading details...</p>
+                  </div>
+                ) : (
+                  <div className="container-fluid">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <p><strong>Request Date:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
+                        <p><strong>Driver:</strong> {selectedRequest.requester_name || "N/A"}</p>
+                        <p><strong>Vehicle:</strong> {selectedRequest.requesters_car_name || "N/A"}</p>
+                        <p><strong>Destination:</strong> {selectedRequest.destination || "N/A"}</p>
+                        <p><strong>Estimated Distance:</strong> {selectedRequest.estimated_distance_km ?? "N/A"} km</p>
+                      </div>
+                      <div className="col-md-6">
+                        <p><strong>Fuel Type:</strong> {selectedRequest.fuel_type || "N/A"}</p>
+                        <p><strong>Fuel Efficiency:</strong> {selectedRequest.fuel_efficiency ?? "N/A"} km/L</p>
+                        <p><strong>Fuel Needed:</strong> {selectedRequest.fuel_needed_liters ?? "N/A"} L</p>
+                        <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter ?? "N/A"}</p>
+                        <p><strong>Total Cost:</strong> {selectedRequest.total_cost ?? "N/A"}</p>
+                      </div>
+                    </div>
+                    {/* Signature section for print only */}
+                    <div className="d-none d-print-block mt-5" style={{ width: "100%" }}>
+                      <div style={{ marginTop: "60px", textAlign: "center" }}>
+                        <div>Signature</div>
+                        <div style={{ borderBottom: "1px solid #000", margin: "40px auto 0 auto", width: "300px" }}></div>
+                        <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer d-print-none">
                 <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => handleAction(selectedRequest.id, "approve")} // Change action to "approve"
-                  disabled={actionLoading}>
-                  {actionLoading ? "Processing..." : "Approve"} 
+                  className="btn btn-secondary"
+                  onClick={() => setSelectedRequest(null)}
+                >
+                  Close
                 </button>
                 <button
-                  className="btn btn-danger"
-                  onClick={() => setShowRejectModal(true)}
-                  disabled={actionLoading}
+                  className="btn btn-primary"
+                  onClick={() => window.print()}
                 >
-                  {actionLoading ? "Processing..." : "Reject"}
+                  Print
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Rejection Modal */}
-      {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Reject Request</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowRejectModal(false)}
-                >
-                  <IoClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  className="form-control"
-                  placeholder="Enter rejection reason"
-                  value={rejectionMessage}
-                  onChange={(e) => setRejectionMessage(e.target.value)}
-                />
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRejectAction}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Reject"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Print styles for detail modal */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          .modal-content, .modal-content * {
+            visibility: visible !important;
+          }
+          .modal-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            background: white;
+            box-shadow: none;
+            border: none;
+          }
+          .btn, .pagination, .modal-footer, .Toastify__toast-container, .btn-close, .d-print-none, .modal-header.d-print-none {
+            display: none !important;
+          }
+          .d-print-block {
+            display: block !important;
+          }
+          /* Hide Vite/React print footer if present */
+          [data-testid="vite-react-info"], .vite-powered, .vite-react-footer {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
 
-export default FMRefuelingTable;
+export default RefuelingTable;

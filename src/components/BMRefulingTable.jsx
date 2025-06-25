@@ -20,14 +20,17 @@ const RefuelingTable = () => {
   const [otpValue, setOtpValue] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
+  const [otpAction, setOtpAction] = useState(null); // "approve" or "reject"
 
+  // Fetches the list of requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
+
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
+
     try {
       const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
@@ -51,6 +54,7 @@ const RefuelingTable = () => {
     }
   };
 
+  // Fetch detail for a single request
   const fetchRequestDetail = async (id) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
@@ -80,7 +84,7 @@ const RefuelingTable = () => {
     }
   };
 
-  // Send OTP using backend endpoint
+  // OTP: Send OTP using backend endpoint
   const sendOtp = async () => {
     setOtpLoading(true);
     try {
@@ -107,23 +111,26 @@ const RefuelingTable = () => {
     }
   };
 
-  // Handle OTP verification and action (forward/reject)
+  // Handle OTP verification and action (approve/reject)
   const handleOtpAction = async (otp, action) => {
     setOtpLoading(true);
     try {
       const accessToken = localStorage.getItem("authToken");
-      let payload = { action, otp_code: otp };
+      let payload = { action: action === "approve" ? "approve" : "reject", otp_code: otp };
       if (action === "reject") {
         payload.rejection_message = rejectionMessage;
       }
-      const response = await fetch(ENDPOINTS.APPREJ_REFUELING_REQUEST(selectedRequest.id), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        ENDPOINTS.APPREJ_REFUELING_REQUEST(selectedRequest.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!response.ok) {
         const data = await response.json();
         throw new Error(
@@ -137,7 +144,7 @@ const RefuelingTable = () => {
       setOtpValue("");
       setOtpSent(false);
       setOtpAction(null);
-      toast.success(`Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`);
+      toast.success(`Request ${action === "approve" ? "approved" : "rejected"} successfully!`);
     } catch (error) {
       toast.error(`Failed to ${action} the request.`);
     } finally {
@@ -214,7 +221,11 @@ const RefuelingTable = () => {
               <div className="modal-header">
                 <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
                 <h5 className="modal-title">Refueling Request Details</h5>
-                <button type="button" className="btn-close" onClick={() => setSelectedRequest(null)}>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedRequest(null)}
+                >
                   <IoClose />
                 </button>
               </div>
@@ -251,10 +262,10 @@ const RefuelingTable = () => {
                 <button
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => handleActionWithOtp("forward")}
+                  onClick={() => handleActionWithOtp("approve")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Forward (with OTP)"}
+                  {actionLoading ? "Processing..." : "Approve (with OTP)"}
                 </button>
                 <button
                   className="btn btn-danger"
@@ -282,7 +293,7 @@ const RefuelingTable = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
                 </h5>
                 <button
                   type="button"
@@ -344,15 +355,15 @@ const RefuelingTable = () => {
                 </button>
                 <button
                   className={`btn ${
-                    otpAction === "forward" ? "btn-primary" : "btn-danger"
+                    otpAction === "approve" ? "btn-primary" : "btn-danger"
                   }`}
                   disabled={otpLoading || otpValue.length !== 6}
                   onClick={() => handleOtpAction(otpValue, otpAction)}
                 >
                   {otpLoading
                     ? "Processing..."
-                    : otpAction === "forward"
-                    ? "Forward"
+                    : otpAction === "approve"
+                    ? "Approve"
                     : "Reject"}
                 </button>
               </div>
@@ -362,7 +373,7 @@ const RefuelingTable = () => {
       )}
 
       {/* Rejection Modal (deprecated if using OTP for reject) */}
-       
+      
       {showRejectModal && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -398,7 +409,7 @@ const RefuelingTable = () => {
           </div>
         </div>
       )}
-    
+      
     </div>
   );
 };

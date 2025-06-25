@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
-import { MdOutlineClose } from "react-icons/md"; // Updated import
-import { toast, ToastContainer } from "react-toastify"; // Import toast
-import "react-toastify/dist/ReactToastify.css"; // Import toast styles
+import { MdOutlineClose } from "react-icons/md";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import CustomPagination from "./CustomPagination";
 
 const TMRefuelingTable = () => {
@@ -13,17 +13,24 @@ const TMRefuelingTable = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionMessage, setRejectionMessage] = useState("");
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showFuelCostModal, setShowFuelCostModal] = useState(false); // State for showing the fuel cost modal
-  const [fuelType, setFuelType] = useState("Petrol"); // Default to Petrol
+  const [showFuelCostModal, setShowFuelCostModal] = useState(false);
+  const [fuelType, setFuelType] = useState("Petrol");
   const [fuelCost, setFuelCost] = useState("");
-  const [showCalculateModal, setShowCalculateModal] = useState(false); // State for showing the calculate modal
+  const [showCalculateModal, setShowCalculateModal] = useState(false);
   const [distance, setDistance] = useState("");
   const [fuelPrice, setFuelPrice] = useState("");
-  const [fuelEfficiency, setFuelEfficiency] = useState(15); // Default value: 15 km/l
-  const [totalCost, setTotalCost] = useState(null); // State to store the calculated total cost
+  const [fuelEfficiency, setFuelEfficiency] = useState(15);
+  const [totalCost, setTotalCost] = useState(null);
+
+  // OTP-related states
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of items per page
+  const itemsPerPage = 5;
 
   const totalPages = Math.ceil(refuelingRequests.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -37,12 +44,10 @@ const TMRefuelingTable = () => {
 
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
@@ -51,11 +56,9 @@ const TMRefuelingTable = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
         throw new Error("Failed to fetch refueling requests");
       }
-
       const data = await response.json();
       setRefuelingRequests(data.results || []);
     } catch (error) {
@@ -67,12 +70,10 @@ const TMRefuelingTable = () => {
 
   const fetchRequestDetail = async (requestId) => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-
     try {
       const response = await fetch(
         ENDPOINTS.REFUELING_REQUEST_DETAIL(requestId),
@@ -84,15 +85,10 @@ const TMRefuelingTable = () => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error("Failed to fetch refueling request details");
       }
-
       const requestData = await response.json();
-      console.log("Refueling Request Details:", requestData);
-
-      // Fetch vehicle details to get the driver name and fuel efficiency
       const vehicleResponse = await fetch(
         ENDPOINTS.VEHICLE_DETAIL(requestData.requesters_car),
         {
@@ -103,17 +99,12 @@ const TMRefuelingTable = () => {
           },
         }
       );
-
       if (!vehicleResponse.ok) {
         throw new Error("Failed to fetch vehicle details");
       }
-
       const vehicleData = await vehicleResponse.json();
-      console.log("Vehicle Details:", vehicleData);
-
       requestData.driver_name = vehicleData.driver_name;
       requestData.fuel_efficiency = parseFloat(vehicleData.fuel_efficiency);
-
       setSelectedRequest(requestData);
     } catch (error) {
       console.error("Error fetching refueling request details:", error);
@@ -121,49 +112,16 @@ const TMRefuelingTable = () => {
     }
   };
 
-  const fetchVehicleDetails = async (vehicleId) => {
-    const accessToken = localStorage.getItem("authToken");
-
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
-    try {
-      const response = await fetch(ENDPOINTS.VEHICLE_DETAIL(vehicleId), {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch vehicle details");
-      }
-
-      const data = await response.json();
-      console.log("Vehicle Details:", data);
-      setFuelEfficiency(parseFloat(data.fuel_efficiency)); // Set the fuel efficiency from the vehicle details
-    } catch (error) {
-      console.error("Error fetching vehicle details:", error);
-      toast.error("Failed to fetch vehicle details.");
-    }
-  };
-
   const handleFuelCostUpdate = async () => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-
     if (!fuelCost) {
       toast.error("Please enter the fuel cost.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.UPDATE_FUEL_COST, {
         method: "POST",
@@ -176,13 +134,11 @@ const TMRefuelingTable = () => {
           fuel_cost: parseFloat(fuelCost),
         }),
       });
-
       if (!response.ok) {
         throw new Error("Failed to update fuel cost");
       }
-
       toast.success(`${fuelType} cost updated successfully!`);
-      setShowFuelCostModal(false); // Close the modal after successful update
+      setShowFuelCostModal(false);
     } catch (error) {
       console.error("Error updating fuel cost:", error);
       toast.error("Failed to update fuel cost. Please try again.");
@@ -195,25 +151,19 @@ const TMRefuelingTable = () => {
     fuelPrice
   ) => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-
     if (!estimatedDistance || !fuelPrice) {
       toast.error("Please provide both estimated distance and fuel price.");
       return;
     }
-
     try {
       const payload = {
         estimated_distance_km: parseFloat(estimatedDistance),
         fuel_price_per_liter: parseFloat(fuelPrice),
       };
-
-      console.log("Payload for calculation:", payload);
-
       const response = await fetch(
         ENDPOINTS.REFUELING_REQUEST_ESTIMATE(requestId),
         {
@@ -225,17 +175,12 @@ const TMRefuelingTable = () => {
           body: JSON.stringify(payload),
         }
       );
-
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error response from backend:", errorData);
         throw new Error("Failed to calculate total cost");
       }
-
       const data = await response.json();
-      console.log("Calculation Result:", data);
-
-      // Set the total cost from the backend response
       setTotalCost(data.total_cost.toFixed(2));
       toast.success(`Total cost calculated: ${data.total_cost.toFixed(2)} ETB`);
     } catch (error) {
@@ -244,100 +189,83 @@ const TMRefuelingTable = () => {
     }
   };
 
-  // Handle actions (forward, reject)
-  const handleAction = async (requestId, action) => {
-    const accessToken = localStorage.getItem("authToken");
-
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
-    setActionLoading(true);
+  // OTP sending function
+  const sendOtp = async () => {
+    setOtpLoading(true);
     try {
-      const body = { action };
+      const accessToken = localStorage.getItem("authToken");
+      const response = await fetch(ENDPOINTS.OTP_REQUEST, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to send OTP");
+      }
+      setOtpSent(true);
+      toast.success("OTP sent to your phone");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
 
-      // Include additional fields for the "forward" action
+  // Handle OTP verification and action (forward or reject)
+  const handleOtpAction = async (otp, action) => {
+    setOtpLoading(true);
+    try {
+      const accessToken = localStorage.getItem("authToken");
+      let payload = { action, otp_code: otp };
       if (action === "forward") {
         if (!distance || !fuelPrice) {
           toast.error("Please provide both estimated distance and fuel price.");
-          setActionLoading(false);
+          setOtpLoading(false);
           return;
         }
-
-        body.estimated_distance_km = parseFloat(distance); // Add estimated distance
-        body.fuel_price_per_liter = parseFloat(fuelPrice); // Add fuel price
+        payload.estimated_distance_km = parseFloat(distance);
+        payload.fuel_price_per_liter = parseFloat(fuelPrice);
       }
-
       if (action === "reject") {
-        body.rejection_message = rejectionMessage; // Add rejection message if rejecting
+        payload.rejection_message = rejectionMessage;
       }
-
-      console.log("Payload being sent to backend:", body); // Debugging
-
       const response = await fetch(
-        ENDPOINTS.APPREJ_REFUELING_REQUEST(requestId),
+        ENDPOINTS.APPREJ_REFUELING_REQUEST(selectedRequest.id),
         {
           method: "POST",
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(body), // Convert the payload to JSON
+          body: JSON.stringify(payload),
         }
       );
-
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response from backend:", errorData);
-        throw new Error(`Failed to ${action} the refueling request`);
+        const data = await response.json();
+        throw new Error(
+          data.detail || `Failed to ${action} refueling request`
+        );
       }
-
-      if (action === "forward") {
-        toast.success("Request forwarded successfully!");
-      } else if (action === "reject") {
-        toast.success("Request rejected successfully!");
-      }
-
-      fetchRefuelingRequests(); // Refresh the list after action
-      setSelectedRequest(null); // Close the detail view
-    } catch (error) {
-      console.error(`Error performing ${action} action:`, error);
-      toast.error(`Failed to ${action} the request. Please try again.`);
+      let successMessage = "";
+      if (action === "forward") successMessage = "Request forwarded!";
+      else if (action === "reject") successMessage = "Request rejected!";
+      toast.success(successMessage);
+      setSelectedRequest(null);
+      setOtpModalOpen(false);
+      setOtpValue("");
+      setOtpSent(false);
+      setOtpAction(null);
+      setRejectionMessage("");
+      setTotalCost(null);
+      fetchRefuelingRequests();
+    } catch (err) {
+      toast.error(err.message);
     } finally {
-      setActionLoading(false);
+      setOtpLoading(false);
     }
-  };
-
-  const handleRejectAction = () => {
-    if (rejectionMessage.trim() && selectedRequest) {
-      handleAction(selectedRequest.id, "reject");
-      setShowRejectModal(false);
-    } else {
-      toast.error("Rejection message cannot be empty.");
-    }
-  };
-
-  const handleCalculate = () => {
-    if (!distance || !fuelPrice || !fuelEfficiency) {
-      toast.error("Please fill in all fields.");
-      return;
-    }
-
-    // Perform the calculation
-    const totalFuelNeeded = distance / fuelEfficiency;
-    const totalCost = totalFuelNeeded * fuelPrice;
-
-    // Display the result using a toast notification
-    toast.success(`The total fuel cost is ${totalCost.toFixed(2)}.`);
-
-    // Clear the form fields
-    setDistance("");
-    setFuelPrice("");
-    setFuelEfficiency("");
-
-    // Close the modal after calculation
-    setShowCalculateModal(false);
   };
 
   // Fetch data when the component mounts
@@ -347,7 +275,7 @@ const TMRefuelingTable = () => {
 
   return (
     <div className="container mt-5">
-      <ToastContainer /> {/* Add ToastContainer */}
+      <ToastContainer />
       <h2 className="text-center mb-4">Refueling Requests</h2>
       {loading ? (
         <div className="text-center">
@@ -373,8 +301,7 @@ const TMRefuelingTable = () => {
               {currentRequests.length > 0 ? (
                 currentRequests.map((request, index) => (
                   <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>{" "}
-                    {/* Correct numbering */}
+                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                     <td>{new Date(request.created_at).toLocaleDateString()}</td>
                     <td>{request.destination || "N/A"}</td>
                     <td>{request.requester_name || "N/A"}</td>
@@ -383,7 +310,7 @@ const TMRefuelingTable = () => {
                       <button
                         className="btn btn-sm"
                         style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => fetchRequestDetail(request.id)} // Fetch and show details
+                        onClick={() => fetchRequestDetail(request.id)}
                       >
                         View Detail
                       </button>
@@ -426,7 +353,7 @@ const TMRefuelingTable = () => {
                   className="btn-close"
                   onClick={() => {
                     setSelectedRequest(null);
-                    setTotalCost(null); // Clear the total cost when closing the modal
+                    setTotalCost(null);
                   }}
                 >
                   <MdOutlineClose />
@@ -499,17 +426,23 @@ const TMRefuelingTable = () => {
                     <button
                       style={{ backgroundColor: "#181E4B", color: "white" }}
                       className="btn"
-                      onClick={() =>
-                        handleAction(selectedRequest.id, "forward")
-                      }
+                      onClick={async () => {
+                        setOtpAction("forward");
+                        setOtpModalOpen(true);
+                        await sendOtp();
+                      }}
                     >
-                      Forward
+                      Forward (with OTP)
                     </button>
                     <button
                       className="btn btn-danger"
-                      onClick={() => setShowRejectModal(true)}
+                      onClick={async () => {
+                        setOtpAction("reject");
+                        setOtpModalOpen(true);
+                        await sendOtp();
+                      }}
                     >
-                      Reject
+                      Reject (with OTP)
                     </button>
                   </>
                 )}
@@ -517,7 +450,7 @@ const TMRefuelingTable = () => {
                   className="btn btn-secondary"
                   onClick={() => {
                     setSelectedRequest(null);
-                    setTotalCost(null); // Clear the total cost when closing the modal
+                    setTotalCost(null);
                   }}
                 >
                   Close
@@ -527,8 +460,8 @@ const TMRefuelingTable = () => {
           </div>
         </div>
       )}
-      {/* Calculate Modal */}
-      {showCalculateModal && (
+      {/* OTP Modal */}
+      {otpModalOpen && (
         <div
           className="modal d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
@@ -536,118 +469,83 @@ const TMRefuelingTable = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Calculate Fuel Cost</h5>
+                <h5 className="modal-title">
+                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => {
-                    setShowCalculateModal(false);
-                    setTotalCost(null); // Clear the total cost when closing the modal
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpSent(false);
+                    setOtpAction(null);
+                    setRejectionMessage("");
                   }}
+                  disabled={otpLoading}
                 >
                   <MdOutlineClose />
                 </button>
               </div>
               <div className="modal-body">
-                <div className="mb-3">
-                  <label htmlFor="distanceInput" className="form-label">
-                    Estimated Distance (in km)
-                  </label>
-                  <input
-                    type="number"
-                    id="distanceInput"
-                    className="form-control"
-                    value={distance}
-                    onChange={(e) => setDistance(e.target.value)}
-                    placeholder="Enter estimated distance in kilometers"
+                <p>
+                  Enter the OTP code sent to your phone number.
+                </p>
+                <input
+                  type="text"
+                  className="form-control"
+                  maxLength={6}
+                  value={otpValue}
+                  onChange={(e) =>
+                    setOtpValue(e.target.value.replace(/\D/g, ""))
+                  }
+                  disabled={otpLoading}
+                  placeholder="Enter OTP"
+                />
+                {otpAction === "reject" && (
+                  <textarea
+                    className="form-control mt-3"
+                    rows={2}
+                    value={rejectionMessage}
+                    onChange={(e) => setRejectionMessage(e.target.value)}
+                    placeholder="Reason for rejection"
+                    disabled={otpLoading}
                   />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="fuelPriceInput" className="form-label">
-                    Fuel Price (per liter)
-                  </label>
-                  <input
-                    type="number"
-                    id="fuelPriceInput"
-                    className="form-control"
-                    value={fuelPrice}
-                    onChange={(e) => setFuelPrice(e.target.value)}
-                    placeholder="Enter fuel price per liter"
-                  />
-                </div>
-                {totalCost && (
-                  <div className="alert alert-info mt-3">
-                    <strong>Total Cost:</strong> The total cost to go from the
-                    Ministry of Innovation and Technology to the destination is{" "}
-                    <strong>{totalCost} ETB</strong>.
-                  </div>
                 )}
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-primary"
-                  onClick={() =>
-                    calculateTotalAmount(distance, fuelPrice, fuelEfficiency)
-                  } // Pass the required parameters
+                  className="btn btn-link"
+                  onClick={() => sendOtp()}
+                  disabled={otpLoading}
                 >
-                  Calculate
+                  Resend OTP
                 </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => {
-                    setShowCalculateModal(false);
-                    setTotalCost(null); // Clear the total cost when closing the modal
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpSent(false);
+                    setOtpAction(null);
+                    setRejectionMessage("");
                   }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Rejection Modal */}
-      {showRejectModal && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Reject Request</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowRejectModal(false)}
-                >
-                  <MdOutlineClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  className="form-control"
-                  placeholder="Enter rejection reason"
-                  value={rejectionMessage}
-                  onChange={(e) => setRejectionMessage(e.target.value)}
-                />
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-danger"
-                  onClick={() => {
-                    handleAction(selectedRequest.id, "reject");
-                    setShowRejectModal(false);
-                  }}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Reject"}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowRejectModal(false)}
+                  disabled={otpLoading}
                 >
                   Cancel
+                </button>
+                <button
+                  className={`btn ${
+                    otpAction === "forward" ? "btn-primary" : "btn-danger"
+                  }`}
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                >
+                  {otpLoading
+                    ? "Processing..."
+                    : otpAction === "forward"
+                    ? "Forward"
+                    : "Reject"}
                 </button>
               </div>
             </div>

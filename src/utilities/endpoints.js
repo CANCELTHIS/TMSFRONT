@@ -1,4 +1,4 @@
-const BASE_URL = "https://tms-api-23gs.onrender.com/";
+const BASE_URL = "http://172.30.61.194/api/";
 
 export const ENDPOINTS = {
   // Department endpoints
@@ -92,4 +92,37 @@ export const ENDPOINTS = {
   SUBMIT_MAINTENANCE_FILES: (request_id) =>
     `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
   MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`, // List current user's maintenance requests
+MAINTAINED_VEHICLES: `${BASE_URL}maintenance-requests/maintained-vehicles/`, // GET method, empty json
+
+  // New: Mark maintenance vehicle available (POST)
+  MARK_MAINTENANCE_VEHICLE_AVAILABLE: (vehicle_id) =>
+    `${BASE_URL}maintenance-requests/${vehicle_id}/mark-available/`, // POST method, empty json
+  // Report endpoints (corrected and explicit)
+  REPORT_LIST: `${BASE_URL}report/`, // GET method, returns JSON, no params
+  REPORT_TRANSPORT: `${BASE_URL}report/?request_type=Transport`,
+  REPORT_MAINTENANCE: `${BASE_URL}report/?request_type=Maintenance`,
+  REPORT_REFUELING: `${BASE_URL}report/?request_type=Refueling`,
+  REPORT_HIGHCOST: `${BASE_URL}report/?request_type=HighCost`,
+  REPORT_BY_MONTH: (year, month) => `${BASE_URL}report/?month=${year}-${month}`,
+   // service endpoints
+ VEHICLES_LIST: `${BASE_URL}service-requests/vehicles_list/`, // GET: vehicles with 5000km (for transport manager)
+  MARK_VEHICLE_SERVICE: (vehicle_id) =>
+    `${BASE_URL}service-requests/${vehicle_id}/mark-service/`, // POST: mark vehicle as under service (empty JSON)
+  LIST_SERVICE_REQUESTS: `${BASE_URL}service-requests/list/`, // GET: all roles, service request workflow
+  SUBMIT_SERVICE_FILES: (request_id) =>
+    `${BASE_URL}service-requests/${request_id}/submit-files/`, // PATCH: submit files (FormData)
+  SERVICE_REQUEST_ACTION: (request_id) =>
+    `${BASE_URL}service-requests/${request_id}/action/`, // POST: { action: "forward" | "approve" }
+  SERVICE_REQUEST_DETAIL: (pk) => `${BASE_URL}service-requests/${pk}/`,
+  SERVICED_VEHICLES: `${BASE_URL}service-requests/serviced-vehicles/`, // GET: under service vehicles
+  MARK_VEHICLE_AVAILABLE: (id) => `${BASE_URL}service-requests/${id}/mark-available/`, // POST: mark as available (empty JSON)
+  // Dashboard endpoints
+  DASHBOARD_RECENT_VEHICLES: `${BASE_URL}dashboard/recent-vehicles/`,
+  DASHBOARD_OVERVIEW: `${BASE_URL}dashboard/overview/`,
+  DASHBOARD_MONTHLY_TRENDS: `${BASE_URL}dashboard/monthly-trends/`,
+  DASHBOARD_TYPE_DISTRIBUTION: `${BASE_URL}dashboard/type-distribution/`,
+  SERVICED_VEHICLES: `${BASE_URL}service-requests/serviced-vehicles/`,
+  OTP_REQUEST: `${BASE_URL}otp/request/`,
+  CREATE_COUPON_REQUEST: `${BASE_URL}coupon-requests/create/`,
+  COUPON_REQUEST_LIST: `${BASE_URL}coupon-requests/list/`,
 };

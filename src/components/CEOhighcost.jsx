@@ -3,24 +3,27 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
-import { IoMdClose } from "react-icons/io";
+import { IoClose, IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
-import { IoClose, IoCloseSharp } from "react-icons/io5";
 
 const CEOhighcost = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
-  const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
 
+  const itemsPerPage = 5;
   const accessToken = localStorage.getItem("authToken");
 
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line
   }, []);
 
   const fetchRequests = async () => {
@@ -55,7 +58,6 @@ const CEOhighcost = () => {
       console.error("No access token found.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
         headers: {
@@ -64,7 +66,8 @@ const CEOhighcost = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch high-cost request details");
+      if (!response.ok)
+        throw new Error("Failed to fetch high-cost request details");
 
       const data = await response.json();
       setSelectedRequest(data);
@@ -79,78 +82,81 @@ const CEOhighcost = () => {
     await fetchHighCostDetails(request.id);
   };
 
-  const handleApprove = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
+  // OTP: Send OTP using backend endpoint
+  const sendOtp = async () => {
+    setOtpLoading(true);
     try {
-      const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
+      const response = await fetch(ENDPOINTS.OTP_REQUEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action: "forward" }),
+        body: JSON.stringify({}),
       });
 
-      if (!response.ok) throw new Error("Failed to forward request");
+      if (!response.ok) throw new Error("Failed to send OTP");
 
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "forwarded" } : req
-        )
-      );
-
-      setSelectedRequest(null);
-      toast.success("Request forwarded successfully!");
-    } catch (error) {
-      console.error("Approve Error:", error);
-      toast.error("Failed to forward request.");
+      toast.success("OTP sent to your phone");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
     }
   };
 
-  const handleReject = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
-    if (!rejectionReason) {
-      toast.error("Please provide a reason for rejection.");
-      return;
-    }
-
+  // OTP: Handle OTP verification and action (forward/reject)
+  const handleOtpAction = async (otp, action) => {
+    setOtpLoading(true);
     try {
-      const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "reject",
-          rejection_message: rejectionReason,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to reject request");
-
+      let payload = { action: action === "forward" ? "forward" : "reject", otp_code: otp };
+      if (action === "reject") {
+        payload.rejection_message = rejectionReason;
+      }
+      const response = await fetch(
+        ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(
+          data.detail || `Failed to ${action} the request`
+        );
+      }
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "rejected" } : req
+          req.id === selectedRequest.id
+            ? { ...req, status: action === "forward" ? "forwarded" : "rejected" }
+            : req
         )
       );
-
       setSelectedRequest(null);
       setRejectionReason("");
-      setShowRejectionModal(false);
-      toast.success("Request rejected successfully!");
+      setOtpModalOpen(false);
+      setOtpValue("");
+      setOtpAction(null);
+      toast.success(
+        `Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`
+      );
     } catch (error) {
-      console.error("Reject Error:", error);
-      toast.error("Failed to reject request.");
+      toast.error(`Failed to ${action} the request.`);
+    } finally {
+      setOtpLoading(false);
     }
+  };
+
+  // Show OTP modal and send OTP
+  const handleActionWithOtp = async (actionType) => {
+    setOtpAction(actionType);
+    setOtpModalOpen(true);
+    await sendOtp();
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -228,7 +234,7 @@ const CEOhighcost = () => {
           tabIndex="-1"
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
         >
-          <div className="modal-dialog">
+          <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <img
@@ -246,29 +252,40 @@ const CEOhighcost = () => {
                 ><IoClose/></button>
               </div>
               <div className="modal-body">
-                <p><strong>Requester:</strong> {selectedRequest.requester}</p>
-                <p><strong>Employees:</strong> {selectedRequest.employees?.join(", ") || "N/A"}</p>
-                <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle || "N/A"}</p>
-                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                <div className="container-fluid">
+                  <div className="row">
+                    <div className="col-md-6">
+                      <p><strong>Requester:</strong> {selectedRequest.requester}</p>
+                      <p><strong>Employees:</strong> {selectedRequest.employees?.join(", ") || "N/A"}</p>
+                      <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle || "N/A"}</p>
+                      <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
+                      <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
+                      <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                      <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                      <p><strong>Status:</strong> {selectedRequest.status}</p>
+                      {selectedRequest.rejection_message && (
+                        <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white", width: "120px" }}
-                  onClick={() => handleApprove(selectedRequest.id)}
+                  onClick={() => handleActionWithOtp("forward")}
                 >
-                  Forward
+                  Forward (with OTP)
                 </button>
                 <button
                   className="btn btn-danger"
-                  onClick={() => setShowRejectionModal(true)}
+                  onClick={() => handleActionWithOtp("reject")}
                 >
-                  Reject
+                  Reject (with OTP)
                 </button>
               </div>
             </div>
@@ -276,48 +293,86 @@ const CEOhighcost = () => {
         </div>
       )}
 
-      {showRejectionModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-          <div className="modal-dialog">
+      {/* OTP Modal */}
+      {otpModalOpen && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Reject Request</h5>
+                <h5 className="modal-title">
+                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                </h5>
                 <button
                   type="button"
-                  className="btn"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "1.5rem",
-                    color: "#000",
-                    marginLeft: "auto",
+                  className="btn-close"
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpAction(null);
                   }}
-                  onClick={() => setShowRejectionModal(false)}
-                  aria-label="Close"
+                  disabled={otpLoading}
                 >
-                  <IoCloseSharp />
+                  <IoClose />
                 </button>
               </div>
               <div className="modal-body">
-                <div className="mb-3">
-                  <label htmlFor="rejectionReason" className="form-label">Rejection Reason</label>
+                <p>Enter the OTP code sent to your phone number.</p>
+                <input
+                  type="text"
+                  className="form-control"
+                  maxLength={6}
+                  value={otpValue}
+                  onChange={(e) =>
+                    setOtpValue(e.target.value.replace(/\D/g, ""))
+                  }
+                  disabled={otpLoading}
+                  placeholder="Enter OTP"
+                />
+                {otpAction === "reject" && (
                   <textarea
-                    id="rejectionReason"
-                    className="form-control"
+                    className="form-control mt-3"
+                    rows={2}
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Provide a reason for rejection"
-                    required
+                    placeholder="Reason for rejection"
+                    disabled={otpLoading}
                   />
-                </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => handleReject(selectedRequest.id)}
+                  className="btn btn-link"
+                  onClick={sendOtp}
+                  disabled={otpLoading}
                 >
-                  Submit Rejection
+                  Resend OTP
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpAction(null);
+                  }}
+                  disabled={otpLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  className={`btn ${
+                    otpAction === "forward" ? "btn-primary" : "btn-danger"
+                  }`}
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                >
+                  {otpLoading
+                    ? "Processing..."
+                    : otpAction === "forward"
+                    ? "Forward"
+                    : "Reject"}
                 </button>
               </div>
             </div>

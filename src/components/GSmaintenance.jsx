@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
-import CustomPagination from './CustomPagination';
+import CustomPagination from "./CustomPagination";
 import { Eye } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg"; // Import the logo
+import Logo from "../assets/Logo.jpg";
 
 const GSmaintenance = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -22,6 +22,11 @@ const GSmaintenance = () => {
   const [maintenanceLetter, setMaintenanceLetter] = useState(null); // State for maintenance letter file
   const [receiptFile, setReceiptFile] = useState(null); // State for receipt file
   const [maintenanceTotalCost, setMaintenanceTotalCost] = useState(""); // State for total cost
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpAction, setOtpAction] = useState(null); // "approve" or "reject"
+  const [otpSent, setOtpSent] = useState(false);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -39,12 +44,12 @@ const GSmaintenance = () => {
   // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
-  
+
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-  
+
     try {
       const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         method: "GET",
@@ -53,11 +58,11 @@ const GSmaintenance = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to fetch maintenance requests");
       }
-  
+
       const data = await response.json();
       setMaintenanceRequests(data.results || []); // Update state with fetched data
     } catch (error) {
@@ -67,10 +72,89 @@ const GSmaintenance = () => {
     }
   };
 
+  // Send OTP using backend endpoint
+  const sendOtp = async () => {
+    setOtpLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch(ENDPOINTS.OTP_REQUEST, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send OTP");
+      }
+
+      setOtpSent(true);
+      toast.success("OTP sent to your phone");
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Handle OTP verification and action (approve or reject)
+  const handleOtpAction = async (otp, action) => {
+    setOtpLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      let payload = { action, otp_code: otp };
+      if (action === "reject") {
+        if (!rejectionMessage.trim()) {
+          toast.error("Rejection message cannot be empty.");
+          setOtpLoading(false);
+          return;
+        }
+        payload.rejection_message = rejectionMessage;
+      }
+
+      const response = await fetch(
+        ENDPOINTS.MAINTENANCE_REQUEST_ACTION(selectedRequest.id),
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || `Failed to ${action} request`);
+      }
+
+      toast.success(
+        action === "forward" ? "Request Forwarded!" : "Request rejected!"
+      );
+
+      setSelectedRequest(null);
+      setOtpModalOpen(false);
+      setOtpValue("");
+      setOtpSent(false);
+      setOtpAction(null);
+      setRejectionMessage("");
+      fetchMaintenanceRequests();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
   // Handle actions (forward, reject)
   const handleAction = async (id, action) => {
     if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
-      toast.error("Please upload all required files and provide the total cost before proceeding.");
+      toast.error(
+        "Please upload all required files and provide the total cost before proceeding."
+      );
       return;
     }
 
@@ -125,7 +209,9 @@ const GSmaintenance = () => {
     }
 
     if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
-      toast.error("Please upload all required files and provide the total cost.");
+      toast.error(
+        "Please upload all required files and provide the total cost."
+      );
       return;
     }
 
@@ -150,7 +236,7 @@ const GSmaintenance = () => {
       }
 
       toast.success("Files submitted successfully!");
-      fetchMaintenanceRequests(); 
+      fetchMaintenanceRequests();
     } catch (error) {
       console.error("Error submitting maintenance files:", error);
       toast.error("Failed to submit maintenance files.");
@@ -182,7 +268,7 @@ const GSmaintenance = () => {
 
   return (
     <div className="container mt-5">
-        <ToastContainer />
+      <ToastContainer />
       <h2 className="text-center mb-4">Maintenance Requests</h2>
 
       {loading ? (
@@ -209,7 +295,8 @@ const GSmaintenance = () => {
               {currentPageRequests.length > 0 ? (
                 currentPageRequests.map((request, index) => (
                   <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
+                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>{" "}
+                    {/* Correct numbering */}
                     <td>{new Date(request.date).toLocaleDateString()}</td>
                     <td>{request.requester_name || "N/A"}</td>
                     <td>{request.requesters_car_name || "N/A"}</td>
@@ -250,7 +337,10 @@ const GSmaintenance = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -258,7 +348,11 @@ const GSmaintenance = () => {
                   <img
                     src={Logo}
                     alt="Logo"
-                    style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                    style={{
+                      width: "100px",
+                      height: "70px",
+                      marginRight: "10px",
+                    }}
                   />
                   <h5 className="modal-title">Maintenance Request Details</h5>
                 </div>
@@ -266,17 +360,35 @@ const GSmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
-                <p><a href="http://172.30.61.49/signin"><strong>Message to Maintenance Provider</strong></a></p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedRequest.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </p>
+                <p>
+                  <strong>Requester Name:</strong>{" "}
+                  {selectedRequest.requester_name}
+                </p>
+                <p>
+                  <strong>Requester's Car:</strong>{" "}
+                  {selectedRequest.requesters_car_name}
+                </p>
+                <p>
+                  <a href="http://172.30.61.49/signin">
+                    <strong>Message to Maintenance Provider</strong>
+                  </a>
+                </p>
                 <div className="mb-3">
                   <label htmlFor="maintenanceLetter" className="form-label">
-                    Maintenance Letter (PDF) <span style={{ color: "red" }}>*</span>
+                    Maintenance Letter (PDF){" "}
+                    <span style={{ color: "red" }}>*</span>
                   </label>
                   <input
                     type="file"
@@ -288,7 +400,12 @@ const GSmaintenance = () => {
                   {maintenanceLetter && (
                     <button
                       className="btn"
-                      onClick={() => window.open(URL.createObjectURL(maintenanceLetter), "_blank")}
+                      onClick={() =>
+                        window.open(
+                          URL.createObjectURL(maintenanceLetter),
+                          "_blank"
+                        )
+                      }
                     >
                       <Eye />
                     </button>
@@ -309,7 +426,9 @@ const GSmaintenance = () => {
                   {receiptFile && (
                     <button
                       className="btn"
-                      onClick={() => window.open(URL.createObjectURL(receiptFile), "_blank")}
+                      onClick={() =>
+                        window.open(URL.createObjectURL(receiptFile), "_blank")
+                      }
                     >
                       <Eye />
                     </button>
@@ -333,7 +452,11 @@ const GSmaintenance = () => {
                 <div className="mb-3">
                   <button
                     className="btn"
-                    style={{ backgroundColor: "#181E4B", color: "white",width:"100px" }}
+                    style={{
+                      backgroundColor: "#181E4B",
+                      color: "white",
+                      width: "100px",
+                    }}
                     onClick={() => handleSubmitFiles(selectedRequest.id)}
                   >
                     Submit
@@ -342,32 +465,26 @@ const GSmaintenance = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => {
-                    if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
-                      toast.error("Please upload all required files and provide the total cost before forwarding.");
-                      return;
-                    }
-                    setPendingAction("forward");
-                    setShowConfirmModal(true);
+                  className="btn btn-success"
+                  onClick={async () => {
+                    setOtpAction("forward");
+                    setOtpModalOpen(true);
+                    await sendOtp();
                   }}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Forward"}
+                  Forward
                 </button>
                 <button
                   className="btn btn-danger"
-                  onClick={() => {
-                    if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
-                      toast.error("Please upload all required files and provide the total cost before rejecting.");
-                      return;
-                    }
-                    setShowRejectModal(true);
+                  onClick={async () => {
+                    setOtpAction("reject");
+                    setOtpModalOpen(true);
+                    await sendOtp();
                   }}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Reject"}
+                  Reject
                 </button>
                 <button
                   className="btn btn-secondary"
@@ -381,9 +498,103 @@ const GSmaintenance = () => {
         </div>
       )}
 
+      {/* OTP Modal */}
+      {otpModalOpen && (
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Enter OTP and confirm{" "}
+                  {otpAction === "forward" ? "forward" : "rejection"}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpSent(false);
+                    setOtpAction(null);
+                    setRejectionMessage("");
+                  }}
+                  disabled={otpLoading}
+                >
+                  <IoClose />
+                </button>
+              </div>
+              <div className="modal-body">
+                <p>Enter the OTP code sent to your phone number.</p>
+                <input
+                  type="text"
+                  className="form-control"
+                  maxLength={6}
+                  value={otpValue}
+                  onChange={(e) =>
+                    setOtpValue(e.target.value.replace(/\D/g, ""))
+                  }
+                  disabled={otpLoading}
+                  placeholder="Enter OTP"
+                />
+                {otpAction === "reject" && (
+                  <textarea
+                    className="form-control mt-3"
+                    rows={2}
+                    value={rejectionMessage}
+                    onChange={(e) => setRejectionMessage(e.target.value)}
+                    placeholder="Reason for rejection"
+                    disabled={otpLoading}
+                  />
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-link"
+                  style={{ color: "#181E4B", width: "160px" }}
+                  onClick={() => sendOtp()}
+                  disabled={otpLoading}
+                >
+                  Resend OTP
+                </button>
+                <button
+                  className="btn"
+                  style={{
+                    backgroundColor: "rgba(31, 41, 55, 0.9)",
+                    color: "white",
+                  }}
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                >
+                  {otpAction === "forward" ? "Forward" : "Reject"}
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpSent(false);
+                    setOtpAction(null);
+                    setRejectionMessage("");
+                  }}
+                  disabled={otpLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -392,7 +603,9 @@ const GSmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowConfirmModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <p>Are you sure you want to forward this request?</p>
@@ -418,7 +631,10 @@ const GSmaintenance = () => {
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -427,7 +643,9 @@ const GSmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowRejectModal(false)}
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <textarea
@@ -444,10 +662,7 @@ const GSmaintenance = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRejectAction}
-                >
+                <button className="btn btn-danger" onClick={handleRejectAction}>
                   Reject
                 </button>
               </div>

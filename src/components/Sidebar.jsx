@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { MdMenu, MdSchedule } from "react-icons/md";
+import { MdAttachEmail, MdMenu, MdSchedule } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
 import Logo from "../assets/Logo.jpg";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -15,10 +15,9 @@ import {
 import { IoBusiness } from "react-icons/io5";
 import { FaUserCog, FaTools, FaGasPump } from "react-icons/fa";
 import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai";
-import { p, path } from "framer-motion/client";
 import { FaGaugeHigh } from "react-icons/fa6";
-import { Wrench } from "lucide-react";
-
+import { LetterTextIcon, Settings, Wrench } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 const Sidebar = ({ role }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -26,66 +25,102 @@ const Sidebar = ({ role }) => {
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
-
+  const { mylanguage } = useLanguage();
   const getActiveClass = (path) =>
     location.pathname === path ? "active text-primary fw-bold" : "text-dark";
 
   const adminMenus = [
-    { path: "/admin/admin", icon: <MdOutlineDashboard />, label: "Dashboard" },
+    {
+      path: "/admin/admin",
+      icon: <MdOutlineDashboard size={22} />,
+      label: "Dashboard",
+    },
     {
       path: "/admin/admin-department",
-      icon: <IoBusiness />,
+      icon: <IoBusiness size={22} />,
       label: "Departments",
     },
-    { path: "/admin/account-page", icon: <FaUserCog />, label: "Accounts" },
-    { path: "/admin/history", icon: <MdOutlineHistory />, label: "History" },
+    {
+      path: "/admin/account-page",
+      icon: <FaUserCog size={22} />,
+      label: "Accounts",
+    },
+    {
+      path: "/admin/history",
+      icon: <MdOutlineHistory size={22} />,
+      label: "History",
+    },
   ];
 
   const transportMenus = [
     {
       path: "/transport-manager/transport-dashbord",
-      icon: <MdOutlineDashboard />,
-      label: "Dashboard",
+      icon: <MdOutlineDashboard size={22} />,
+      label: mylanguage === "EN" ? "Dashboard" : "ዳሽቦርድ",
     },
     {
       path: "/transport-manager/vehicle-request",
-      icon: <MdOutlineRequestPage />,
-      label: "Vehicle Request",
+      icon: <MdOutlineRequestPage size={22} />,
+      label: mylanguage === "EN" ? "Vehicle Request" : "የተሽከርካሪ ጥያቄ",
     },
     {
       path: "/transport-manager/vehicle-management",
-      icon: <AiOutlineCar />,
-      label: "Vehicle Management",
+      icon: <AiOutlineCar size={22} />,
+      label: mylanguage === "EN" ? "Vehicle Management" : "የተሽከርካሪ አስተዳደር",
     },
     {
       path: "/transport-manager/maintenance-table",
-      icon: <FaTools />,
-      label: "Maintenance",
+      icon: <FaTools size={22} />,
+      label: mylanguage === "EN" ? "Maintenance" : "ጥገና",
     },
     {
       path: "/transport-manager/refueling",
-      icon: <FaGasPump />,
-      label: "Refueling",
+      icon: <FaGasPump size={22} />,
+      label: mylanguage === "EN" ? "Refueling" : "እንደገና ማሙላት",
     },
     {
       path: "/transport-manager/high_cost",
-      icon: <FaGaugeHigh />,
-      label: "Highcost Vehicle Requests",
+      icon: <FaGaugeHigh size={22} />,
+      label:
+        mylanguage === "EN"
+          ? "Highcost Vehicle Requests"
+          : "የከፍተኛ ዋጋ ተሽከርካሪ ጥያቄዎች",
     },
     {
       path: "/transport-manager/report",
-      icon: <AiOutlineFileText />,
-      label: "Report",
+      icon: <AiOutlineFileText size={22} />,
+      label: mylanguage === "EN" ? "Report" : "ሪፖርት",
     },
     {
       path: "/transport-manager/history",
-      icon: <MdOutlineHistory />,
-      label: "History",
+      icon: <MdOutlineHistory size={22} />,
+      label: mylanguage === "EN" ? "History" : "ታሪክ",
     },
     {
       path: "/transport-manager/maintenance-request",
-      icon: <FaTools />,
-      label: "Create Maintenance Request",
+      icon: <FaTools size={22} />,
+      label:
+        mylanguage === "EN" ? "Create Maintenance Request" : "የጥገና ጥያቄ ፍጠር",
+    },
+    {
+      path: "/transport-manager/vehicle-services",
+      icon: <Settings size={22} />,
+      label: "Create Service Request",
+    },
+    {
+      path: "/transport-manager/service",
+      icon: <Wrench size={22} />,
+      label: mylanguage === "EN" ? "Vehicle Service" : "የተሽከርካሪ አገልግሎት",
+    },
+    {
+      path: "/transport-manager/monthly-coupon",
+      icon: <LetterTextIcon size={22} />,
+      label: "Request Coupon",
+    },
+    {
+      path: "/transport-manager/monthly-coupons",
+      icon: <MdAttachEmail size={22} />,
+      label: "Transport Coupons",
     },
   ];
 
@@ -112,8 +147,13 @@ const Sidebar = ({ role }) => {
     },
     {
       path: "/driver/vehicle-services",
-      icon: <Wrench />,
-      label: "Vehicle Service",
+      icon: <Settings />,
+      label: "Create Service Request",
+    },
+    {
+      path: "/driver/monthly-coupon",
+      icon: <LetterTextIcon />,
+      label: "Request Coupon",
     },
   ];
 
@@ -134,6 +174,11 @@ const Sidebar = ({ role }) => {
       label: "Maintenance Request",
     },
     {
+      path: "/department-manager/vehicle-services",
+      icon: <Settings />,
+      label: "Create Service Request",
+    },
+    {
       path: "/department-manager/hight-cost",
       icon: <FaGaugeHigh />,
       label: "High Cost",
@@ -142,6 +187,11 @@ const Sidebar = ({ role }) => {
       path: "/department-manager/history",
       icon: <MdOutlineHistory />,
       label: "History",
+    },
+    {
+      path: "/department-manager/monthly-coupon",
+      icon: <LetterTextIcon />,
+      label: "Request Coupon",
     },
   ];
 
@@ -157,6 +207,11 @@ const Sidebar = ({ role }) => {
       label: "Maintenance Request",
     },
     {
+      path: "/finance-manager/vehicle-services",
+      icon: <Settings />,
+      label: "Create Service Request",
+    },
+    {
       path: "/finance-manager/refueling",
       icon: <FaGasPump />,
       label: "Refueling",
@@ -165,6 +220,16 @@ const Sidebar = ({ role }) => {
       path: "/finance-manager/maintenance-request",
       icon: <FaTools />,
       label: "Create Maintenance Request",
+    },
+    {
+      path: "/finance-manager/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
+    {
+      path: "/finance-manager/monthly-coupon",
+      icon: <LetterTextIcon />,
+      label: "Request Coupon",
     },
   ];
 
@@ -181,11 +246,26 @@ const Sidebar = ({ role }) => {
       label: "Maintenance",
     },
     {
+      path: "/ceo/vehicle-services",
+      icon: <Settings />,
+      label: "Create Service Request",
+    },
+    {
       path: "/ceo/maintenance-request",
       icon: <FaTools />,
       label: "Create Maintenance Request",
     },
     { path: "/ceo/history", icon: <MdOutlineHistory />, label: "History" },
+    {
+      path: "/ceo/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
+    {
+      path: "/ceo/monthly-coupon",
+      icon: <LetterTextIcon />,
+      label: "Request Coupon",
+    },
   ];
   const BudgetManagerMenus = [
     {
@@ -204,6 +284,11 @@ const Sidebar = ({ role }) => {
       label: "Maintenance",
     },
     {
+      path: "/budget-manager/vehicle-services",
+      icon: <Settings />,
+      label: "Create Service Request",
+    },
+    {
       path: "/budget-manager/maintenance-request",
       icon: <FaTools />,
       label: "Create Maintenance Request",
@@ -212,6 +297,16 @@ const Sidebar = ({ role }) => {
       path: "/budget-manager/history",
       icon: <MdOutlineHistory />,
       label: "History",
+    },
+    {
+      path: "/budget-manager/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
+    {
+      path: "/budget-manager/monthly-coupon",
+      icon: <LetterTextIcon />,
+      label: "Request Coupon",
     },
   ];
 
@@ -232,6 +327,11 @@ const Sidebar = ({ role }) => {
       label: "Maintenance",
     },
     {
+      path: "/general-service/vehicle-services",
+      icon: <Settings />,
+      label: "Create Service Request",
+    },
+    {
       path: "/general-service/maintenance-request",
       icon: <FaTools />,
       label: "Create Maintenance Request",
@@ -240,6 +340,16 @@ const Sidebar = ({ role }) => {
       path: "/general-service/history",
       icon: <MdOutlineHistory />,
       label: "History",
+    },
+    {
+      path: "/general-service/service",
+      icon: <Wrench />,
+      label: "Vehicle Service",
+    },
+    {
+      path: "/general-service/monthly-coupon",
+      icon: <LetterTextIcon />,
+      label: "Request Coupon",
     },
   ];
 
@@ -250,7 +360,7 @@ const Sidebar = ({ role }) => {
     "/department-manager": departmentManagerMenus,
     "/finance-manager": financeManagerMenus,
     "/ceo": ceoMenus,
-    "/general-service": GeneralSystemExcuterMenus, // Added Budget Manager menus
+    "/general-service": GeneralSystemExcuterMenus,
     "/budget-manager": BudgetManagerMenus, // Added Budget Officer menus
   };
 

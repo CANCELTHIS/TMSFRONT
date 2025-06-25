@@ -3,8 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
-import { IoMdClose } from "react-icons/io";
-import { IoCloseSharp } from "react-icons/io5"; // Import IoCloseSharp
+import { IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 
@@ -15,12 +14,19 @@ const BUHighCost = () => {
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
+  // OTP
+  const [otpModalOpen, setOtpModalOpen] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpAction, setOtpAction] = useState(null); // "approve" | "reject"
+
+  const itemsPerPage = 5;
   const accessToken = localStorage.getItem("authToken");
 
   useEffect(() => {
     fetchRequests();
+    // eslint-disable-next-line
   }, []);
 
   const fetchRequests = async () => {
@@ -28,7 +34,6 @@ const BUHighCost = () => {
       console.error("No access token found.");
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
@@ -37,9 +42,7 @@ const BUHighCost = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) throw new Error("Failed to fetch high-cost requests");
-
       const data = await response.json();
       setRequests(data.results || []);
     } catch (error) {
@@ -55,7 +58,6 @@ const BUHighCost = () => {
       console.error("No access token found.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
         headers: {
@@ -63,9 +65,7 @@ const BUHighCost = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) throw new Error("Failed to fetch high-cost request details");
-
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
@@ -79,77 +79,93 @@ const BUHighCost = () => {
     await fetchHighCostDetails(request.id);
   };
 
-  const handleApprove = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
+  // OTP send
+  const sendOtp = async (actionType) => {
+    setOtpAction(actionType);
+    setOtpValue("");
+    setOtpModalOpen(true);
+    setOtpLoading(true);
     try {
-      const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
+      const response = await fetch(ENDPOINTS.OTP_REQUEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ action: "approve" }),
+        body: JSON.stringify({}),
       });
-
-      if (!response.ok) throw new Error("Failed to forward request");
-
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "forwarded" } : req
-        )
-      );
-
-      setSelectedRequest(null);
-      toast.success("Request forwarded successfully!");
-    } catch (error) {
-      console.error("Approve Error:", error);
-      toast.error("Failed to forward request.");
+      if (!response.ok) throw new Error("Failed to send OTP");
+      toast.success("OTP sent to your phone");
+    } catch (err) {
+      toast.error(err.message);
+      setOtpModalOpen(false);
+    } finally {
+      setOtpLoading(false);
     }
   };
 
-  const handleReject = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
-    if (!rejectionReason) {
-      toast.error("Please provide a reason for rejection.");
-      return;
-    }
-
+  // OTP approve/reject handler
+  const handleOtpAction = async () => {
+    setOtpLoading(true);
     try {
-      const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "reject",
-          rejection_message: rejectionReason,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Failed to reject request");
-
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "rejected" } : req
-        )
-      );
-
-      setSelectedRequest(null);
-      setRejectionReason("");
+      if (otpAction === "approve") {
+        // Approve (with OTP)
+        const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id), {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "approve",
+            otp_code: otpValue,
+          }),
+        });
+        if (!response.ok) throw new Error("Failed to approve request");
+        setRequests((prevRequests) =>
+          prevRequests.map((req) =>
+            req.id === selectedRequest.id ? { ...req, status: "forwarded" } : req
+          )
+        );
+        setSelectedRequest(null);
+        toast.success("Request forwarded successfully!");
+      } else if (otpAction === "reject") {
+        if (!rejectionReason) {
+          toast.error("Please provide a reason for rejection.");
+          setOtpLoading(false);
+          return;
+        }
+        // Reject (with OTP)
+        const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id), {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "reject",
+            rejection_message: rejectionReason,
+            otp_code: otpValue,
+          }),
+        });
+        if (!response.ok) throw new Error("Failed to reject request");
+        setRequests((prevRequests) =>
+          prevRequests.map((req) =>
+            req.id === selectedRequest.id ? { ...req, status: "rejected" } : req
+          )
+        );
+        setSelectedRequest(null);
+        setRejectionReason("");
+        toast.success("Request rejected successfully!");
+      }
+      setOtpModalOpen(false);
+      setOtpValue("");
+      setOtpAction(null);
       setShowRejectionModal(false);
-      toast.success("Request rejected successfully!");
     } catch (error) {
-      console.error("Reject Error:", error);
-      toast.error("Failed to reject request.");
+      toast.error(error.message || "Failed to process request.");
+    } finally {
+      setOtpLoading(false);
     }
   };
 
@@ -266,9 +282,9 @@ const BUHighCost = () => {
               <div className="modal-footer">
                 <button
                   className="btn btn-success"
-                  onClick={() => handleApprove(selectedRequest.id)}
+                  onClick={() => sendOtp("approve")}
                 >
-                  Approve
+                  Approve (with OTP)
                 </button>
                 <button
                   className="btn btn-danger"
@@ -282,6 +298,95 @@ const BUHighCost = () => {
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* OTP Modal */}
+      {otpModalOpen && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
+                </h5>
+                <button
+                  type="button"
+                  className="btn"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "1.5rem",
+                    color: "#000",
+                    marginLeft: "auto",
+                  }}
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpAction(null);
+                  }}
+                  aria-label="Close"
+                  disabled={otpLoading}
+                >
+                  <IoCloseSharp />
+                </button>
+              </div>
+              <div className="modal-body">
+                <input
+                  type="text"
+                  className="form-control"
+                  maxLength={6}
+                  value={otpValue}
+                  onChange={e => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                  disabled={otpLoading}
+                  placeholder="Enter OTP"
+                />
+                {otpAction === "reject" && (
+                  <textarea
+                    className="form-control mt-3"
+                    rows={2}
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Reason for rejection"
+                    disabled={otpLoading}
+                  />
+                )}
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-link"
+                  onClick={() => sendOtp(otpAction)}
+                  disabled={otpLoading}
+                >
+                  Resend OTP
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    setOtpModalOpen(false);
+                    setOtpValue("");
+                    setOtpAction(null);
+                  }}
+                  disabled={otpLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={handleOtpAction}
+                >
+                  {otpLoading
+                    ? "Processing..."
+                    : otpAction === "approve"
+                    ? "Approve"
+                    : "Reject"}
                 </button>
               </div>
             </div>
@@ -329,9 +434,12 @@ const BUHighCost = () => {
                 <button
                   type="button"
                   className="btn btn-danger"
-                  onClick={() => handleReject(selectedRequest.id)}
+                  onClick={() => {
+                    setShowRejectionModal(false);
+                    sendOtp("reject");
+                  }}
                 >
-                  Submit Rejection
+                  Submit Rejection (with OTP)
                 </button>
               </div>
             </div>

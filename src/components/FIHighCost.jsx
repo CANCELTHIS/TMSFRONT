@@ -1,28 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { toast, ToastContainer } from "react-toastify"; // For toast messages
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg"; // Import the logo image
+import Logo from "../assets/Logo.jpg";
 import { IoMdClose } from "react-icons/io";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from './CustomPagination';
 
 const FIHighCost = () => {
   const [requests, setRequests] = useState([]);
-  const [users, setUsers] = useState([]); // State for employees
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
-  const [rejectionReason, setRejectionReason] = useState(""); // State for rejection reason
-  const [showRejectionModal, setShowRejectionModal] = useState(false); // State for rejection modal
-  const [showConfirmation, setShowConfirmation] = useState(false); // State for rejection confirmation dialog
-  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false); // State for approve confirmation dialog
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of items per page
+  const itemsPerPage = 5;
+
+  const printDetailRef = useRef();
 
   const accessToken = localStorage.getItem("authToken");
   useEffect(() => {
     fetchRequests();
-    fetchUsers(); 
+    fetchUsers();
+    // eslint-disable-next-line
   }, []);
 
   const fetchRequests = async () => {
@@ -33,17 +36,12 @@ const FIHighCost = () => {
 
     setLoading(true);
     try {
-      // Fetch high-cost requests
       const highCostRequests = await fetchHighCostRequests();
-
-      // Add a "requestType" property to high-cost requests
       const highCostRequestsWithLabel = highCostRequests.map((request) => ({
         ...request,
-        requestType: "High Cost", // Label as high-cost
+        requestType: "High Cost",
       }));
-
-      console.log("High-Cost Requests:", highCostRequestsWithLabel); // Debugging log
-      setRequests(highCostRequestsWithLabel); // Set high-cost requests to state
+      setRequests(highCostRequestsWithLabel);
     } catch (error) {
       console.error("Fetch Requests Error:", error);
     } finally {
@@ -56,7 +54,6 @@ const FIHighCost = () => {
       console.error("No access token found.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.USER_LIST, {
         headers: {
@@ -64,11 +61,9 @@ const FIHighCost = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) throw new Error("Failed to fetch users");
-
       const data = await response.json();
-      setUsers(data.results || []); // Set users data
+      setUsers(data.results || []);
     } catch (error) {
       console.error("Fetch Users Error:", error);
     }
@@ -79,7 +74,6 @@ const FIHighCost = () => {
       console.error("No access token found.");
       return [];
     }
-
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
         headers: {
@@ -87,12 +81,9 @@ const FIHighCost = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) throw new Error("Failed to fetch high-cost transport requests");
-
       const data = await response.json();
-      console.log("High-Cost Requests:", data.results); // Debugging log
-      return data.results || []; // Return fetched high-cost requests
+      return data.results || [];
     } catch (error) {
       console.error("Fetch High-Cost Requests Error:", error);
       return [];
@@ -100,13 +91,10 @@ const FIHighCost = () => {
   };
 
   const fetchHighCostDetail = async (requestId) => {
-    const accessToken = localStorage.getItem("authToken");
-  
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-  
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
         method: "GET",
@@ -115,20 +103,16 @@ const FIHighCost = () => {
           "Content-Type": "application/json",
         },
       });
-  
       if (!response.ok) {
         throw new Error("Failed to fetch high-cost request details");
       }
-  
       const data = await response.json();
-      console.log("High-Cost Request Details:", data); // Log the details
-      setSelectedRequest(data); // Set the fetched details to the state
+      setSelectedRequest(data);
     } catch (error) {
       console.error("Error fetching high-cost request details:", error);
     }
   };
 
-  // Get employee names from IDs
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
       .map((id) => {
@@ -139,15 +123,15 @@ const FIHighCost = () => {
   };
 
   const handleViewDetail = (request) => {
-    fetchHighCostDetail(request.id); // Fetch and log the details
+    fetchHighCostDetail(request.id);
   };
 
   const handleCloseDetail = () => {
     setSelectedRequest(null);
-    setRejectionReason(""); // Clear rejection reason
-    setShowRejectionModal(false); // Close rejection modal
-    setShowConfirmation(false); // Close rejection confirmation dialog
-    setShowApproveConfirmation(false); // Close approve confirmation dialog
+    setRejectionReason("");
+    setShowRejectionModal(false);
+    setShowConfirmation(false);
+    setShowApproveConfirmation(false);
   };
 
   const handleApprove = async (requestId) => {
@@ -155,7 +139,6 @@ const FIHighCost = () => {
       console.error("No access token found.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
         method: "POST",
@@ -164,22 +147,20 @@ const FIHighCost = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          action: "approve", 
+          action: "approve",
         }),
       });
-
       if (!response.ok) throw new Error("Failed to approve transport request");
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.id === requestId ? { ...req, status: "approved" } : req
         )
       );
-
-      setSelectedRequest(null); 
-      toast.success("Request approved successfully!"); 
+      setSelectedRequest(null);
+      toast.success("Request approved successfully!");
     } catch (error) {
       console.error("Approve Error:", error);
-      toast.error("Failed to approve request."); 
+      toast.error("Failed to approve request.");
     }
   };
 
@@ -188,12 +169,10 @@ const FIHighCost = () => {
       console.error("No access token found.");
       return;
     }
-
     if (!rejectionReason) {
-      toast.error("Please provide a reason for rejection."); // Show error toast
+      toast.error("Please provide a reason for rejection.");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(requestId), {
         method: "POST",
@@ -203,49 +182,44 @@ const FIHighCost = () => {
         },
         body: JSON.stringify({
           action: "reject",
-          rejection_message: rejectionReason, // Use the provided reason
+          rejection_message: rejectionReason,
         }),
       });
-
       if (!response.ok) throw new Error("Failed to reject transport request");
-
-      // Update the status locally after rejection
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.id === requestId ? { ...req, status: "rejected" } : req
         )
       );
-
-      setSelectedRequest(null); // Close modal
-      setRejectionReason(""); // Clear rejection reason
-      setShowRejectionModal(false); // Close rejection modal
-      toast.success("Request rejected successfully!"); // Show success toast
+      setSelectedRequest(null);
+      setRejectionReason("");
+      setShowRejectionModal(false);
+      toast.success("Request rejected successfully!");
     } catch (error) {
       console.error("Reject Error:", error);
-      toast.error("Failed to reject request."); // Show error toast
+      toast.error("Failed to reject request.");
     }
   };
 
-  const handleRejectClick = () => {
-    setShowRejectionModal(true); 
-  };
+  const handleRejectClick = () => setShowRejectionModal(true);
 
-  const handleConfirmReject = () => {
-    setShowConfirmation(true); 
-  };
+  const handleConfirmReject = () => setShowConfirmation(true);
 
   const handleConfirmAction = () => {
     handleReject(selectedRequest.id);
-    setShowConfirmation(false); 
+    setShowConfirmation(false);
   };
 
-  const handleApproveClick = () => {
-    setShowApproveConfirmation(true); 
-  };
+  const handleApproveClick = () => setShowApproveConfirmation(true);
 
   const handleConfirmApprove = () => {
-    handleApprove(selectedRequest.id); // Call handleApprove
-    setShowApproveConfirmation(false); // Close approve confirmation dialog
+    handleApprove(selectedRequest.id);
+    setShowApproveConfirmation(false);
+  };
+
+  // Print handler for detail view
+  const handlePrintDetail = () => {
+    window.print();
   };
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -254,7 +228,7 @@ const FIHighCost = () => {
 
   return (
     <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
-      <ToastContainer /> 
+      <ToastContainer />
       {loading ? (
         <div className="text-center mt-4">
           <div className="spinner-border text-primary" role="status">
@@ -263,57 +237,53 @@ const FIHighCost = () => {
           <p>Loading data...</p>
         </div>
       ) : (
-<div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
-  <table className="table table-hover align-middle">
-    <thead className="table">
-      <tr>
-        <th>#</th> {/* Add numbering column */}
-        <th>Start Day</th>
-        <th>Start Time</th>
-        <th>Return Day</th>
-        <th>Destination</th>
-        <th>Request Type</th> {/* Add Request Type column */}
-        
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {currentPageRequests.length > 0 ? (
-        currentPageRequests.map((request, index) => (
-          <tr key={request.id}>
-            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
-            <td>{request.start_day}</td>
-            <td>{request.start_time}</td>
-            <td>{request.return_day}</td>
-            <td>{request.destination}</td>
-            <td>{request.status}</td>
-            <td>
-              <button
-                className="btn btn-sm"
-                style={{ backgroundColor: "#181E4B", color: "white" }}
-                onClick={() => handleViewDetail(request)}
-              >
-                View Detail
-              </button>
-            </td>
-          </tr>
-        ))
-      ) : (
-        <tr>
-          <td colSpan="7" className="text-center">
-            No transport requests found.
-          </td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
+        <div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
+          <table className="table table-hover align-middle">
+            <thead className="table">
+              <tr>
+                <th>#</th>
+                <th>Start Day</th>
+                <th>Start Time</th>
+                <th>Return Day</th>
+                <th>Destination</th>
+                <th>Request Type</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentPageRequests.length > 0 ? (
+                currentPageRequests.map((request, index) => (
+                  <tr key={request.id}>
+                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                    <td>{request.start_day}</td>
+                    <td>{request.start_time}</td>
+                    <td>{request.return_day}</td>
+                    <td>{request.destination}</td>
+                    <td>{request.status}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#181E4B", color: "white" }}
+                        onClick={() => handleViewDetail(request)}
+                      >
+                        View Detail
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center">
+                    No transport requests found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100px" }}
-      >
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
         <CustomPagination
           currentPage={currentPage}
           totalPages={Math.ceil(requests.length / itemsPerPage)}
@@ -322,39 +292,60 @@ const FIHighCost = () => {
       </div>
 
       {selectedRequest && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
-                <h5 className="modal-title">High-Cost Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}>
-                  <IoMdClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <p><strong>Created At:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
-                <p><strong>Updated At:</strong> {new Date(selectedRequest.updated_at).toLocaleString()}</p>
-                <p><strong>Requester:</strong> {selectedRequest.requester}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Employees:</strong> {selectedRequest.employees.join(", ")}</p>
-                <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km}</p>
-                <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle}</p>
-                <p><strong>Fuel Needed (liters):</strong> {selectedRequest.fuel_needed_liters}</p>
-                <p><strong>Fuel Price Per Liter:</strong> {selectedRequest.fuel_price_per_liter}</p>
-                <p><strong>Total Cost:</strong> {selectedRequest.total_cost}</p>
-
-                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                <p><strong>Vehicle:</strong> {selectedRequest.vehicle}</p>
-                
+        <>
+          {/* PRINTABLE DETAIL VIEW */}
+          <div
+            ref={printDetailRef}
+            className="modal fade show d-block"
+            tabIndex="-1"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          >
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                  <h5 className="modal-title">High-Cost Request Details</h5>
+                  <button type="button" className="btn-close" onClick={handleCloseDetail}>
+                    <IoMdClose />
+                  </button>
+                </div>
+                <div className="modal-body">
+                  <p><strong>Created At:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
+                  <p><strong>Updated At:</strong> {new Date(selectedRequest.updated_at).toLocaleString()}</p>
+                  <p><strong>Requester:</strong> {selectedRequest.requester}</p>
+                  <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                  <p><strong>Employees:</strong> {selectedRequest.employees.join(", ")}</p>
+                  <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km}</p>
+                  <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle}</p>
+                  <p><strong>Fuel Needed (liters):</strong> {selectedRequest.fuel_needed_liters}</p>
+                  <p><strong>Fuel Price Per Liter:</strong> {selectedRequest.fuel_price_per_liter}</p>
+                  <p><strong>Total Cost:</strong> {selectedRequest.total_cost}</p>
+                  <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
+                  <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
+                  <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                  <p><strong>Vehicle:</strong> {selectedRequest.vehicle}</p>
+                  {/* Print Button (screen only) */}
+                  <div className="mt-3 d-print-none text-end">
+                    <button className="btn btn-primary" onClick={handlePrintDetail}>Print</button>
+                  </div>
+                  {/* Signature section for print only */}
+                  <div className="d-none d-print-block mt-5" style={{ width: "100%" }}>
+                    <div style={{ marginTop: "60px", textAlign: "center" }}>
+                      <div>Signature</div>
+                      <div style={{ borderBottom: "1px solid #000", margin: "40px auto 0 auto", width: "300px" }}></div>
+                      <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                    </div>
+                  </div>
+                  {/* Logo for print only, centered above */}
+                  <div className="d-none d-print-block text-center mb-3">
+                    <img src={Logo} alt="Logo" style={{ width: "150px", height: "100px" }} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
-
 
       {showRejectionModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(184, 113, 113, 0.5)" }}>
@@ -383,7 +374,7 @@ const FIHighCost = () => {
                 <button
                   type="button"
                   className="btn btn-danger"
-                  onClick={handleConfirmReject} // Show confirmation dialog
+                  onClick={handleConfirmReject}
                 >
                   Submit Rejection
                 </button>
@@ -400,7 +391,7 @@ const FIHighCost = () => {
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Rejection</h5>
                 <button type="button" className="btn-close" onClick={() => setShowConfirmation(false)}>
-                  <IoMdClose size={30}/>
+                  <IoMdClose size={30} />
                 </button>
               </div>
               <div className="modal-body">
@@ -442,7 +433,38 @@ const FIHighCost = () => {
           </div>
         </div>
       )}
+      {/* Print styles for cleaner printout */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .modal-content, .modal-content * {
+            visibility: visible;
+          }
+          .modal-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            background: white;
+            box-shadow: none;
+            border: none;
+          }
+          .btn, .pagination, .modal-footer, .Toastify__toast-container, .btn-close, .d-print-none {
+            display: none !important;
+          }
+          .d-print-block {
+            display: block !important;
+          }
+        }
+        @page {
+          size: auto;
+          margin: 20mm;
+        }
+      `}</style>
     </div>
   );
 };
+
 export default FIHighCost;

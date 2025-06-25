@@ -2,34 +2,43 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
+import CustomPagination from './CustomPagination';
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg";
 
-const RefuelingTable = () => {
-  const [refuelingRequests, setRefuelingRequests] = useState([]);
+const CEOService = () => {
+  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionMessage, setRejectionMessage] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // OTP states
+  // OTP
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
+  const [otpAction, setOtpAction] = useState(null); // "approve" | "reject"
+  const itemsPerPage = 5;
 
-  const fetchRefuelingRequests = async () => {
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageRequests = requests.slice(startIndex, endIndex);
+
+  // Fetch service requests
+  const fetchRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
+    setLoading(true);
     try {
-      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
+      const response = await fetch(ENDPOINTS.LIST_SERVICE_REQUESTS, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -38,50 +47,53 @@ const RefuelingTable = () => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch refueling requests");
+        throw new Error("Failed to fetch service requests");
       }
 
       const data = await response.json();
-      setRefuelingRequests(data.results || []);
+      setRequests(data.results || []);
     } catch (error) {
-      console.error("Error fetching refueling requests:", error);
-      toast.error("Failed to fetch refueling requests.");
+      console.error("Error fetching service requests:", error);
+      toast.error("Failed to fetch service requests.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch request detail
   const fetchRequestDetail = async (id) => {
+    setDetailLoading(true);
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
       console.error("No access token found.");
+      setDetailLoading(false);
       return;
     }
-
-    setDetailLoading(true);
     try {
-      const response = await fetch(ENDPOINTS.REFUELING_REQUEST_DETAIL(id), {
+      const endpoint = ENDPOINTS.SERVICE_REQUEST_DETAIL(id);
+      const response = await fetch(endpoint, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch refueling request detail");
-      }
+      if (!response.ok) throw new Error("Failed to fetch request details");
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
-      console.error("Error fetching request details:", error);
       toast.error("Failed to fetch request details.");
+      setSelectedRequest(null);
     } finally {
       setDetailLoading(false);
     }
   };
 
-  // Send OTP using backend endpoint
-  const sendOtp = async () => {
+  // Send OTP for approve or reject
+  const sendOtp = async (actionType) => {
+    setOtpAction(actionType);
+    setOtpValue("");
+    setOtpModalOpen(true);
     setOtpLoading(true);
     try {
       const accessToken = localStorage.getItem("authToken");
@@ -93,81 +105,70 @@ const RefuelingTable = () => {
         },
         body: JSON.stringify({}),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to send OTP");
-      }
-
-      setOtpSent(true);
+      if (!response.ok) throw new Error("Failed to send OTP");
       toast.success("OTP sent to your phone");
     } catch (err) {
       toast.error(err.message);
+      setOtpModalOpen(false);
     } finally {
       setOtpLoading(false);
     }
   };
 
-  // Handle OTP verification and action (forward/reject)
-  const handleOtpAction = async (otp, action) => {
+  // Handle OTP verification and action (approve, reject)
+  const handleOtpAction = async () => {
     setOtpLoading(true);
     try {
       const accessToken = localStorage.getItem("authToken");
-      let payload = { action, otp_code: otp };
-      if (action === "reject") {
-        payload.rejection_message = rejectionMessage;
+      let body = { action: otpAction, otp_code: otpValue };
+      if (otpAction === "reject") {
+        body.rejection_message = rejectionMessage;
       }
-      const response = await fetch(ENDPOINTS.APPREJ_REFUELING_REQUEST(selectedRequest.id), {
+      const endpoint = ENDPOINTS.SERVICE_REQUEST_ACTION(selectedRequest.id);
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(
-          data.detail || `Failed to ${action} the refueling request`
-        );
+        throw new Error(`Failed to ${otpAction} the service request`);
       }
-      await fetchRefuelingRequests();
+
+      await fetchRequests();
       setSelectedRequest(null);
       setRejectionMessage("");
       setOtpModalOpen(false);
       setOtpValue("");
-      setOtpSent(false);
       setOtpAction(null);
-      toast.success(`Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`);
+      toast.success(`Request ${otpAction === "approve" ? "approved" : "rejected"} successfully!`);
     } catch (error) {
-      toast.error(`Failed to ${action} the request.`);
+      toast.error(`Failed to ${otpAction} the request.`);
     } finally {
       setOtpLoading(false);
-      setActionLoading(false);
     }
   };
 
-  // Show OTP modal and send OTP
-  const handleActionWithOtp = async (actionType) => {
-    setOtpAction(actionType);
-    setOtpModalOpen(true);
-    await sendOtp();
-  };
-
   useEffect(() => {
-    fetchRefuelingRequests();
+    setCurrentPage(1); // Reset page on refresh
+    fetchRequests();
     // eslint-disable-next-line
   }, []);
 
   return (
     <div className="container mt-5">
       <ToastContainer />
-      <h2 className="text-center mb-4">Refueling Requests</h2>
+      <h2 className="text-center mb-4">Service Requests</h2>
+
       {loading ? (
         <div className="text-center">
           <div className="spinner-border text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p>Loading refueling requests...</p>
+          <p>Loading service requests...</p>
         </div>
       ) : (
         <div className="table-responsive">
@@ -176,19 +177,17 @@ const RefuelingTable = () => {
               <tr>
                 <th>#</th>
                 <th>Date</th>
-                <th>Destination</th>
-                <th>Driver</th>
+                <th>Requester's Car</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {refuelingRequests.map((request, index) => (
+              {currentPageRequests.map((request, index) => (
                 <tr key={request.id}>
-                  <td>{index + 1}</td>
+                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                  <td>{request.destination || "N/A"}</td>
-                  <td>{request.requester_name || "N/A"}</td>
+                  <td>{request.vehicle || "N/A"}</td>
                   <td>{request.status || "N/A"}</td>
                   <td>
                     <button
@@ -206,15 +205,24 @@ const RefuelingTable = () => {
         </div>
       )}
 
+      <CustomPagination
+        currentPage={currentPage}
+        totalPages={Math.ceil(requests.length / itemsPerPage)}
+        handlePageChange={setCurrentPage}
+      />
+
       {/* Modal for Viewing Details */}
       {selectedRequest && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-lg modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
-                <h5 className="modal-title">Refueling Request Details</h5>
-                <button type="button" className="btn-close" onClick={() => setSelectedRequest(null)}>
+                <h5 className="modal-title">Service Request Details</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setSelectedRequest(null)}
+                >
                   <IoClose />
                 </button>
               </div>
@@ -227,47 +235,75 @@ const RefuelingTable = () => {
                     <p>Loading details...</p>
                   </div>
                 ) : (
-                  <div className="container-fluid">
-                    <div className="row">
-                      <div className="col-md-6">
-                        <p><strong>Request Date:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
-                        <p><strong>Driver:</strong> {selectedRequest.requester_name || "N/A"}</p>
-                        <p><strong>Vehicle:</strong> {selectedRequest.requesters_car_name || "N/A"}</p>
-                        <p><strong>Destination:</strong> {selectedRequest.destination || "N/A"}</p>
-                        <p><strong>Estimated Distance:</strong> {selectedRequest.estimated_distance_km ?? "N/A"} km</p>
-                      </div>
-                      <div className="col-md-6">
-                        <p><strong>Fuel Type:</strong> {selectedRequest.fuel_type || "N/A"}</p>
-                        <p><strong>Fuel Efficiency:</strong> {selectedRequest.fuel_efficiency ?? "N/A"} km/L</p>
-                        <p><strong>Fuel Needed:</strong> {selectedRequest.fuel_needed_liters ?? "N/A"} L</p>
-                        <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter ?? "N/A"}</p>
-                        <p><strong>Total Cost:</strong> {selectedRequest.total_cost ?? "N/A"}</p>
-                      </div>
-                    </div>
-                  </div>
+                  <>
+                    <p>
+                      <strong>Created At:</strong>{" "}
+                      {selectedRequest.created_at
+                        ? new Date(selectedRequest.created_at).toLocaleDateString()
+                        : "N/A"}
+                    </p>
+                    <p>
+                      <strong>Vehicle:</strong> {selectedRequest.vehicle || "N/A"}
+                    </p>
+                    <p>
+                      <strong>Status:</strong> {selectedRequest.status}
+                    </p>
+                    <p>
+                      <strong>Total Cost:</strong>{" "}
+                      {selectedRequest.service_total_cost} ETB
+                    </p>
+                    {selectedRequest.service_letter && (
+                      <p>
+                        <strong>Service Letter:</strong>{" "}
+                        <a
+                          href={selectedRequest.service_letter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Service Letter
+                        </a>
+                      </p>
+                    )}
+                    {selectedRequest.receipt_file && (
+                      <p>
+                        <strong>Receipt File:</strong>{" "}
+                        <a
+                          href={selectedRequest.receipt_file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Receipt
+                        </a>
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  onClick={() => handleActionWithOtp("forward")}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Forward (with OTP)"}
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={() => handleActionWithOtp("reject")}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Reject (with OTP)"}
-                </button>
                 <button
                   className="btn btn-secondary"
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setOtpAction("approve");
+                    sendOtp("approve");
+                  }}
+                  disabled={actionLoading || detailLoading}
+                >
+                  Approve (with OTP)
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    setShowRejectModal(true);
+                  }}
+                  disabled={actionLoading || detailLoading}
+                >
+                  Reject
                 </button>
               </div>
             </div>
@@ -282,7 +318,7 @@ const RefuelingTable = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
                 </h5>
                 <button
                   type="button"
@@ -290,9 +326,7 @@ const RefuelingTable = () => {
                   onClick={() => {
                     setOtpModalOpen(false);
                     setOtpValue("");
-                    setOtpSent(false);
                     setOtpAction(null);
-                    setRejectionMessage("");
                   }}
                   disabled={otpLoading}
                 >
@@ -300,13 +334,12 @@ const RefuelingTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p>Enter the OTP code sent to your phone number.</p>
                 <input
                   type="text"
                   className="form-control"
                   maxLength={6}
                   value={otpValue}
-                  onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                  onChange={e => setOtpValue(e.target.value.replace(/\D/g, ""))}
                   disabled={otpLoading}
                   placeholder="Enter OTP"
                 />
@@ -324,7 +357,7 @@ const RefuelingTable = () => {
               <div className="modal-footer">
                 <button
                   className="btn btn-link"
-                  onClick={() => sendOtp()}
+                  onClick={() => sendOtp(otpAction)}
                   disabled={otpLoading}
                 >
                   Resend OTP
@@ -334,25 +367,21 @@ const RefuelingTable = () => {
                   onClick={() => {
                     setOtpModalOpen(false);
                     setOtpValue("");
-                    setOtpSent(false);
                     setOtpAction(null);
-                    setRejectionMessage("");
                   }}
                   disabled={otpLoading}
                 >
                   Cancel
                 </button>
                 <button
-                  className={`btn ${
-                    otpAction === "forward" ? "btn-primary" : "btn-danger"
-                  }`}
+                  className={`btn btn-primary`}
                   disabled={otpLoading || otpValue.length !== 6}
-                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                  onClick={handleOtpAction}
                 >
                   {otpLoading
                     ? "Processing..."
-                    : otpAction === "forward"
-                    ? "Forward"
+                    : otpAction === "approve"
+                    ? "Approve"
                     : "Reject"}
                 </button>
               </div>
@@ -361,8 +390,7 @@ const RefuelingTable = () => {
         </div>
       )}
 
-      {/* Rejection Modal (deprecated if using OTP for reject) */}
-       
+      {/* Rejection Modal */}
       {showRejectModal && (
         <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -387,20 +415,29 @@ const RefuelingTable = () => {
               </div>
               <div className="modal-footer">
                 <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowRejectModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
                   className="btn btn-danger"
-                  onClick={handleRejectAction}
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setOtpAction("reject");
+                    sendOtp("reject");
+                  }}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Reject"}
+                  Reject (with OTP)
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-    
     </div>
   );
 };
 
-export default RefuelingTable;
+export default CEOService;
