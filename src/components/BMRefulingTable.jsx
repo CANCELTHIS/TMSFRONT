@@ -265,14 +265,14 @@ const RefuelingTable = () => {
                   onClick={() => handleActionWithOtp("approve")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Approve (with OTP)"}
+                  {actionLoading ? "Processing..." : "Approve "}
                 </button>
                 <button
                   className="btn btn-danger"
                   onClick={() => handleActionWithOtp("reject")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Reject (with OTP)"}
+                  {actionLoading ? "Processing..." : "Reject "}
                 </button>
                 <button
                   className="btn btn-secondary"
@@ -354,18 +354,17 @@ const RefuelingTable = () => {
                   Cancel
                 </button>
                 <button
-                  className={`btn ${
-                    otpAction === "approve" ? "btn-primary" : "btn-danger"
-                  }`}
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={() => handleOtpAction(otpValue, otpAction)}
-                >
-                  {otpLoading
-                    ? "Processing..."
-                    : otpAction === "approve"
-                    ? "Approve"
-                    : "Reject"}
-                </button>
+  className={`btn ${otpAction === "approve" ? "" : "btn-danger"}`}
+  style={otpAction === "approve" ? { backgroundColor: "#181E4B", color: "white" } : {}}
+  disabled={otpLoading || otpValue.length !== 6}
+  onClick={() => handleOtpAction(otpValue, otpAction)}
+>
+  {otpLoading
+    ? "Processing..."
+    : otpAction === "approve"
+    ? "Approve"
+    : "Reject"}
+</button>
               </div>
             </div>
           </div>

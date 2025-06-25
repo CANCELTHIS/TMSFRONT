@@ -46,7 +46,7 @@ const ListServiceRequestsTable = () => {
       })
       .catch(() => setServiceRequests([]))
       .finally(() => setLoading(false));
-  };
+  }
 
   const handleFileChange = (e, setter) => {
     if (e.target.files && e.target.files[0]) {
@@ -82,10 +82,11 @@ const ListServiceRequestsTable = () => {
       if (!response.ok) throw new Error("Failed to submit files.");
       toast.success("Files submitted successfully!");
       fetchRequests();
-      setSelectedRequest(null);
-      setMaintenanceLetter(null);
-      setReceiptFile(null);
-      setMaintenanceTotalCost("");
+      // Do NOT close the modal or reset fields here
+      // setSelectedRequest(null);
+      // setMaintenanceLetter(null);
+      // setReceiptFile(null);
+      // setMaintenanceTotalCost("");
     } catch (error) {
       toast.error(error.message || "Failed to submit files.");
     } finally {
@@ -223,7 +224,8 @@ const ListServiceRequestsTable = () => {
                   <td>{req.status || "N/A"}</td>
                   <td>
                     <button
-                      className="btn btn-primary btn-sm"
+                      className=""
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
                       onClick={() => setSelectedRequest(req)}
                     >
                       View Details
@@ -252,6 +254,11 @@ const ListServiceRequestsTable = () => {
               <div className="modal-body">
                 <p><strong>Date:</strong> {selectedRequest.created_at ? new Date(selectedRequest.created_at).toLocaleDateString() : "N/A"}</p>
                 <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name || "N/A"}</p>
+                <p>
+                  <a href="https://lms.gdop.gov.et">
+                    <strong>Message to service Provider</strong>
+                  </a>
+                </p>
                 <div className="mb-3">
                   <label htmlFor="maintenanceLetter" className="form-label">
                     Service Letter (PDF) <span style={{ color: "red" }}>*</span>
@@ -303,31 +310,30 @@ const ListServiceRequestsTable = () => {
                 </div>
                 <div className="mb-3 d-flex gap-2">
                   <button
-                    className="btn btn-success"
+                    className="btn btn-success btn-sm px-3"
+                    style={{ minWidth: 90 }}
                     onClick={() => handleSubmitFiles(selectedRequest.id)}
                     disabled={actionLoading}
                   >
                     {actionLoading ? "Submitting..." : "Submit"}
                   </button>
+                </div>
+                <div className="d-flex justify-content-end gap-2 mt-3">
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-sm px-3"
+                    style={{ backgroundColor: "#181E4B", color: "white", minWidth: 90, border: "none" }}
                     onClick={() => setShowConfirmModal(true)}
                     disabled={actionLoading}
                   >
                     {actionLoading ? "Processing..." : "Forward"}
                   </button>
                   <button
-                    className="btn btn-danger"
+                    className="btn btn-danger btn-sm px-3"
+                    style={{ minWidth: 90 }}
                     onClick={() => sendOtp("reject")}
                     disabled={actionLoading}
                   >
-                    Reject (with OTP)
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => setSelectedRequest(null)}
-                  >
-                    Close
+                    Reject 
                   </button>
                 </div>
               </div>
@@ -349,16 +355,17 @@ const ListServiceRequestsTable = () => {
                 <p>Are you sure you want to forward this request?</p>
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn btn-primary"
-                  disabled={actionLoading}
-                  onClick={() => {
-                    setShowConfirmModal(false);
-                    sendOtp("forward");
-                  }}
-                >
-                  {actionLoading ? "Processing..." : "Yes, Forward (with OTP)"}
-                </button>
+<button
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  disabled={actionLoading}
+  onClick={() => {
+    setShowConfirmModal(false);
+    sendOtp("forward");
+  }}
+>
+  {actionLoading ? "Processing..." : " Forward"}
+</button>
                 <button className="btn btn-secondary" onClick={() => setShowConfirmModal(false)}>
                   Cancel
                 </button>
@@ -418,17 +425,18 @@ const ListServiceRequestsTable = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="btn btn-primary"
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={handleOtpSubmit}
-                >
-                  {otpLoading
-                    ? "Processing..."
-                    : otpAction === "forward"
-                    ? "Forward"
-                    : "Reject"}
-                </button>
+<button
+  className="btn"
+  style={{ backgroundColor: "#181E4B", color: "white" }}
+  disabled={otpLoading || otpValue.length !== 6}
+  onClick={handleOtpSubmit}
+>
+  {otpLoading
+    ? "Processing..."
+    : otpAction === "forward"
+    ? "Forward"
+    : "Reject"}
+</button>
               </div>
             </div>
           </div>

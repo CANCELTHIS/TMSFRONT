@@ -381,7 +381,7 @@ const GSmaintenance = () => {
                   {selectedRequest.requesters_car_name}
                 </p>
                 <p>
-                  <a href="http://172.30.61.49/signin">
+                  <a href="https://lms.gdop.gov.et">
                     <strong>Message to Maintenance Provider</strong>
                   </a>
                 </p>
@@ -465,7 +465,8 @@ const GSmaintenance = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-success"
+                  className="btn"
+                  style={{ backgroundColor: "#181E4B", color: "white" }}
                   onClick={async () => {
                     setOtpAction("forward");
                     setOtpModalOpen(true);
@@ -561,10 +562,7 @@ const GSmaintenance = () => {
                 </button>
                 <button
                   className="btn"
-                  style={{
-                    backgroundColor: "rgba(31, 41, 55, 0.9)",
-                    color: "white",
-                  }}
+                  style={{ backgroundColor: "#181E4B", color: "white" }}
                   disabled={otpLoading || otpValue.length !== 6}
                   onClick={() => handleOtpAction(otpValue, otpAction)}
                 >

@@ -1,4 +1,4 @@
-const BASE_URL = "http://172.30.61.194/api/";
+const BASE_URL = "https://tms-api-23gs.onrender.com/";
 
 export const ENDPOINTS = {
   // Department endpoints
