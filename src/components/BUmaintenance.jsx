@@ -395,17 +395,46 @@ onClick={async () => {
               </div>
               <div className="modal-body">
                 <p>Enter the OTP code sent to your phone number.</p>
-                <input
-                  type="text"
-                  className="form-control"
-                  maxLength={6}
-                  value={otpValue}
-                  onChange={(e) =>
-                    setOtpValue(e.target.value.replace(/\D/g, ""))
-                  }
-                  disabled={otpLoading}
-                  placeholder="Enter OTP"
-                />
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {[...Array(6)].map((_, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      className="form-control text-center"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        fontSize: "1.5rem",
+                        borderRadius: "6px",
+                        border: "1px solid #ccc",
+                        boxShadow: "none",
+                      }}
+                      value={otpValue[idx] || ""}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        if (!val) return;
+                        let newOtp = otpValue.split("");
+                        newOtp[idx] = val;
+                        // Move to next input if not last
+                        if (val && idx < 5) {
+                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          if (next) next.focus();
+                        }
+                        setOtpValue(newOtp.join("").slice(0, 6));
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
+                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                          if (prev) prev.focus();
+                        }
+                      }}
+                      id={`otp-input-${idx}`}
+                      disabled={otpLoading}
+                    />
+                  ))}
+                </div>
                 {otpAction === "reject" && (
                   <textarea
                     className="form-control mt-3"

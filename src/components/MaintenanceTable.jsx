@@ -1,24 +1,22 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
+import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CustomPagination from "./CustomPagination";
 import { useLanguage } from "../context/LanguageContext";
+import "../index.css";
 
-const MaintenanceManagement = () => {
-  // State variables
+const MaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // OTP-related states
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
+  const [otpAction, setOtpAction] = useState(null); // "forward", "reject", or "approve"
   const [rejectionMessage, setRejectionMessage] = useState("");
 
   const itemsPerPage = 5;
@@ -27,39 +25,42 @@ const MaintenanceManagement = () => {
     startIndex,
     startIndex + itemsPerPage
   );
-
   const { mylanguage } = useLanguage();
 
-  // Fetch data
-  const fetchData = async () => {
+  // Fetch maintenance requests
+  const fetchMaintenanceRequests = useCallback(async () => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      toast.error(
+        mylanguage === "EN" ? "Authentication required" : "ማረጋገጫ ያስፈልጋል"
+      );
+      return;
+    }
 
-    setLoading(true);
     try {
-      // Fetch maintenance requests
-      const requestsRes = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
+      const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      const requestsData = await requestsRes.json();
-      setMaintenanceRequests(requestsData.results || []);
-    } catch (err) {
-      toast.error(
-        mylanguage === "EN"
-          ? "Failed to load data"
-          : "ዳታ ማምጣት አልተቻለም"
-      );
+
+      if (!response.ok) {
+        throw new Error(
+          mylanguage === "EN"
+            ? "Failed to fetch requests"
+            : "ጥያቄዎችን ማግኘት አልተቻለም"
+        );
+      }
+
+      const data = await response.json();
+      setMaintenanceRequests(data.results || []);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line
   }, [mylanguage]);
 
   // Send OTP using backend endpoint
@@ -93,14 +94,14 @@ const MaintenanceManagement = () => {
     }
   };
 
-  // Handle OTP verification and action (forward, reject)
-  const handleOtpAction = async () => {
+  // Handle OTP verification and action (forward, reject, or approve)
+  const handleOtpAction = async (otp, action) => {
     setOtpLoading(true);
     try {
       const token = localStorage.getItem("authToken");
-      let payload = { action: otpAction, otp_code: otpValue };
+      let payload = { action, otp_code: otp };
 
-      if (otpAction === "reject") {
+      if (action === "reject") {
         payload.rejection_message = rejectionMessage;
       }
 
@@ -121,19 +122,22 @@ const MaintenanceManagement = () => {
         throw new Error(
           data.detail ||
             (mylanguage === "EN"
-              ? `Failed to ${otpAction} request`
-              : `ጥያቄ ላይ ${otpAction} አልተቻለም`)
+              ? `Failed to ${action} request`
+              : `ጥያቄ ላይ ${action} አልተቻለም`)
         );
       }
 
       // Success message based on action
       let successMessage = "";
-      if (otpAction === "forward") {
+      if (action === "forward") {
         successMessage =
           mylanguage === "EN" ? "Request forwarded!" : "ጥያቄ ተቀድሷል!";
-      } else if (otpAction === "reject") {
+      } else if (action === "reject") {
         successMessage =
           mylanguage === "EN" ? "Request rejected!" : "ጥያቄ ተቀባይነት አላገኘም!";
+      } else if (action === "approve") {
+        successMessage =
+          mylanguage === "EN" ? "Request approved!" : "ጥያቄ ተፈቅዷል!";
       }
 
       toast.success(successMessage);
@@ -146,8 +150,8 @@ const MaintenanceManagement = () => {
       setOtpAction(null);
       setRejectionMessage("");
 
-      // Refresh the data
-      fetchData();
+      // Refresh the requests list
+      fetchMaintenanceRequests();
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -155,160 +159,170 @@ const MaintenanceManagement = () => {
     }
   };
 
+  // Fetch maintenance requests on mount
+  useEffect(() => {
+    fetchMaintenanceRequests();
+  }, [fetchMaintenanceRequests]);
+
   return (
     <div className="container mt-5">
       <ToastContainer position="top-center" autoClose={5000} />
+
       <h2 className="text-center mb-4">
         {mylanguage === "EN" ? "Maintenance Requests" : "የጥገና ጥያቄዎች"}
       </h2>
+
       {loading ? (
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status"></div>
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">
+              {mylanguage === "EN" ? "Loading..." : "በመጫን ላይ..."}
+            </span>
+          </div>
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered table-hover">
-            <thead className="table-light">
-              <tr>
-                <th>#</th>
-                <th>{mylanguage === "EN" ? "Date" : "ቀን"}</th>
-                <th>{mylanguage === "EN" ? "Requester" : "ለማን"}</th>
-                <th>{mylanguage === "EN" ? "Vehicle" : "መኪና"}</th>
-                <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
-                <th>{mylanguage === "EN" ? "Actions" : "ድርጊቶች"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.length > 0 ? (
-                currentPageRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{startIndex + index + 1}</td>
-                    <td>{new Date(request.date).toLocaleDateString()}</td>
-                    <td>{request.requester_name}</td>
-                    <td>{request.requesters_car_name}</td>
-                    <td>
-                      <span className={`badge ${
-                        request.status === 'pending' ? 'bg-warning text-dark' :
-                        request.status === 'approved' ? 'bg-success' :
-                        request.status === 'rejected' ? 'bg-danger' : 'bg-secondary'
-                      }`}>
-                        {request.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => setSelectedRequest(request)}
-                      >
-                        {mylanguage === "EN" ? "View" : "እይታ"}
-                      </button>
+        <>
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{mylanguage === "EN" ? "Date" : "ቀን"}</th>
+                  <th>{mylanguage === "EN" ? "Requester" : "ለማን"}</th>
+                  <th>{mylanguage === "EN" ? "Vehicle" : "መኪና"}</th>
+                  <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
+                  <th>{mylanguage === "EN" ? "Actions" : "ድርጊቶች"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{new Date(request.date).toLocaleDateString()}</td>
+                      <td>{request.requester_name}</td>
+                      <td>{request.requesters_car_name}</td>
+                      <td>
+                        <span>{request.status}</span>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-sm"
+                          style={{ backgroundColor: "#14183E", color: "#fff" }}
+                          onClick={() => setSelectedRequest(request)}
+                        >
+                          {mylanguage === "EN" ? "View" : "እይታ"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center py-4">
+                      {mylanguage === "EN"
+                        ? "No maintenance requests found"
+                        : "የጥገና ጥያቄዎች አልተገኙም"}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center py-4">
-                    {mylanguage === "EN"
-                      ? "No maintenance requests found"
-                      : "የጥገና ጥያቄዎች አልተገኙም"}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {maintenanceRequests.length > 0 && (
+            <CustomPagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
+              handlePageChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
-      <CustomPagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
-        handlePageChange={setCurrentPage}
-      />
 
       {/* Request Details Modal */}
       {selectedRequest && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header border-0">
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
                 <h5 className="modal-title">
                   {mylanguage === "EN"
                     ? "Maintenance Request Details"
                     : "የጥገና ጥያቄ ዝርዝሮች"}
                 </h5>
                 <button
-                  className="btn-close"
+                  type="button"
+                  className="btn-close btn-close-white"
                   onClick={() => setSelectedRequest(null)}
                 ></button>
               </div>
               <div className="modal-body">
-                {/* Card-style layout, clean with no blue color */}
                 <div className="row">
-                  <div className="col-md-6 mb-2">
-                    <div className="mb-2">
-                      <span className="fw-bold">{mylanguage === "EN" ? "Requester:" : "ለማን፡"}</span>
-                      <span className="ms-2">{selectedRequest.requester_name}</span>
-                    </div>
-                    <div className="mb-2">
-                      <span className="fw-bold">{mylanguage === "EN" ? "Vehicle:" : "መኪና፡"}</span>
-                      <span className="ms-2">{selectedRequest.requesters_car_name}</span>
-                    </div>
+                  <div className="col-md-6">
+                    <p>
+                      <strong>
+                        {mylanguage === "EN" ? "Request ID:" : "የጥያቄ መለያ፡"}
+                      </strong>{" "}
+                      {selectedRequest.id}
+                    </p>
+                    <p>
+                      <strong>{mylanguage === "EN" ? "Date:" : "ቀን፡"}</strong>{" "}
+                      {new Date(selectedRequest.date).toLocaleString()}
+                    </p>
+                    <p>
+                      <strong>
+                        {mylanguage === "EN" ? "Requester:" : "ለማን፡"}
+                      </strong>{" "}
+                      {selectedRequest.requester_name}
+                    </p>
                   </div>
-                  <div className="col-md-6 mb-2">
-                    <div className="mb-2">
-                      <span className="fw-bold">{mylanguage === "EN" ? "Date:" : "ቀን፡"}</span>
-                      <span className="ms-2">{new Date(selectedRequest.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="mb-2">
-                      <span className="fw-bold">{mylanguage === "EN" ? "Status:" : "ሁኔታ፡"}</span>
-                      <span className={`badge ms-2 ${
-                        selectedRequest.status === 'pending' ? 'bg-warning text-dark' :
-                        selectedRequest.status === 'approved' ? 'bg-success' :
-                        selectedRequest.status === 'rejected' ? 'bg-danger' : 'bg-secondary'
-                      }`}>
-                        {selectedRequest.status}
-                      </span>
-                    </div>
+                  <div className="col-md-6">
+                    <p>
+                      <strong>
+                        {mylanguage === "EN" ? "Vehicle:" : "መኪና፡"}
+                      </strong>{" "}
+                      {selectedRequest.requesters_car_name}
+                    </p>
+                    <p>
+                      <strong>
+                        {mylanguage === "EN" ? "Status:" : "ሁኔታ፡"}
+                      </strong>{" "}
+                      {selectedRequest.status}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-3">
-                  <h6 className="fw-bold">{mylanguage === "EN" ? "Request Details" : "የጥያቄ ዝርዝሮች"}</h6>
-                  <div className="border rounded p-3 bg-light">
-                    {selectedRequest.reason || (
-                      mylanguage === "EN"
+                  <h5>
+                    {mylanguage === "EN" ? "Request Details" : "የጥያቄ ዝርዝሮች"}
+                  </h5>
+                  <div className="border p-3 rounded bg-light">
+                    {selectedRequest.reason ||
+                      (mylanguage === "EN"
                         ? "No details provided"
-                        : "ዝርዝሮች አልተሰጡም"
-                    )}
+                        : "ዝርዝሮች አልተሰጡም")}
                   </div>
                 </div>
               </div>
-              <div className="modal-footer border-0">
-                {selectedRequest.status === 'pending' && (
-                  <>
-                    <button
-                      className="btn btn-primary"
-                      onClick={async () => {
-                        setOtpAction("forward");
-                        setOtpModalOpen(true);
-                        await sendOtp();
-                      }}
-                      disabled={otpLoading}
-                    >
-                      {mylanguage === "EN" ? "Forward" : "ላክ"}
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={async () => {
-                        setOtpAction("reject");
-                        setOtpModalOpen(true);
-                        await sendOtp();
-                      }}
-                      disabled={otpLoading}
-                    >
-                      {mylanguage === "EN" ? "Reject" : "አትቀበል"}
-                    </button>
-                  </>
-                )}
+              <div className="modal-footer">
                 <button
+                  type="button"
+                  className="btn"
+                  style={{ backgroundColor: "#14183E", color: "#fff" }}
+                  onClick={async () => {
+                    setOtpAction("forward");
+                    setOtpModalOpen(true);
+                    await sendOtp();
+                  }}
+                  disabled={otpLoading}
+                >
+                  {mylanguage === "EN" ? "Send OTP" : "OTP ይላኩ"}
+                </button>
+
+                <button
+                  type="button"
                   className="btn btn-secondary"
                   onClick={() => setSelectedRequest(null)}
                   disabled={otpLoading}
@@ -323,16 +337,20 @@ const MaintenanceManagement = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header  text-black">
+              <div className="modal-header">
                 <h5 className="modal-title">
                   {mylanguage === "EN"
                     ? "Enter OTP and choose action"
                     : "OTP ያስገቡ እና ድርጊት ይምረጡ"}
                 </h5>
                 <button
+                  type="button"
                   className="btn-close btn-close-white"
                   onClick={() => {
                     setOtpModalOpen(false);
@@ -361,38 +379,49 @@ const MaintenanceManagement = () => {
                   disabled={otpLoading}
                   placeholder={mylanguage === "EN" ? "Enter OTP" : "OTP ያስገቡ"}
                 />
-
+                <div className="d-flex gap-2 mt-3">
+                  <button
+                    className="btn flex-fill"
+                    style={{ backgroundColor: "#14183E", color: "#fff" }}
+                    disabled={otpLoading || otpValue.length !== 6}
+                    onClick={() => handleOtpAction(otpValue, "forward")}
+                  >
+                    {mylanguage === "EN" ? "Forward" : "ቀጥል"}
+                  </button>
+                  <button
+                    className="btn btn-danger flex-fill"
+                    disabled={otpLoading || otpValue.length !== 6}
+                    onClick={() => handleOtpAction(otpValue, "reject")}
+                  >
+                    {mylanguage === "EN" ? "Reject" : "አትቀበል"}
+                  </button>
+                </div>
                 {otpAction === "reject" && (
-                  <div className="mt-3">
-                    <label className="form-label">
-                      {mylanguage === "EN"
-                        ? "Reason for rejection:"
-                        : "ለመቀባያ ምክንያት፡"}
-                    </label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      value={rejectionMessage}
-                      onChange={(e) => setRejectionMessage(e.target.value)}
-                      placeholder={
-                        mylanguage === "EN"
-                          ? "Enter reason for rejection..."
-                          : "ለመቀባያ ምክንያት ያስገቡ..."
-                      }
-                      disabled={otpLoading}
-                    />
-                  </div>
+                  <textarea
+                    className="form-control mt-3"
+                    rows={2}
+                    value={rejectionMessage}
+                    onChange={(e) => setRejectionMessage(e.target.value)}
+                    placeholder={
+                      mylanguage === "EN"
+                        ? "Reason for rejection"
+                        : "የመቀበል ምክንያት"
+                    }
+                    disabled={otpLoading}
+                  />
                 )}
               </div>
               <div className="modal-footer">
                 <button
+                  type="button"
                   className="btn btn-link"
-                  onClick={sendOtp}
+                  onClick={() => sendOtp()}
                   disabled={otpLoading}
                 >
                   {mylanguage === "EN" ? "Resend OTP" : "OTP ደግመው ይላኩ"}
                 </button>
                 <button
+                  type="button"
                   className="btn btn-secondary"
                   onClick={() => {
                     setOtpModalOpen(false);
@@ -405,20 +434,6 @@ const MaintenanceManagement = () => {
                 >
                   {mylanguage === "EN" ? "Cancel" : "ይቅር"}
                 </button>
-                <button
-                  className="btn btn-success"
-                  onClick={handleOtpAction}
-                  disabled={
-                    otpLoading ||
-                    otpValue.length !== 6 ||
-                    (otpAction === "reject" && !rejectionMessage.trim())
-                  }
-                >
-                  {otpLoading ? (
-                    <span className="spinner-border spinner-border-sm me-2"></span>
-                  ) : null}
-                  {mylanguage === "EN" ? "Confirm" : "አረጋግጥ"}
-                </button>
               </div>
             </div>
           </div>
@@ -428,4 +443,4 @@ const MaintenanceManagement = () => {
   );
 };
 
-export default MaintenanceManagement;
+export default MaintenanceTable;

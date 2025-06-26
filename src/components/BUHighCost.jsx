@@ -37,10 +37,11 @@ const BUHighCost = () => {
     setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+        headers:
+          {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
       });
       if (!response.ok) throw new Error("Failed to fetch high-cost requests");
       const data = await response.json();
@@ -60,10 +61,11 @@ const BUHighCost = () => {
     }
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+        headers:
+          {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
       });
       if (!response.ok) throw new Error("Failed to fetch high-cost request details");
       const data = await response.json();
@@ -88,10 +90,11 @@ const BUHighCost = () => {
     try {
       const response = await fetch(ENDPOINTS.OTP_REQUEST, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
+        headers:
+          {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
         body: JSON.stringify({}),
       });
       if (!response.ok) throw new Error("Failed to send OTP");
@@ -112,10 +115,11 @@ const BUHighCost = () => {
         // Approve (with OTP)
         const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id), {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers:
+            {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
           body: JSON.stringify({
             action: "approve",
             otp_code: otpValue,
@@ -138,10 +142,11 @@ const BUHighCost = () => {
         // Reject (with OTP)
         const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id), {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers:
+            {
+              Authorization: `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            },
           body: JSON.stringify({
             action: "reject",
             rejection_message: rejectionReason,
@@ -337,15 +342,47 @@ const BUHighCost = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <input
-                  type="text"
-                  className="form-control"
-                  maxLength={6}
-                  value={otpValue}
-                  onChange={e => setOtpValue(e.target.value.replace(/\D/g, ""))}
-                  disabled={otpLoading}
-                  placeholder="Enter OTP"
-                />
+                <p>Enter the OTP code sent to your phone number.</p>
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {[...Array(6)].map((_, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      className="form-control text-center"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        fontSize: "1.5rem",
+                        borderRadius: "6px",
+                        border: "1px solid #ccc",
+                        boxShadow: "none",
+                      }}
+                      value={otpValue[idx] || ""}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        if (!val) return;
+                        let newOtp = otpValue.split("");
+                        newOtp[idx] = val;
+                        // Move to next input if not last
+                        if (val && idx < 5) {
+                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          if (next) next.focus();
+                        }
+                        setOtpValue(newOtp.join("").slice(0, 6));
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
+                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                          if (prev) prev.focus();
+                        }
+                      }}
+                      id={`otp-input-${idx}`}
+                      disabled={otpLoading}
+                    />
+                  ))}
+                </div>
                 {otpAction === "reject" && (
                   <textarea
                     className="form-control mt-3"
@@ -378,70 +415,17 @@ const BUHighCost = () => {
                   Cancel
                 </button>
                 <button
-  type="button"
-  className="btn"
-  style={{ backgroundColor: "#181E4B", color: "white" }}
-  disabled={otpLoading || otpValue.length !== 6}
-  onClick={handleOtpAction}
->
-  {otpLoading
-    ? "Processing..."
-    : otpAction === "approve"
-    ? "Approve"
-    : "Reject"}
-</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Rejection Modal */}
-      {showRejectionModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Reject Request</h5>
-                <button
                   type="button"
                   className="btn"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    fontSize: "1.5rem",
-                    color: "#000",
-                    marginLeft: "auto",
-                  }}
-                  onClick={() => setShowRejectionModal(false)}
-                  aria-label="Close"
+                  style={{ backgroundColor: "#181E4B", color: "white" }}
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={handleOtpAction}
                 >
-                  <IoCloseSharp />
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label htmlFor="rejectionReason" className="form-label">Rejection Reason</label>
-                  <textarea
-                    id="rejectionReason"
-                    className="form-control"
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder="Provide a reason for rejection"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={() => {
-                    setShowRejectionModal(false);
-                    sendOtp("reject");
-                  }}
-                >
-                  Submit Rejection (with OTP)
+                  {otpLoading
+                    ? "Processing..."
+                    : otpAction === "approve"
+                    ? "Approve"
+                    : "Reject"}
                 </button>
               </div>
             </div>
