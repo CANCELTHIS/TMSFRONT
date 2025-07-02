@@ -18,6 +18,7 @@ import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai";
 import { FaGaugeHigh } from "react-icons/fa6";
 import { LetterTextIcon, Settings, Wrench } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { FaRoute } from "react-icons/fa"; // For Field Trip icon
 const Sidebar = ({ role }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -80,8 +81,8 @@ const Sidebar = ({ role }) => {
     },
     {
       path: "/transport-manager/high_cost",
-      icon: <FaGaugeHigh size={22} />,
-      label: mylanguage === "EN" ? "Field Trip" : "የከፍተኛ ዋጋ ተሽከርካሪ ጥያቄዎች",
+      icon: <FaRoute size={22} />,
+      label: mylanguage === "EN" ? "Field Trip" : "የመውጫ ጉዞ",
     },
     {
       path: "/transport-manager/report",
@@ -130,7 +131,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/driver/high-cost-schedule",
       icon: <FaGaugeHigh />,
-      label: "Field Trip Schedule",
+      label: "High Cost Schedule",
     },
     {
       path: "/driver/maintenance-request",
@@ -178,7 +179,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/department-manager/hight-cost",
       icon: <FaGaugeHigh />,
-      label: "Field Trip",
+      label: "High Cost",
     },
     {
       path: "/department-manager/history",
@@ -196,7 +197,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/finance-manager/hight-cost",
       icon: <FaGaugeHigh />,
-      label: "Field Trip",
+      label: "High Cost",
     },
     {
       path: "/finance-manager/financemaintenance-table",
@@ -233,8 +234,8 @@ const Sidebar = ({ role }) => {
   const ceoMenus = [
     {
       path: "/ceo/high_cost",
-      icon: <FaGaugeHigh />,
-      label: "Highcost Vehicle Requests",
+      icon: <FaRoute />,
+      label: "Field Trip",
     },
     { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
     {
@@ -272,8 +273,8 @@ const Sidebar = ({ role }) => {
     },
     {
       path: "/budget-manager/high_cost",
-      icon: <FaGaugeHigh />,
-      label: "Highcost Vehicle Requests",
+      icon: <FaRoute />,
+      label: "Field Trip",
     },
     {
       path: "/budget-manager/maintenance",
@@ -315,8 +316,8 @@ const Sidebar = ({ role }) => {
     },
     {
       path: "/general-service/high_cost",
-      icon: <FaGaugeHigh />,
-      label: "Highcost Vehicle Requests",
+      icon: <FaRoute />,
+      label: "Field Trip",
     },
     {
       path: "/general-service/maintenance",
