@@ -6,6 +6,8 @@ import Logo from "../assets/Logo.jpg";
 import { IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const BUHighCost = () => {
   const [requests, setRequests] = useState([]);
@@ -23,6 +25,7 @@ const BUHighCost = () => {
 
   const itemsPerPage = 5;
   const accessToken = localStorage.getItem("authToken");
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   useEffect(() => {
     fetchRequests();
@@ -31,19 +34,25 @@ const BUHighCost = () => {
 
   const fetchRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
-        headers:
-          {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
-      if (!response.ok) throw new Error("Failed to fetch high-cost requests");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch high-cost requests");
+      }
       const data = await response.json();
       setRequests(data.results || []);
     } catch (error) {
@@ -56,18 +65,24 @@ const BUHighCost = () => {
 
   const fetchHighCostDetails = async (requestId) => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
-        headers:
-          {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
-      if (!response.ok) throw new Error("Failed to fetch high-cost request details");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch high-cost request details");
+      }
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
@@ -90,11 +105,10 @@ const BUHighCost = () => {
     try {
       const response = await fetch(ENDPOINTS.OTP_REQUEST, {
         method: "POST",
-        headers:
-          {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({}),
       });
       if (!response.ok) throw new Error("Failed to send OTP");
@@ -113,22 +127,26 @@ const BUHighCost = () => {
     try {
       if (otpAction === "approve") {
         // Approve (with OTP)
-        const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id), {
-          method: "POST",
-          headers:
-            {
+        const response = await fetch(
+          ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
+          {
+            method: "POST",
+            headers: {
               Authorization: `Bearer ${accessToken}`,
               "Content-Type": "application/json",
             },
-          body: JSON.stringify({
-            action: "approve",
-            otp_code: otpValue,
-          }),
-        });
+            body: JSON.stringify({
+              action: "approve",
+              otp_code: otpValue,
+            }),
+          }
+        );
         if (!response.ok) throw new Error("Failed to approve request");
         setRequests((prevRequests) =>
           prevRequests.map((req) =>
-            req.id === selectedRequest.id ? { ...req, status: "forwarded" } : req
+            req.id === selectedRequest.id
+              ? { ...req, status: "forwarded" }
+              : req
           )
         );
         setSelectedRequest(null);
@@ -140,19 +158,21 @@ const BUHighCost = () => {
           return;
         }
         // Reject (with OTP)
-        const response = await fetch(ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id), {
-          method: "POST",
-          headers:
-            {
+        const response = await fetch(
+          ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
+          {
+            method: "POST",
+            headers: {
               Authorization: `Bearer ${accessToken}`,
               "Content-Type": "application/json",
             },
-          body: JSON.stringify({
-            action: "reject",
-            rejection_message: rejectionReason,
-            otp_code: otpValue,
-          }),
-        });
+            body: JSON.stringify({
+              action: "reject",
+              rejection_message: rejectionReason,
+              otp_code: otpValue,
+            }),
+          }
+        );
         if (!response.ok) throw new Error("Failed to reject request");
         setRequests((prevRequests) =>
           prevRequests.map((req) =>
@@ -178,8 +198,18 @@ const BUHighCost = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
 
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
+
   return (
-    <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div
+      className="container mt-4"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
       <ToastContainer />
       {loading ? (
         <div className="text-center mt-4">
@@ -189,7 +219,10 @@ const BUHighCost = () => {
           <p>Loading data...</p>
         </div>
       ) : (
-        <div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
+        <div
+          className="table-responsive"
+          style={{ width: "100%", overflowX: "auto" }}
+        >
           <table className="table table-hover align-middle">
             <thead className="table">
               <tr>
@@ -235,7 +268,10 @@ const BUHighCost = () => {
         </div>
       )}
 
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100px" }}
+      >
         <CustomPagination
           currentPage={currentPage}
           totalPages={Math.ceil(requests.length / itemsPerPage)}
@@ -245,11 +281,23 @@ const BUHighCost = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
+                />
                 <h5 className="modal-title">Transport Request Details</h5>
                 <button
                   type="button"
@@ -268,29 +316,67 @@ const BUHighCost = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Requester:</strong> {selectedRequest.requester}</p>
-                <p><strong>Employees:</strong> {selectedRequest.employees?.join(", ") || "N/A"}</p>
-                <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle || "N/A"}</p>
-                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
-                <p><strong>Vehicle Assigned:</strong> {selectedRequest.vehicle_assigned ? "Yes" : "No"}</p>
-                <p><strong>Estimated Distance (km):</strong> {selectedRequest.estimated_distance_km || "N/A"}</p>
-                <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter || "N/A"}</p>
-                <p><strong>Fuel Needed (Liters):</strong> {selectedRequest.fuel_needed_liters || "N/A"}</p>
-                <p><strong>Total Cost:</strong> {selectedRequest.total_cost || "N/A"} ETB</p>
-                <p><strong>Created At:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
+                <p>
+                  <strong>Requester:</strong> {selectedRequest.requester}
+                </p>
+                <p>
+                  <strong>Employees:</strong>{" "}
+                  {selectedRequest.employees?.join(", ") || "N/A"}
+                </p>
+                <p>
+                  <strong>Estimated Vehicle:</strong>{" "}
+                  {selectedRequest.estimated_vehicle || "N/A"}
+                </p>
+                <p>
+                  <strong>Start Day:</strong> {selectedRequest.start_day}
+                </p>
+                <p>
+                  <strong>Return Day:</strong> {selectedRequest.return_day}
+                </p>
+                <p>
+                  <strong>Start Time:</strong> {selectedRequest.start_time}
+                </p>
+                <p>
+                  <strong>Destination:</strong> {selectedRequest.destination}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedRequest.status}
+                </p>
+                <p>
+                  <strong>Vehicle Assigned:</strong>{" "}
+                  {selectedRequest.vehicle_assigned ? "Yes" : "No"}
+                </p>
+                <p>
+                  <strong>Estimated Distance (km):</strong>{" "}
+                  {selectedRequest.estimated_distance_km || "N/A"}
+                </p>
+                <p>
+                  <strong>Fuel Price per Liter:</strong>{" "}
+                  {selectedRequest.fuel_price_per_liter || "N/A"}
+                </p>
+                <p>
+                  <strong>Fuel Needed (Liters):</strong>{" "}
+                  {selectedRequest.fuel_needed_liters || "N/A"}
+                </p>
+                <p>
+                  <strong>Total Cost:</strong>{" "}
+                  {selectedRequest.total_cost || "N/A"} ETB
+                </p>
+                <p>
+                  <strong>Created At:</strong>{" "}
+                  {new Date(selectedRequest.created_at).toLocaleString()}
+                </p>
               </div>
               <div className="modal-footer">
                 <button
-  className="btn"
-  style={{ backgroundColor: "#181E4B", color: "white" }}
-  onClick={() => sendOtp("approve")}
->
-  Approve 
+                  className="btn"
+                  style={{ backgroundColor: "#181E4B", color: "white" }}
+                  onClick={() => sendOtp("approve")}
+                >
+                  Approve
                 </button>
                 <button
                   className="btn btn-danger"
@@ -313,12 +399,17 @@ const BUHighCost = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"}{" "}
+                  request
                 </h5>
                 <button
                   type="button"
@@ -360,21 +451,29 @@ const BUHighCost = () => {
                         boxShadow: "none",
                       }}
                       value={otpValue[idx] || ""}
-                      onChange={e => {
+                      onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
                         // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
-                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
                           if (prev) prev.focus();
                         }
                       }}

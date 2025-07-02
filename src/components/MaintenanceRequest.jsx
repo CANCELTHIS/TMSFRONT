@@ -5,6 +5,8 @@ import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from "react-toastify"; // Import toast for notifications
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import Logo from "../assets/Logo.jpg"; // Import the logo
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const MaintenanceRequest = () => {
   const [requests, setRequests] = useState([]); // State to store maintenance requests
@@ -12,12 +14,13 @@ const MaintenanceRequest = () => {
   const [showForm, setShowForm] = useState(false); // State to toggle the form modal
   const [formData, setFormData] = useState({ date: "", reason: "" }); // State for form data
   const [currentUser, setCurrentUser] = useState(null); // State to store current user data
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const fetchMaintenanceRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -31,6 +34,11 @@ const MaintenanceRequest = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch maintenance requests");
       }
 
@@ -46,7 +54,7 @@ const MaintenanceRequest = () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -60,6 +68,11 @@ const MaintenanceRequest = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch current user data");
       }
 
@@ -116,7 +129,9 @@ const MaintenanceRequest = () => {
       toast.success("Your maintenance request has been created successfully!");
     } catch (error) {
       console.error("Error creating maintenance request:", error);
-      toast.error("Failed to create the maintenance request. Please try again.");
+      toast.error(
+        "Failed to create the maintenance request. Please try again."
+      );
     }
   };
 
@@ -124,6 +139,13 @@ const MaintenanceRequest = () => {
     fetchMaintenanceRequests();
     fetchCurrentUser();
   }, []);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -141,7 +163,10 @@ const MaintenanceRequest = () => {
       </div>
 
       {showForm && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -186,7 +211,11 @@ const MaintenanceRequest = () => {
                   </div>
                   <button
                     type="submit"
-                    style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
+                    style={{
+                      width: "300px",
+                      backgroundColor: "#181E4B",
+                      color: "white",
+                    }}
                     className="btn"
                   >
                     Submit
@@ -232,7 +261,10 @@ const MaintenanceRequest = () => {
       </div>
 
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -240,7 +272,11 @@ const MaintenanceRequest = () => {
                   <img
                     src={Logo}
                     alt="Logo"
-                    style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                    style={{
+                      width: "100px",
+                      height: "70px",
+                      marginRight: "10px",
+                    }}
                   />
                   <h5 className="modal-title">Maintenance Request Details</h5>
                 </div>
@@ -253,11 +289,24 @@ const MaintenanceRequest = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedRequest.date).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </p>
+                <p>
+                  <strong>Requester Name:</strong>{" "}
+                  {selectedRequest.requester_name}
+                </p>
+                <p>
+                  <strong>Requester's Car:</strong>{" "}
+                  {selectedRequest.requesters_car_name}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedRequest.status}
+                </p>
               </div>
             </div>
           </div>

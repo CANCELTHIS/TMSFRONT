@@ -3,7 +3,18 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ENDPOINTS } from "../utilities/endpoints";
-import { FaCar, FaWrench, FaSearch, FaSync, FaSort, FaSortUp, FaSortDown, FaUser } from "react-icons/fa";
+import {
+  FaCar,
+  FaWrench,
+  FaSearch,
+  FaSync,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaUser,
+} from "react-icons/fa";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 // OTP Modal
 const OTPModal = ({
@@ -14,39 +25,62 @@ const OTPModal = ({
   onClose,
   onResend,
   onSubmit,
-  actionLabel
-}) => open ? (
-  <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-    <div className="modal-dialog modal-dialog-centered">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h5 className="modal-title">Enter OTP to {actionLabel}</h5>
-          <button type="button" className="btn-close" onClick={onClose} disabled={loading} />
-        </div>
-        <div className="modal-body">
-          <input
-            type="text"
-            className="form-control"
-            maxLength={6}
-            value={value}
-            onChange={e => onChange(e.target.value.replace(/\D/g, ""))}
-            disabled={loading}
-            placeholder="Enter OTP"
-          />
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-link" onClick={onResend} disabled={loading}>Resend OTP</button>
-          <button className="btn btn-secondary" onClick={onClose} disabled={loading}>Cancel</button>
-          <button
-            className="btn btn-primary"
-            disabled={loading || value.length !== 6}
-            onClick={onSubmit}
-          >{loading ? "Processing..." : actionLabel}</button>
+  actionLabel,
+}) =>
+  open ? (
+    <div
+      className="modal fade show d-block"
+      style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+    >
+      <div className="modal-dialog modal-dialog-centered">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">Enter OTP to {actionLabel}</h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={onClose}
+              disabled={loading}
+            />
+          </div>
+          <div className="modal-body">
+            <input
+              type="text"
+              className="form-control"
+              maxLength={6}
+              value={value}
+              onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+              disabled={loading}
+              placeholder="Enter OTP"
+            />
+          </div>
+          <div className="modal-footer">
+            <button
+              className="btn btn-link"
+              onClick={onResend}
+              disabled={loading}
+            >
+              Resend OTP
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              className="btn btn-primary"
+              disabled={loading || value.length !== 6}
+              onClick={onSubmit}
+            >
+              {loading ? "Processing..." : actionLabel}
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-) : null;
+  ) : null;
 
 function VehicleServiceManager() {
   const [allVehicles, setAllVehicles] = useState([]);
@@ -56,7 +90,10 @@ function VehicleServiceManager() {
   const [refetchTrigger, setRefetchTrigger] = useState(0);
   const [activeTab, setActiveTab] = useState("due");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: "model", direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "model",
+    direction: "asc",
+  });
 
   // OTP
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -64,6 +101,9 @@ function VehicleServiceManager() {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // { type: 'service'|'available', id }
   const [otpActionLabel, setOtpActionLabel] = useState("");
+
+  // Error handling
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Helper function to get auth token
   const getAuthToken = () => {
@@ -77,6 +117,11 @@ function VehicleServiceManager() {
   // Handle API responses consistently
   const handleApiResponse = async (response) => {
     if (!response.ok) {
+      if (response.status === 401) {
+        setErrorType("unauthorized");
+      } else {
+        setErrorType("server");
+      }
       let errorMsg = "Server error";
       try {
         const data = await response.json();
@@ -141,9 +186,13 @@ function VehicleServiceManager() {
   // Helper function to display status text
   const getStatusDisplay = (status) => {
     switch (status) {
-      case 'available': return 'Available';
-      case 'service': case 'under_service': return 'Under Service';
-      default: return status.charAt(0).toUpperCase() + status.slice(1);
+      case "available":
+        return "Available";
+      case "service":
+      case "under_service":
+        return "Under Service";
+      default:
+        return status.charAt(0).toUpperCase() + status.slice(1);
     }
   };
 
@@ -184,8 +233,10 @@ function VehicleServiceManager() {
     try {
       const token = getAuthToken();
       let url = "";
-      if (otpAction.type === "service") url = ENDPOINTS.MARK_VEHICLE_SERVICE(otpAction.id);
-      if (otpAction.type === "available") url = ENDPOINTS.MARK_VEHICLE_AVAILABLE(otpAction.id);
+      if (otpAction.type === "service")
+        url = ENDPOINTS.MARK_VEHICLE_SERVICE(otpAction.id);
+      if (otpAction.type === "available")
+        url = ENDPOINTS.MARK_VEHICLE_AVAILABLE(otpAction.id);
 
       const response = await fetch(url, {
         method: "POST",
@@ -197,7 +248,7 @@ function VehicleServiceManager() {
       });
 
       await handleApiResponse(response);
-      setRefetchTrigger(prev => prev + 1);
+      setRefetchTrigger((prev) => prev + 1);
       toast.success(
         otpAction.type === "service"
           ? "Vehicle marked as Under Service"
@@ -216,14 +267,16 @@ function VehicleServiceManager() {
   // Filter vehicles based on active tab and search term
   const filterVehicles = () => {
     let filtered = [];
-    if (activeTab === "due") filtered = allVehicles.filter(v => v.status === "available");
+    if (activeTab === "due")
+      filtered = allVehicles.filter((v) => v.status === "available");
     else if (activeTab === "under") filtered = servicedVehicles;
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(v =>
-        (v.model && v.model.toLowerCase().includes(term)) ||
-        (v.license_plate && v.license_plate.toLowerCase().includes(term)) ||
-        (v.driver_name && v.driver_name.toLowerCase().includes(term))
+      filtered = filtered.filter(
+        (v) =>
+          (v.model && v.model.toLowerCase().includes(term)) ||
+          (v.license_plate && v.license_plate.toLowerCase().includes(term)) ||
+          (v.driver_name && v.driver_name.toLowerCase().includes(term))
       );
     }
     return filtered;
@@ -231,8 +284,9 @@ function VehicleServiceManager() {
 
   // Handle sorting
   const handleSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc")
+      direction = "desc";
     setSortConfig({ key, direction });
   };
 
@@ -240,10 +294,10 @@ function VehicleServiceManager() {
   const getSortedVehicles = (vehicles) => {
     if (!sortConfig.key) return vehicles;
     return [...vehicles].sort((a, b) => {
-      const aValue = a[sortConfig.key] || '';
-      const bValue = b[sortConfig.key] || '';
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
   };
@@ -254,18 +308,23 @@ function VehicleServiceManager() {
   // Get status badge class
   const getStatusClass = (status) => {
     switch (status) {
-      case 'available': return 'bg-success';
-      case 'service': return 'bg-warning text-dark';
-      default: return 'bg-secondary';
+      case "available":
+        return "bg-success";
+      case "service":
+        return "bg-warning text-dark";
+      default:
+        return "bg-secondary";
     }
   };
 
   // Get sort icon for column
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <FaSort className="text-muted ms-1" />;
-    return sortConfig.direction === 'asc'
-      ? <FaSortUp className="text-primary ms-1" />
-      : <FaSortDown className="text-primary ms-1" />;
+    return sortConfig.direction === "asc" ? (
+      <FaSortUp className="text-primary ms-1" />
+    ) : (
+      <FaSortDown className="text-primary ms-1" />
+    );
   };
 
   // Determine if we should show loading state
@@ -274,6 +333,13 @@ function VehicleServiceManager() {
     if (activeTab === "due") return loading;
     return loading || loadingServiced;
   };
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container py-4">
@@ -298,12 +364,14 @@ function VehicleServiceManager() {
               disabled={activeTab === "all"}
             />
           </div>
-          <button 
+          <button
             className="btn btn-outline-primary d-flex align-items-center"
-            onClick={() => setRefetchTrigger(prev => prev + 1)}
+            onClick={() => setRefetchTrigger((prev) => prev + 1)}
             disabled={loading || loadingServiced}
           >
-            <FaSync className={(loading || loadingServiced) ? "me-2 spin" : "me-2"} />
+            <FaSync
+              className={loading || loadingServiced ? "me-2 spin" : "me-2"}
+            />
             Refresh
           </button>
         </div>
@@ -317,7 +385,9 @@ function VehicleServiceManager() {
           >
             <li className="nav-item">
               <button
-                className={`nav-link ${activeTab === "under" ? "active" : ""} d-flex align-items-center`}
+                className={`nav-link ${
+                  activeTab === "under" ? "active" : ""
+                } d-flex align-items-center`}
                 onClick={() => setActiveTab("under")}
                 style={{ minWidth: "200px" }}
               >
@@ -330,39 +400,66 @@ function VehicleServiceManager() {
             </li>
             <li className="nav-item">
               <button
-                className={`nav-link ${activeTab === "due" ? "active" : ""} d-flex align-items-center`}
+                className={`nav-link ${
+                  activeTab === "due" ? "active" : ""
+                } d-flex align-items-center`}
                 onClick={() => setActiveTab("due")}
                 style={{ minWidth: "200px" }}
               >
                 <FaWrench className="me-2" />
                 Due Service
                 <span className="badge bg-danger ms-2">
-                  {allVehicles.filter(v => v.status === "available").length}
+                  {allVehicles.filter((v) => v.status === "available").length}
                 </span>
               </button>
             </li>
           </ul>
         </div>
-        
+
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
               <thead className="table-light">
                 <tr>
-                  <th onClick={() => handleSort('model')} className="cursor-pointer">
-                    <div className="d-flex align-items-center">Vehicle{getSortIcon('model')}</div>
+                  <th
+                    onClick={() => handleSort("model")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      Vehicle{getSortIcon("model")}
+                    </div>
                   </th>
-                  <th onClick={() => handleSort('license_plate')} className="cursor-pointer">
-                    <div className="d-flex align-items-center">Plate No.{getSortIcon('license_plate')}</div>
+                  <th
+                    onClick={() => handleSort("license_plate")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      Plate No.{getSortIcon("license_plate")}
+                    </div>
                   </th>
-                  <th onClick={() => handleSort('driver_name')} className="cursor-pointer">
-                    <div className="d-flex align-items-center">Driver{getSortIcon('driver_name')}</div>
+                  <th
+                    onClick={() => handleSort("driver_name")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      Driver{getSortIcon("driver_name")}
+                    </div>
                   </th>
-                  <th onClick={() => handleSort('total_kilometers')} className="cursor-pointer text-end">
-                    <div className="d-flex align-items-center justify-content-end">Total KM{getSortIcon('total_kilometers')}</div>
+                  <th
+                    onClick={() => handleSort("total_kilometers")}
+                    className="cursor-pointer text-end"
+                  >
+                    <div className="d-flex align-items-center justify-content-end">
+                      Total KM{getSortIcon("total_kilometers")}
+                    </div>
                   </th>
-                  <th onClick={() => handleSort('last_service_kilometers')} className="cursor-pointer text-end">
-                    <div className="d-flex align-items-center justify-content-end">Last Service KM{getSortIcon('last_service_kilometers')}</div>
+                  <th
+                    onClick={() => handleSort("last_service_kilometers")}
+                    className="cursor-pointer text-end"
+                  >
+                    <div className="d-flex align-items-center justify-content-end">
+                      Last Service KM{getSortIcon("last_service_kilometers")}
+                    </div>
                   </th>
                   <th>Status</th>
                   <th className="text-center">Action</th>
@@ -373,7 +470,10 @@ function VehicleServiceManager() {
                   <tr>
                     <td colSpan={7} className="text-center py-5">
                       <div className="d-flex justify-content-center align-items-center">
-                        <div className="spinner-border text-primary" role="status">
+                        <div
+                          className="spinner-border text-primary"
+                          role="status"
+                        >
                           <span className="visually-hidden">Loading...</span>
                         </div>
                         <span className="ms-3">
@@ -395,7 +495,9 @@ function VehicleServiceManager() {
                             : "No vehicles currently under service"}
                         </p>
                         <small className="text-muted">
-                          {searchTerm ? "Try adjusting your search term" : "Add new vehicles or check back later"}
+                          {searchTerm
+                            ? "Try adjusting your search term"
+                            : "Add new vehicles or check back later"}
                         </small>
                       </div>
                     </td>
@@ -410,7 +512,9 @@ function VehicleServiceManager() {
                           </div>
                           <div>
                             <div className="fw-medium">{vehicle.model}</div>
-                            <small className="text-muted">ID: {vehicle.id}</small>
+                            <small className="text-muted">
+                              ID: {vehicle.id}
+                            </small>
                           </div>
                         </div>
                       </td>
@@ -438,7 +542,11 @@ function VehicleServiceManager() {
                           : "N/A"}
                       </td>
                       <td>
-                        <span className={`badge ${getStatusClass(vehicle.status)} py-2 px-3`}>
+                        <span
+                          className={`badge ${getStatusClass(
+                            vehicle.status
+                          )} py-2 px-3`}
+                        >
                           {getStatusDisplay(vehicle.status)}
                         </span>
                       </td>
@@ -446,14 +554,26 @@ function VehicleServiceManager() {
                         {vehicle.status === "available" ? (
                           <button
                             className="btn btn-sm btn-outline-primary d-flex align-items-center"
-                            onClick={() => requestOtp("service", vehicle.id, "mark as Under Service")}
+                            onClick={() =>
+                              requestOtp(
+                                "service",
+                                vehicle.id,
+                                "mark as Under Service"
+                              )
+                            }
                           >
                             <FaWrench className="me-1" /> Service (OTP)
                           </button>
                         ) : vehicle.status === "service" ? (
                           <button
                             className="btn btn-sm btn-outline-success d-flex align-items-center"
-                            onClick={() => requestOtp("available", vehicle.id, "mark as Available")}
+                            onClick={() =>
+                              requestOtp(
+                                "available",
+                                vehicle.id,
+                                "mark as Available"
+                              )
+                            }
                           >
                             <FaCar className="me-1" /> Available (OTP)
                           </button>
@@ -472,13 +592,20 @@ function VehicleServiceManager() {
         {activeTab !== "all" && (
           <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-0">
             <div className="text-muted small">
-              Showing <span className="fw-medium">{filteredVehicles.length}</span> vehicles
+              Showing{" "}
+              <span className="fw-medium">{filteredVehicles.length}</span>{" "}
+              vehicles
               {activeTab !== "under" && (
-                <span> of <span className="fw-medium">{
-                  activeTab === "due"
-                    ? allVehicles.filter(v => v.status === "available").length
-                    : allVehicles.length
-                }</span></span>
+                <span>
+                  {" "}
+                  of{" "}
+                  <span className="fw-medium">
+                    {activeTab === "due"
+                      ? allVehicles.filter((v) => v.status === "available")
+                          .length
+                      : allVehicles.length}
+                  </span>
+                </span>
               )}
             </div>
             <div className="d-flex gap-2">
@@ -505,7 +632,9 @@ function VehicleServiceManager() {
           setOtpValue("");
           setOtpAction(null);
         }}
-        onResend={() => requestOtp(otpAction?.type, otpAction?.id, otpActionLabel)}
+        onResend={() =>
+          requestOtp(otpAction?.type, otpAction?.id, otpActionLabel)
+        }
         onSubmit={handleOtpSubmit}
         actionLabel={otpActionLabel}
       />
@@ -520,8 +649,12 @@ function VehicleServiceManager() {
           animation: spin 1s linear infinite;
         }
         @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
         }
         .nav-link {
           transition: all 0.2s ease;

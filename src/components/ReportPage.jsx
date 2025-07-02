@@ -11,6 +11,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const to2dp = (v) => Number(v || 0).toFixed(2);
 
@@ -71,6 +73,7 @@ const ReportPage = () => {
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [plateSearch, setPlateSearch] = useState("");
   const [driverSearch, setDriverSearch] = useState("");
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const currentYear = new Date().getFullYear();
   const yearOptions = [];
@@ -87,7 +90,7 @@ const ReportPage = () => {
         localStorage.getItem("authToken") ||
         localStorage.getItem("token");
       if (!accessToken) {
-        setError("You are not authorized. Please log in.");
+        setErrorType("unauthorized");
         setLoading(false);
         setTableData([]);
         return;
@@ -111,7 +114,7 @@ const ReportPage = () => {
           },
         });
         if (res.status === 401) {
-          setError("Session expired or unauthorized. Please log in again.");
+          setErrorType("unauthorized");
           setLoading(false);
           setTableData([]);
           return;
@@ -150,7 +153,7 @@ const ReportPage = () => {
         const groupedData = Object.values(requestMap);
         setTableData(groupedData);
       } catch (err) {
-        setError("Failed to fetch report data.");
+        setErrorType("server");
         setTableData([]);
       }
       setLoading(false);
@@ -260,6 +263,13 @@ const ReportPage = () => {
     printWindow.print();
     printWindow.close();
   };
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div

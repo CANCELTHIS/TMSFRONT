@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
-import CustomPagination from './CustomPagination';
+import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const CEOService = () => {
   const [requests, setRequests] = useState([]);
@@ -28,12 +30,13 @@ const CEOService = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Fetch service requests
   const fetchRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     setLoading(true);
@@ -47,6 +50,11 @@ const CEOService = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch service requests");
       }
 
@@ -144,7 +152,11 @@ const CEOService = () => {
       setOtpModalOpen(false);
       setOtpValue("");
       setOtpAction(null);
-      toast.success(`Request ${otpAction === "approve" ? "approved" : "rejected"} successfully!`);
+      toast.success(
+        `Request ${
+          otpAction === "approve" ? "approved" : "rejected"
+        } successfully!`
+      );
     } catch (error) {
       toast.error(`Failed to ${otpAction} the request.`);
     } finally {
@@ -157,6 +169,14 @@ const CEOService = () => {
     fetchRequests();
     // eslint-disable-next-line
   }, []);
+
+  // Render error pages if needed
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -213,7 +233,10 @@ const CEOService = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -239,11 +262,14 @@ const CEOService = () => {
                     <p>
                       <strong>Created At:</strong>{" "}
                       {selectedRequest.created_at
-                        ? new Date(selectedRequest.created_at).toLocaleDateString()
+                        ? new Date(
+                            selectedRequest.created_at
+                          ).toLocaleDateString()
                         : "N/A"}
                     </p>
                     <p>
-                      <strong>Vehicle:</strong> {selectedRequest.vehicle || "N/A"}
+                      <strong>Vehicle:</strong>{" "}
+                      {selectedRequest.vehicle || "N/A"}
                     </p>
                     <p>
                       <strong>Status:</strong> {selectedRequest.status}
@@ -287,15 +313,15 @@ const CEOService = () => {
                   Close
                 </button>
                 <button
-  className="btn"
-  style={{ backgroundColor: "#181E4B", color: "white" }}
-  onClick={() => {
-    setOtpAction("approve");
-    sendOtp("approve");
-  }}
-  disabled={actionLoading || detailLoading}
->
-  Approve 
+                  className="btn"
+                  style={{ backgroundColor: "#181E4B", color: "white" }}
+                  onClick={() => {
+                    setOtpAction("approve");
+                    sendOtp("approve");
+                  }}
+                  disabled={actionLoading || detailLoading}
+                >
+                  Approve
                 </button>
                 <button
                   className="btn btn-danger"
@@ -314,12 +340,16 @@ const CEOService = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"}{" "}
+                  request
                 </h5>
                 <button
                   type="button"
@@ -353,21 +383,29 @@ const CEOService = () => {
                         boxShadow: "none",
                       }}
                       value={otpValue[idx] || ""}
-                      onChange={e => {
+                      onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
                         // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
-                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
                           if (prev) prev.focus();
                         }
                       }}
@@ -426,7 +464,10 @@ const CEOService = () => {
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">

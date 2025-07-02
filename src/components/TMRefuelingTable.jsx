@@ -5,6 +5,8 @@ import { MdOutlineClose } from "react-icons/md";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomPagination from "./CustomPagination";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const TMRefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
@@ -42,10 +44,12 @@ const TMRefuelingTable = () => {
   const handlePreviousPage = () =>
     setCurrentPage((prev) => Math.max(prev - 1, 1));
 
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     try {
@@ -57,11 +61,17 @@ const TMRefuelingTable = () => {
         },
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch refueling requests");
       }
       const data = await response.json();
       setRefuelingRequests(data.results || []);
     } catch (error) {
+      setErrorType("server");
       console.error("Error fetching refueling requests:", error);
     } finally {
       setLoading(false);
@@ -71,7 +81,7 @@ const TMRefuelingTable = () => {
   const fetchRequestDetail = async (requestId) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     try {
@@ -86,6 +96,11 @@ const TMRefuelingTable = () => {
         }
       );
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch refueling request details");
       }
       const requestData = await response.json();
@@ -100,6 +115,11 @@ const TMRefuelingTable = () => {
         }
       );
       if (!vehicleResponse.ok) {
+        if (vehicleResponse.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch vehicle details");
       }
       const vehicleData = await vehicleResponse.json();
@@ -107,6 +127,7 @@ const TMRefuelingTable = () => {
       requestData.fuel_efficiency = parseFloat(vehicleData.fuel_efficiency);
       setSelectedRequest(requestData);
     } catch (error) {
+      setErrorType("server");
       console.error("Error fetching refueling request details:", error);
       toast.error("Failed to fetch request details.");
     }
@@ -245,9 +266,7 @@ const TMRefuelingTable = () => {
       );
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(
-          data.detail || `Failed to ${action} refueling request`
-        );
+        throw new Error(data.detail || `Failed to ${action} refueling request`);
       }
       let successMessage = "";
       if (action === "forward") successMessage = "Request forwarded!";
@@ -272,6 +291,13 @@ const TMRefuelingTable = () => {
   useEffect(() => {
     fetchRefuelingRequests();
   }, []);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -432,7 +458,7 @@ const TMRefuelingTable = () => {
                         await sendOtp();
                       }}
                     >
-                      Forward 
+                      Forward
                     </button>
                     <button
                       className="btn btn-danger"
@@ -442,7 +468,7 @@ const TMRefuelingTable = () => {
                         await sendOtp();
                       }}
                     >
-                      Reject 
+                      Reject
                     </button>
                   </>
                 )}
@@ -470,7 +496,8 @@ const TMRefuelingTable = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"}{" "}
+                  request
                 </h5>
                 <button
                   type="button"
@@ -488,9 +515,7 @@ const TMRefuelingTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p>
-                  Enter the OTP code sent to your phone number.
-                </p>
+                <p>Enter the OTP code sent to your phone number.</p>
                 <div className="d-flex justify-content-center gap-2 mb-3">
                   {[...Array(6)].map((_, idx) => (
                     <input
@@ -508,21 +533,29 @@ const TMRefuelingTable = () => {
                         boxShadow: "none",
                       }}
                       value={otpValue[idx] || ""}
-                      onChange={e => {
+                      onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
                         // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
-                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
                           if (prev) prev.focus();
                         }
                       }}

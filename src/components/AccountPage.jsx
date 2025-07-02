@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
+
 const AccountPage = () => {
   const itemsPerPage = 5;
   const [accounts, setAccounts] = useState([]);
@@ -14,10 +17,11 @@ const AccountPage = () => {
     phone: "",
     role: "",
     department: "",
-  }); 
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   useEffect(() => {
     fetchUsers();
@@ -26,49 +30,61 @@ const AccountPage = () => {
   }, []);
 
   const fetchUsers = async () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     if (!token) {
       setError("Unauthorized. Please log in.");
+      setErrorType("unauthorized");
       setIsLoading(false);
       return;
     }
-  
+
     try {
       const response = await axios.get(ENDPOINTS.APPROVED_USERS, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
+
       console.log("Fetched Users:", response.data);
-  
-      const filteredAccounts = response.data.filter(user => user.role !== 7);
-      filteredAccounts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  
+
+      const filteredAccounts = response.data.filter((user) => user.role !== 7);
+      filteredAccounts.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+
       setAccounts(filteredAccounts);
       setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      if (error.response && error.response.status === 401) {
+        setErrorType("unauthorized");
+      } else {
+        setErrorType("server");
+      }
       setError("Failed to load approved users.");
       setIsLoading(false);
     }
   };
-  
+
   const fetchDepartments = async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
       setError("Unauthorized. Please log in.");
+      setErrorType("unauthorized");
       return;
     }
-  
+
     try {
       const response = await axios.get(ENDPOINTS.DEPARTMENT_LIST, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
-      console.log("Fetched Departments:", response.data); 
-  
+
+      console.log("Fetched Departments:", response.data);
+
       setDepartments(response.data);
     } catch (error) {
-      console.error("Error fetching departments:", error);
+      if (error.response && error.response.status === 401) {
+        setErrorType("unauthorized");
+      } else {
+        setErrorType("server");
+      }
       setError("Failed to load departments.");
     }
   };
@@ -81,7 +97,7 @@ const AccountPage = () => {
       5: "CEO",
       6: "Driver",
       7: "System Admin",
-      8: "General System Excuter", 
+      8: "General System Excuter",
       9: "Budget Manager",
     };
     setRoleMappings(roleData);
@@ -93,15 +109,19 @@ const AccountPage = () => {
   const totalPages = Math.ceil(accounts.length / itemsPerPage);
 
   const handleToggleStatus = async (id, isActive) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem("authToken");
     const endpoint = isActive
       ? ENDPOINTS.DEACTIVATE_USER(id)
       : ENDPOINTS.ACTIVATE_USER(id);
 
     try {
-      await axios.post(endpoint, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(
+        endpoint,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       // Update the UI without refetching the entire list
       setAccounts((prevAccounts) =>
@@ -136,9 +156,7 @@ const AccountPage = () => {
       );
 
       const updatedAccounts = accounts.map((acc) =>
-        acc.id === editAccount.id
-          ? { ...acc, role: formValues.role } 
-          : acc
+        acc.id === editAccount.id ? { ...acc, role: formValues.role } : acc
       );
 
       setAccounts(updatedAccounts);
@@ -173,136 +191,166 @@ const AccountPage = () => {
   };
 
   return (
-    <div className="d-flex mt-5" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div
+      className="d-flex mt-5"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
       <div className="flex-grow-1 mt-2">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="h5">Account Management</h2>
-          <div className="d-flex align-items-center">
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : error ? (
-          <div className="alert alert-danger">{error}</div>
+        {/* Error Page Handling */}
+        {errorType === "unauthorized" ? (
+          <UnauthorizedPage />
+        ) : errorType === "server" ? (
+          <ServerErrorPage />
         ) : (
-          <div className="container py-4">
-            <div className="card shadow-sm">
-              <div className="card-body">
-              <div className="table-responsive">
-                  <table className="table table-hover align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Department</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.isArray(currentPageAccounts) && currentPageAccounts.length > 0 ? (
-                        currentPageAccounts.map((acc, index) => (
-                          <tr key={acc.id}>
-                            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Adjust numbering */}
-                            <td>{acc.full_name}</td>
-                            <td>{acc.email}</td>
-                            <td>
-                              {editAccount && editAccount.id === acc.id ? (
-                                <select
-                                  className="form-control"
-                                  value={formValues.role}
-                                  onChange={handleRoleChange}
-                                >
-                                  {Object.keys(roleMappings).map((roleId) => (
-                                    <option key={roleId} value={roleId}>
-                                      {roleMappings[roleId]}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                roleMappings[acc.role]
-                              )}
-                            </td>
-                            <td>
-                              {departments.length > 0
-                                ? departments.find((dep) => dep.id === acc.department)?.name ||
-                                  "No Department"
-                                : "Loading..."}
-                            </td>
-                            <td>
-                              <span
-                                className={`badge ${
-                                  acc.is_active ? "bg-success" : "bg-secondary"
-                                }`}
-                              >
-                                {acc.is_active ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td>
-                              {editAccount && editAccount.id === acc.id ? (
-                                <>
-                                  <button
-                                    style={{ backgroundColor: "#0b455b", color: "#fff" }}
-                                    className="btn btn-sm me-2"
-                                    onClick={handleSaveEdit}
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    className="btn btn-secondary btn-sm"
-                                    onClick={handleCancelEdit}
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <button
-                                  style={{ backgroundColor: "#0b455b", color: "#fff" }}
-                                  className="btn btn-sm me-2"
-                                  onClick={() => handleEdit(acc)}
-                                >
-                                  Edit
-                                </button>
-                              )}
-                              <button
-                                className={`btn btn-sm ${
-                                  acc.is_active ? "btn-danger" : "btn-success"
-                                }`}
-                                onClick={() => handleToggleStatus(acc.id, acc.is_active)}
-                              >
-                                {acc.is_active ? "Deactivate" : "Activate"}
-                              </button>
-                            </td>
+          <>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h2 className="h5">Account Management</h2>
+              <div className="d-flex align-items-center"></div>
+            </div>
+
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : error ? (
+              <div className="alert alert-danger">{error}</div>
+            ) : (
+              <div className="container py-4">
+                <div className="card shadow-sm">
+                  <div className="card-body">
+                    <div className="table-responsive">
+                      <table className="table table-hover align-middle">
+                        <thead className="table-light">
+                          <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Actions</th>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="8" className="text-center">
-                            No accounts found.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        </thead>
+                        <tbody>
+                          {Array.isArray(currentPageAccounts) &&
+                          currentPageAccounts.length > 0 ? (
+                            currentPageAccounts.map((acc, index) => (
+                              <tr key={acc.id}>
+                                <td>
+                                  {(currentPage - 1) * itemsPerPage + index + 1}
+                                </td>{" "}
+                                {/* Adjust numbering */}
+                                <td>{acc.full_name}</td>
+                                <td>{acc.email}</td>
+                                <td>
+                                  {editAccount && editAccount.id === acc.id ? (
+                                    <select
+                                      className="form-control"
+                                      value={formValues.role}
+                                      onChange={handleRoleChange}
+                                    >
+                                      {Object.keys(roleMappings).map(
+                                        (roleId) => (
+                                          <option key={roleId} value={roleId}>
+                                            {roleMappings[roleId]}
+                                          </option>
+                                        )
+                                      )}
+                                    </select>
+                                  ) : (
+                                    roleMappings[acc.role]
+                                  )}
+                                </td>
+                                <td>
+                                  {departments.length > 0
+                                    ? departments.find(
+                                        (dep) => dep.id === acc.department
+                                      )?.name || "No Department"
+                                    : "Loading..."}
+                                </td>
+                                <td>
+                                  <span
+                                    className={`badge ${
+                                      acc.is_active
+                                        ? "bg-success"
+                                        : "bg-secondary"
+                                    }`}
+                                  >
+                                    {acc.is_active ? "Active" : "Inactive"}
+                                  </span>
+                                </td>
+                                <td>
+                                  {editAccount && editAccount.id === acc.id ? (
+                                    <>
+                                      <button
+                                        style={{
+                                          backgroundColor: "#0b455b",
+                                          color: "#fff",
+                                        }}
+                                        className="btn btn-sm me-2"
+                                        onClick={handleSaveEdit}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        className="btn btn-secondary btn-sm"
+                                        onClick={handleCancelEdit}
+                                      >
+                                        Cancel
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      style={{
+                                        backgroundColor: "#0b455b",
+                                        color: "#fff",
+                                      }}
+                                      className="btn btn-sm me-2"
+                                      onClick={() => handleEdit(acc)}
+                                    >
+                                      Edit
+                                    </button>
+                                  )}
+                                  <button
+                                    className={`btn btn-sm ${
+                                      acc.is_active
+                                        ? "btn-danger"
+                                        : "btn-success"
+                                    }`}
+                                    onClick={() =>
+                                      handleToggleStatus(acc.id, acc.is_active)
+                                    }
+                                  >
+                                    {acc.is_active ? "Deactivate" : "Activate"}
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="8" className="text-center">
+                                No accounts found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-<div
-  className="d-flex justify-content-center align-items-center"
-  // Full viewport height
->
-  <CustomPagination
-    currentPage={currentPage}
-    totalPages={totalPages}
-    handlePageChange={handlePageChange}
-  />
-</div>
+            <div
+              className="d-flex justify-content-center align-items-center"
+              // Full viewport height
+            >
+              <CustomPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

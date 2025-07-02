@@ -3,6 +3,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import { toast } from "react-toastify";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const RefuelingRequest = () => {
   const [requests, setRequests] = useState([]);
@@ -10,13 +12,14 @@ const RefuelingRequest = () => {
   const [selectedRequest, setSelectedRequest] = useState(null); // State for selected request details
   const [showForm, setShowForm] = useState(false); // State for showing the form
   const [formData, setFormData] = useState({ date: "", destination: "" }); // Updated form data state
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Fetch refueling requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -30,11 +33,15 @@ const RefuelingRequest = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch refueling requests");
       }
 
       const data = await response.json();
-      console.log("Fetched Refueling Requests:", data);
       setRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching refueling requests:", error);
@@ -91,6 +98,13 @@ const RefuelingRequest = () => {
     fetchRefuelingRequests();
   }, []);
 
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
+
   return (
     <div className="container mt-5">
       <h2 className="text-center mb-4">Refueling Requests</h2>
@@ -108,7 +122,10 @@ const RefuelingRequest = () => {
 
       {/* Refueling Request Form */}
       {showForm && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -154,7 +171,11 @@ const RefuelingRequest = () => {
                   </div>
                   <button
                     type="submit"
-                    style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
+                    style={{
+                      width: "300px",
+                      backgroundColor: "#181E4B",
+                      color: "white",
+                    }}
                     className="btn"
                   >
                     Submit
@@ -190,7 +211,10 @@ const RefuelingRequest = () => {
               {requests.map((request, index) => (
                 <tr key={request.id}>
                   <td>{index + 1}</td>
-                  <td>{new Date(request.created_at).toLocaleDateString()}</td> {/* Use created_at */}
+                  <td>
+                    {new Date(request.created_at).toLocaleDateString()}
+                  </td>{" "}
+                  {/* Use created_at */}
                   <td>{request.destination || "N/A"}</td>
                   <td>{request.status || "N/A"}</td>
                   <td>
@@ -211,7 +235,10 @@ const RefuelingRequest = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -225,9 +252,17 @@ const RefuelingRequest = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p> {/* Use created_at */}
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Status:</strong> {selectedRequest.status}</p>
+                <p>
+                  <strong>Date:</strong>{" "}
+                  {new Date(selectedRequest.created_at).toLocaleDateString()}
+                </p>{" "}
+                {/* Use created_at */}
+                <p>
+                  <strong>Destination:</strong> {selectedRequest.destination}
+                </p>
+                <p>
+                  <strong>Status:</strong> {selectedRequest.status}
+                </p>
               </div>
             </div>
           </div>

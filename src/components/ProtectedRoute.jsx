@@ -1,5 +1,4 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from "react-router-dom";
 
 // ProtectedRoute checks if the user is authenticated
 const ProtectedRoute = ({ isAuthenticated, children }) => {

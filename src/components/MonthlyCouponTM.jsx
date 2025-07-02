@@ -4,6 +4,8 @@ import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ENDPOINTS } from "../utilities/endpoints";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 function formatDisplayMonth(monthString) {
   if (!monthString) return "";
@@ -17,6 +19,7 @@ const MonthlyCouponTM = () => {
   const [loading, setLoading] = useState(false);
   const [refuelLogs, setRefuelLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Get current month in YYYY-MM format
   const getCurrentMonth = () => {
@@ -33,7 +36,7 @@ const MonthlyCouponTM = () => {
     setLoadingLogs(true);
     const token = localStorage.getItem("authToken");
     if (!token) {
-      toast.error("You are not authorized. Please log in.");
+      setErrorType("unauthorized");
       setLoadingLogs(false);
       setRefuelLogs([]);
       return;
@@ -47,17 +50,19 @@ const MonthlyCouponTM = () => {
         },
       });
       if (logsResponse.status === 401) {
-        toast.error("You are not authorized. Please log in.");
+        setErrorType("unauthorized");
         setRefuelLogs([]);
+        setLoadingLogs(false);
         return;
       }
-      if (!logsResponse.ok) throw new Error("Failed to load coupon requests");
+      if (!logsResponse.ok) {
+        setErrorType("server");
+        throw new Error("Failed to load coupon requests");
+      }
       const logsData = await logsResponse.json();
-      // logsData.results is the array you want
       setRefuelLogs(Array.isArray(logsData.results) ? logsData.results : []);
-      console.log("Fetched coupon requests:", logsData);
     } catch (error) {
-      toast.error(error.message || "Error loading coupon requests");
+      setErrorType("server");
       setRefuelLogs([]);
     } finally {
       setLoadingLogs(false);
@@ -130,6 +135,13 @@ const MonthlyCouponTM = () => {
       setLoading(false);
     }
   };
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">

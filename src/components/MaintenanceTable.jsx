@@ -6,6 +6,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLanguage } from "../context/LanguageContext";
 import "../index.css";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const MaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -18,6 +20,7 @@ const MaintenanceTable = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "forward", "reject", or "approve"
   const [rejectionMessage, setRejectionMessage] = useState("");
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const itemsPerPage = 5;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -31,9 +34,11 @@ const MaintenanceTable = () => {
   const fetchMaintenanceRequests = useCallback(async () => {
     const token = localStorage.getItem("authToken");
     if (!token) {
+      setErrorType("unauthorized");
       toast.error(
         mylanguage === "EN" ? "Authentication required" : "ማረጋገጫ ያስፈልጋል"
       );
+      setLoading(false);
       return;
     }
 
@@ -46,6 +51,11 @@ const MaintenanceTable = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error(
           mylanguage === "EN"
             ? "Failed to fetch requests"
@@ -163,6 +173,13 @@ const MaintenanceTable = () => {
   useEffect(() => {
     fetchMaintenanceRequests();
   }, [fetchMaintenanceRequests]);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">

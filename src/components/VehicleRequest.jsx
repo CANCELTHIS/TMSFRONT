@@ -6,6 +6,9 @@ import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { IoMdClose } from "react-icons/io";
 import { IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
+
 const DepartementPage = () => {
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]); // State for employees
@@ -15,6 +18,7 @@ const DepartementPage = () => {
   const [showRejectionModal, setShowRejectionModal] = useState(false); // State for rejection modal
   const [showConfirmation, setShowConfirmation] = useState(false); // State for rejection confirmation dialog
   const [showApproveConfirmation, setShowApproveConfirmation] = useState(false); // State for approve confirmation dialog
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const accessToken = localStorage.getItem("authToken");
 
@@ -26,7 +30,7 @@ const DepartementPage = () => {
 
   const fetchRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -39,7 +43,14 @@ const DepartementPage = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch transport requests");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch transport requests");
+      }
 
       const data = await response.json();
       setRequests(data.results || []); // Set fetched data to state
@@ -52,7 +63,7 @@ const DepartementPage = () => {
 
   const fetchUsers = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -64,7 +75,14 @@ const DepartementPage = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch users");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch users");
+      }
 
       const data = await response.json();
       setUsers(data.results || []); // Set users data
@@ -190,6 +208,13 @@ const DepartementPage = () => {
     handleApprove(selectedRequest.id); // Call handleApprove
     setShowApproveConfirmation(false); // Close approve confirmation dialog
   };
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div
@@ -429,14 +454,13 @@ const DepartementPage = () => {
                 </p>
               </div>
               <div className="modal-footer">
-                
                 <button
                   type="button"
                   style={{ backgroundColor: "#0B455B", color: "white" }}
                   className="btn"
                   onClick={handleConfirmApprove}
                 >
-                  Confirm 
+                  Confirm
                 </button>
               </div>
             </div>

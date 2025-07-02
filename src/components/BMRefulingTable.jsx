@@ -5,6 +5,8 @@ import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const RefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
@@ -22,12 +24,15 @@ const RefuelingTable = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "approve" or "reject"
 
+  // Error handling state
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+
   // Fetches the list of requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -41,6 +46,11 @@ const RefuelingTable = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch refueling requests");
       }
 
@@ -116,7 +126,10 @@ const RefuelingTable = () => {
     setOtpLoading(true);
     try {
       const accessToken = localStorage.getItem("authToken");
-      let payload = { action: action === "approve" ? "approve" : "reject", otp_code: otp };
+      let payload = {
+        action: action === "approve" ? "approve" : "reject",
+        otp_code: otp,
+      };
       if (action === "reject") {
         payload.rejection_message = rejectionMessage;
       }
@@ -144,7 +157,11 @@ const RefuelingTable = () => {
       setOtpValue("");
       setOtpSent(false);
       setOtpAction(null);
-      toast.success(`Request ${action === "approve" ? "approved" : "rejected"} successfully!`);
+      toast.success(
+        `Request ${
+          action === "approve" ? "approved" : "rejected"
+        } successfully!`
+      );
     } catch (error) {
       toast.error(`Failed to ${action} the request.`);
     } finally {
@@ -164,6 +181,14 @@ const RefuelingTable = () => {
     fetchRefuelingRequests();
     // eslint-disable-next-line
   }, []);
+
+  // Render error pages if needed
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -215,11 +240,22 @@ const RefuelingTable = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
+                />
                 <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"
@@ -241,18 +277,50 @@ const RefuelingTable = () => {
                   <div className="container-fluid">
                     <div className="row">
                       <div className="col-md-6">
-                        <p><strong>Request Date:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
-                        <p><strong>Driver:</strong> {selectedRequest.requester_name || "N/A"}</p>
-                        <p><strong>Vehicle:</strong> {selectedRequest.requesters_car_name || "N/A"}</p>
-                        <p><strong>Destination:</strong> {selectedRequest.destination || "N/A"}</p>
-                        <p><strong>Estimated Distance:</strong> {selectedRequest.estimated_distance_km ?? "N/A"} km</p>
+                        <p>
+                          <strong>Request Date:</strong>{" "}
+                          {new Date(
+                            selectedRequest.created_at
+                          ).toLocaleString()}
+                        </p>
+                        <p>
+                          <strong>Driver:</strong>{" "}
+                          {selectedRequest.requester_name || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Vehicle:</strong>{" "}
+                          {selectedRequest.requesters_car_name || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Destination:</strong>{" "}
+                          {selectedRequest.destination || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Estimated Distance:</strong>{" "}
+                          {selectedRequest.estimated_distance_km ?? "N/A"} km
+                        </p>
                       </div>
                       <div className="col-md-6">
-                        <p><strong>Fuel Type:</strong> {selectedRequest.fuel_type || "N/A"}</p>
-                        <p><strong>Fuel Efficiency:</strong> {selectedRequest.fuel_efficiency ?? "N/A"} km/L</p>
-                        <p><strong>Fuel Needed:</strong> {selectedRequest.fuel_needed_liters ?? "N/A"} L</p>
-                        <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter ?? "N/A"}</p>
-                        <p><strong>Total Cost:</strong> {selectedRequest.total_cost ?? "N/A"}</p>
+                        <p>
+                          <strong>Fuel Type:</strong>{" "}
+                          {selectedRequest.fuel_type || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Fuel Efficiency:</strong>{" "}
+                          {selectedRequest.fuel_efficiency ?? "N/A"} km/L
+                        </p>
+                        <p>
+                          <strong>Fuel Needed:</strong>{" "}
+                          {selectedRequest.fuel_needed_liters ?? "N/A"} L
+                        </p>
+                        <p>
+                          <strong>Fuel Price per Liter:</strong>{" "}
+                          {selectedRequest.fuel_price_per_liter ?? "N/A"}
+                        </p>
+                        <p>
+                          <strong>Total Cost:</strong>{" "}
+                          {selectedRequest.total_cost ?? "N/A"}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -288,12 +356,16 @@ const RefuelingTable = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"}{" "}
+                  request
                 </h5>
                 <button
                   type="button"
@@ -329,21 +401,29 @@ const RefuelingTable = () => {
                         boxShadow: "none",
                       }}
                       value={otpValue[idx] || ""}
-                      onChange={e => {
+                      onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
                         // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
-                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
                           if (prev) prev.focus();
                         }
                       }}
@@ -385,17 +465,23 @@ const RefuelingTable = () => {
                   Cancel
                 </button>
                 <button
-  className={`btn ${otpAction === "approve" ? "" : "btn-danger"}`}
-  style={otpAction === "approve" ? { backgroundColor: "#181E4B", color: "white" } : {}}
-  disabled={otpLoading || otpValue.length !== 6}
-  onClick={() => handleOtpAction(otpValue, otpAction)}
->
-  {otpLoading
-    ? "Processing..."
-    : otpAction === "approve"
-    ? "Approve"
-    : "Reject"}
-</button>
+                  className={`btn ${
+                    otpAction === "approve" ? "" : "btn-danger"
+                  }`}
+                  style={
+                    otpAction === "approve"
+                      ? { backgroundColor: "#181E4B", color: "white" }
+                      : {}
+                  }
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                >
+                  {otpLoading
+                    ? "Processing..."
+                    : otpAction === "approve"
+                    ? "Approve"
+                    : "Reject"}
+                </button>
               </div>
             </div>
           </div>
@@ -403,9 +489,12 @@ const RefuelingTable = () => {
       )}
 
       {/* Rejection Modal (deprecated if using OTP for reject) */}
-      
+
       {showRejectModal && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -439,7 +528,6 @@ const RefuelingTable = () => {
           </div>
         </div>
       )}
-      
     </div>
   );
 };

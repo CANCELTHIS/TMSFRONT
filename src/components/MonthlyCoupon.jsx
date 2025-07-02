@@ -4,6 +4,8 @@ import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ENDPOINTS } from "../utilities/endpoints";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 function formatDisplayMonth(monthString) {
   if (!monthString) return "";
@@ -19,6 +21,7 @@ const MonthlyCoupon = () => {
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [userVehicles, setUserVehicles] = useState([]);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Get current month in YYYY-MM format
   const getCurrentMonth = () => {
@@ -33,7 +36,10 @@ const MonthlyCoupon = () => {
   // Fetch current user
   const fetchCurrentUser = useCallback(async () => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      setErrorType("unauthorized");
+      return;
+    }
     try {
       const res = await fetch(ENDPOINTS.CURRENT_USER, {
         headers: {
@@ -41,13 +47,19 @@ const MonthlyCoupon = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (res.ok) {
-        const user = await res.json();
-        console.log("Current user:::::::::::", user);
-
-        setCurrentUser(user);
+      if (res.status === 401) {
+        setErrorType("unauthorized");
+        return;
       }
-    } catch {}
+      if (!res.ok) {
+        setErrorType("server");
+        return;
+      }
+      const user = await res.json();
+      setCurrentUser(user);
+    } catch {
+      setErrorType("server");
+    }
   }, []);
 
   useEffect(() => {
@@ -59,7 +71,7 @@ const MonthlyCoupon = () => {
     setLoadingLogs(true);
     const token = localStorage.getItem("authToken");
     if (!token) {
-      toast.error("You are not authorized. Please log in.");
+      setErrorType("unauthorized");
       setLoadingLogs(false);
       setRefuelLogs([]);
       return;
@@ -73,17 +85,19 @@ const MonthlyCoupon = () => {
         },
       });
       if (logsResponse.status === 401) {
-        toast.error("You are not authorized. Please log in.");
+        setErrorType("unauthorized");
         setRefuelLogs([]);
+        setLoadingLogs(false);
         return;
       }
-      if (!logsResponse.ok) throw new Error("Failed to load coupon requests");
+      if (!logsResponse.ok) {
+        setErrorType("server");
+        throw new Error("Failed to load coupon requests");
+      }
       const logsData = await logsResponse.json();
-      // logsData.results is the array you want
       setRefuelLogs(Array.isArray(logsData.results) ? logsData.results : []);
-      console.log("Fetched coupon requests:", logsData);
     } catch (error) {
-      toast.error(error.message || "Error loading coupon requests");
+      setErrorType("server");
       setRefuelLogs([]);
     } finally {
       setLoadingLogs(false);
@@ -97,7 +111,10 @@ const MonthlyCoupon = () => {
   // Fetch current user vehicles
   const fetchUserVehicles = useCallback(async () => {
     const token = localStorage.getItem("authToken");
-    if (!token) return;
+    if (!token) {
+      setErrorType("unauthorized");
+      return;
+    }
     try {
       const res = await fetch(ENDPOINTS.CURRENT_USER_VEHICLES, {
         headers: {
@@ -105,20 +122,24 @@ const MonthlyCoupon = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (res.ok) {
-        const vehicles = await res.json();
-        console.log("User vehicles:::::::::::", vehicles);
-
-        setUserVehicles(vehicles.license_plate);
+      if (res.status === 401) {
+        setErrorType("unauthorized");
+        return;
       }
-    } catch {}
+      if (!res.ok) {
+        setErrorType("server");
+        return;
+      }
+      const vehicles = await res.json();
+      setUserVehicles(vehicles.license_plate);
+    } catch {
+      setErrorType("server");
+    }
   }, []);
 
   useEffect(() => {
     fetchUserVehicles();
   }, [fetchUserVehicles]);
-
-  // Helper to get vehicle string by id
 
   // Submit new coupon request
   const handleSubmit = async (e) => {
@@ -187,6 +208,13 @@ const MonthlyCoupon = () => {
   const userCoupons = currentUser
     ? refuelLogs.filter((log) => log.requester === currentUser.id)
     : [];
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">

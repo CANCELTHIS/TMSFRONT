@@ -7,6 +7,8 @@ import { Eye } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const GSmaintenance = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -27,6 +29,7 @@ const GSmaintenance = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "approve" or "reject"
   const [otpSent, setOtpSent] = useState(false);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -46,7 +49,7 @@ const GSmaintenance = () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -60,6 +63,11 @@ const GSmaintenance = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch maintenance requests");
       }
 
@@ -265,6 +273,13 @@ const GSmaintenance = () => {
   useEffect(() => {
     fetchMaintenanceRequests();
   }, []);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">

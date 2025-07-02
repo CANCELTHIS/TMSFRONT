@@ -6,6 +6,8 @@ import Logo from "../assets/Logo.jpg";
 import { IoClose, IoCloseSharp } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const CEOhighcost = () => {
   const [requests, setRequests] = useState([]);
@@ -17,6 +19,7 @@ const CEOhighcost = () => {
   const [otpValue, setOtpValue] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const itemsPerPage = 5;
   const accessToken = localStorage.getItem("authToken");
@@ -28,7 +31,7 @@ const CEOhighcost = () => {
 
   const fetchRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -41,7 +44,14 @@ const CEOhighcost = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch high-cost requests");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch high-cost requests");
+      }
 
       const data = await response.json();
       setRequests(data.results || []);
@@ -55,7 +65,7 @@ const CEOhighcost = () => {
 
   const fetchHighCostDetails = async (requestId) => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     try {
@@ -66,8 +76,14 @@ const CEOhighcost = () => {
         },
       });
 
-      if (!response.ok)
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch high-cost request details");
+      }
 
       const data = await response.json();
       setSelectedRequest(data);
@@ -109,7 +125,10 @@ const CEOhighcost = () => {
   const handleOtpAction = async (otp, action) => {
     setOtpLoading(true);
     try {
-      let payload = { action: action === "forward" ? "forward" : "reject", otp_code: otp };
+      let payload = {
+        action: action === "forward" ? "forward" : "reject",
+        otp_code: otp,
+      };
       if (action === "reject") {
         payload.rejection_message = rejectionReason;
       }
@@ -126,14 +145,15 @@ const CEOhighcost = () => {
       );
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(
-          data.detail || `Failed to ${action} the request`
-        );
+        throw new Error(data.detail || `Failed to ${action} the request`);
       }
       setRequests((prevRequests) =>
         prevRequests.map((req) =>
           req.id === selectedRequest.id
-            ? { ...req, status: action === "forward" ? "forwarded" : "rejected" }
+            ? {
+                ...req,
+                status: action === "forward" ? "forwarded" : "rejected",
+              }
             : req
         )
       );
@@ -143,7 +163,9 @@ const CEOhighcost = () => {
       setOtpValue("");
       setOtpAction(null);
       toast.success(
-        `Request ${action === "forward" ? "forwarded" : "rejected"} successfully!`
+        `Request ${
+          action === "forward" ? "forwarded" : "rejected"
+        } successfully!`
       );
     } catch (error) {
       toast.error(`Failed to ${action} the request.`);
@@ -163,8 +185,18 @@ const CEOhighcost = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
 
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
+
   return (
-    <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div
+      className="container mt-4"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
       <ToastContainer />
       {loading ? (
         <div className="text-center mt-4">
@@ -174,7 +206,10 @@ const CEOhighcost = () => {
           <p>Loading data...</p>
         </div>
       ) : (
-        <div className="table-responsive" style={{ width: "100%", overflowX: "auto" }}>
+        <div
+          className="table-responsive"
+          style={{ width: "100%", overflowX: "auto" }}
+        >
           <table className="table table-hover align-middle">
             <thead className="table">
               <tr>
@@ -220,7 +255,10 @@ const CEOhighcost = () => {
         </div>
       )}
 
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100px" }}
+      >
         <CustomPagination
           currentPage={currentPage}
           totalPages={Math.ceil(requests.length / itemsPerPage)}
@@ -240,7 +278,11 @@ const CEOhighcost = () => {
                 <img
                   src={Logo}
                   alt="Logo"
-                  style={{ width: "100px", height: "70px", marginRight: "10px" }}
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
                 />
                 <h5 className="modal-title">Request Details</h5>
                 <button
@@ -249,25 +291,53 @@ const CEOhighcost = () => {
                   style={{ marginLeft: "auto" }}
                   onClick={() => setSelectedRequest(null)}
                   aria-label="Close"
-                ><IoClose/></button>
+                >
+                  <IoClose />
+                </button>
               </div>
               <div className="modal-body">
                 <div className="container-fluid">
                   <div className="row">
                     <div className="col-md-6">
-                      <p><strong>Requester:</strong> {selectedRequest.requester}</p>
-                      <p><strong>Employees:</strong> {selectedRequest.employees?.join(", ") || "N/A"}</p>
-                      <p><strong>Estimated Vehicle:</strong> {selectedRequest.estimated_vehicle || "N/A"}</p>
-                      <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                      <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                      <p>
+                        <strong>Requester:</strong> {selectedRequest.requester}
+                      </p>
+                      <p>
+                        <strong>Employees:</strong>{" "}
+                        {selectedRequest.employees?.join(", ") || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Estimated Vehicle:</strong>{" "}
+                        {selectedRequest.estimated_vehicle || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Start Day:</strong> {selectedRequest.start_day}
+                      </p>
+                      <p>
+                        <strong>Return Day:</strong>{" "}
+                        {selectedRequest.return_day}
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                      <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                      <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                      <p><strong>Status:</strong> {selectedRequest.status}</p>
+                      <p>
+                        <strong>Start Time:</strong>{" "}
+                        {selectedRequest.start_time}
+                      </p>
+                      <p>
+                        <strong>Destination:</strong>{" "}
+                        {selectedRequest.destination}
+                      </p>
+                      <p>
+                        <strong>Reason:</strong> {selectedRequest.reason}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {selectedRequest.status}
+                      </p>
                       {selectedRequest.rejection_message && (
-                        <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message}</p>
+                        <p>
+                          <strong>Rejection Message:</strong>{" "}
+                          {selectedRequest.rejection_message}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -276,16 +346,20 @@ const CEOhighcost = () => {
               <div className="modal-footer">
                 <button
                   className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white", width: "120px" }}
+                  style={{
+                    backgroundColor: "#181E4B",
+                    color: "white",
+                    width: "120px",
+                  }}
                   onClick={() => handleActionWithOtp("forward")}
                 >
-                  Forward 
+                  Forward
                 </button>
                 <button
                   className="btn btn-danger"
                   onClick={() => handleActionWithOtp("reject")}
                 >
-                  Reject 
+                  Reject
                 </button>
               </div>
             </div>
@@ -303,7 +377,8 @@ const CEOhighcost = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"}{" "}
+                  request
                 </h5>
                 <button
                   type="button"
@@ -337,21 +412,29 @@ const CEOhighcost = () => {
                         boxShadow: "none",
                       }}
                       value={otpValue[idx] || ""}
-                      onChange={e => {
+                      onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
                         // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
-                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
                           if (prev) prev.focus();
                         }
                       }}
@@ -391,8 +474,14 @@ const CEOhighcost = () => {
                   Cancel
                 </button>
                 <button
-                  className={`btn ${otpAction === "forward" ? "" : "btn-danger"}`}
-                  style={otpAction === "forward" ? { backgroundColor: "#181E4B", color: "white" } : {}}
+                  className={`btn ${
+                    otpAction === "forward" ? "" : "btn-danger"
+                  }`}
+                  style={
+                    otpAction === "forward"
+                      ? { backgroundColor: "#181E4B", color: "white" }
+                      : {}
+                  }
                   disabled={otpLoading || otpValue.length !== 6}
                   onClick={() => handleOtpAction(otpValue, otpAction)}
                 >

@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
 import { IoMdClose } from "react-icons/io";
 import { ENDPOINTS } from "../utilities/endpoints";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const FinanceManagerPage = () => {
   const [requests, setRequests] = useState([]);
@@ -15,6 +17,7 @@ const FinanceManagerPage = () => {
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const accessToken = localStorage.getItem("authToken");
 
@@ -25,7 +28,7 @@ const FinanceManagerPage = () => {
 
   const fetchRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -38,14 +41,22 @@ const FinanceManagerPage = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch transport requests");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch transport requests");
+      }
 
       const data = await response.json();
-      const financeManagerRequests = data.results.filter(request => 
-        request.status === "forwarded" && 
-        request.current_approver_role === "CEO"
+      const financeManagerRequests = data.results.filter(
+        (request) =>
+          request.status === "forwarded" &&
+          request.current_approver_role === "CEO"
       );
-      
+
       setRequests(financeManagerRequests || []);
     } catch (error) {
       console.error("Fetch Error:", error);
@@ -57,7 +68,7 @@ const FinanceManagerPage = () => {
 
   const fetchUsers = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -69,7 +80,14 @@ const FinanceManagerPage = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch users");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch users");
+      }
 
       const data = await response.json();
       setUsers(data.results || []);
@@ -80,7 +98,7 @@ const FinanceManagerPage = () => {
 
   const getEmployeeNames = (employeeIds) => {
     if (!employeeIds || !Array.isArray(employeeIds)) return "Unknown";
-    
+
     return employeeIds
       .map((id) => {
         const employee = users.find((user) => user.id === id);
@@ -108,22 +126,25 @@ const FinanceManagerPage = () => {
     }
 
     try {
-      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "forward", // Forward to transport manager
-        }),
-      });
+      const response = await fetch(
+        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "forward", // Forward to transport manager
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to forward transport request");
 
       // Refresh the list after successful action
       await fetchRequests();
-      
+
       setSelectedRequest(null);
       toast.success("Request forwarded to transport manager successfully!");
     } catch (error) {
@@ -144,23 +165,26 @@ const FinanceManagerPage = () => {
     }
 
     try {
-      const response = await fetch(`${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "reject",
-          rejection_message: rejectionReason,
-        }),
-      });
+      const response = await fetch(
+        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "reject",
+            rejection_message: rejectionReason,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to reject transport request");
 
       // Refresh the list after successful action
       await fetchRequests();
-      
+
       setSelectedRequest(null);
       setRejectionReason("");
       setShowRejectionModal(false);
@@ -193,8 +217,18 @@ const FinanceManagerPage = () => {
     setShowApproveConfirmation(false);
   };
 
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
+
   return (
-    <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div
+      className="container mt-4"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
       <ToastContainer />
       {loading ? (
         <div className="text-center mt-4">
@@ -250,24 +284,59 @@ const FinanceManagerPage = () => {
 
       {/* Modals remain the same */}
       {selectedRequest && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
+                />
                 <h5 className="modal-title">Transport Request Details</h5>
-                <button type="button" className="btn-close" onClick={handleCloseDetail}></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={handleCloseDetail}
+                >
+                  <IoMdClose size={24} />
+                </button>
               </div>
               <div className="modal-body">
-                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
-                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                <p>
+                  <strong>Start Day:</strong> {selectedRequest.start_day}
+                </p>
+                <p>
+                  <strong>Start Time:</strong> {selectedRequest.start_time}
+                </p>
+                <p>
+                  <strong>Return Day:</strong> {selectedRequest.return_day}
+                </p>
+                <p>
+                  <strong>Employees:</strong>{" "}
+                  {getEmployeeNames(selectedRequest.employees)}
+                </p>
+                <p>
+                  <strong>Destination:</strong> {selectedRequest.destination}
+                </p>
+                <p>
+                  <strong>Reason:</strong> {selectedRequest.reason}
+                </p>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleCloseDetail}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={handleCloseDetail}
+                >
                   Close
                 </button>
                 <button
@@ -294,19 +363,31 @@ const FinanceManagerPage = () => {
 
       {/* Other modals remain unchanged */}
       {showRejectionModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           {/* ... existing rejection modal code ... */}
         </div>
       )}
 
       {showConfirmation && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           {/* ... existing confirmation modal code ... */}
         </div>
       )}
 
       {showApproveConfirmation && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+        >
           {/* ... existing approve confirmation modal code ... */}
         </div>
       )}

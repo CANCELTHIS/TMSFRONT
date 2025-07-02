@@ -1,65 +1,77 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import '../index.css'; 
-import { ENDPOINTS } from '../utilities/endpoints';
-import CustomPagination from './CustomPagination';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../index.css";
+import { ENDPOINTS } from "../utilities/endpoints";
+import CustomPagination from "./CustomPagination";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
+
 const HistoryPage = () => {
   const itemsPerPage = 5;
   const [history, setHistory] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filter, setFilter] = useState('');
+  const [error, setError] = useState("");
+  const [filter, setFilter] = useState("");
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem("authToken");
 
   useEffect(() => {
     const fetchHistory = async () => {
       if (!token) {
-        setError('User not authenticated');
+        setErrorType("unauthorized");
         setLoading(false);
-        console.error('Error: No token found in localStorage');
+        console.error("Error: No token found in localStorage");
         return;
       }
-    
-      console.log('Using token:', token);  // Log the token for debugging
-    
+
       try {
         const response = await axios.get(ENDPOINTS.STATUS_HISTORY_LIST, {
           headers: { Authorization: `Bearer ${token}` },
         });
-    
+
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+          setLoading(false);
+          return;
+        }
+
         // Log the API response
         console.log("API Response:", response.data);
-    
+
         // Check if results exist and is an array
         if (Array.isArray(response.data.results)) {
           // Add department info to the history data
-          const uniqueHistory = Array.from(new Map(response.data.results.map(item => [item.user_email, item])).values());
+          const uniqueHistory = Array.from(
+            new Map(
+              response.data.results.map((item) => [item.user_email, item])
+            ).values()
+          );
           setHistory(uniqueHistory);
         } else {
-          setError('Invalid API response structure');
+          setError("Invalid API response structure");
         }
-    
+
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch history');
+        if (err.response && err.response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         setLoading(false);
         console.error("API Error:", err);
-        if (err.response && err.response.status === 401) {
-          console.error("Unauthorized - Invalid or expired token");
-        }
       }
     };
-    
-  
+
     fetchHistory();
   }, [token]);
 
   // Filter history based on status
-  const filteredHistory = history.filter(record => {
-    if (filter === 'approved') return record.status === 'approve';
-    if (filter === 'rejected') return record.status === 'reject';
+  const filteredHistory = history.filter((record) => {
+    if (filter === "approved") return record.status === "approve";
+    if (filter === "rejected") return record.status === "reject";
 
     return true;
   });
@@ -67,13 +79,28 @@ const HistoryPage = () => {
   // Pagination logic
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentPageHistory = filteredHistory.slice(startIndex, startIndex + itemsPerPage);
+  const currentPageHistory = filteredHistory.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
-  const handleNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
-  const handlePreviousPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
+  const handleNextPage = () =>
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  const handlePreviousPage = () =>
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
-    <div className="container-fluid py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div
+      className="container-fluid py-4"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
       <h2 className="h5 mb-4">History</h2>
 
       {loading && <p>Loading...</p>}
@@ -81,13 +108,22 @@ const HistoryPage = () => {
 
       {/* Filter Options */}
       <div className="mb-3 d-flex flex-wrap">
-        <button className="btn btn-success me-2 mb-2" onClick={() => setFilter('approved')}>
+        <button
+          className="btn btn-success me-2 mb-2"
+          onClick={() => setFilter("approved")}
+        >
           Approved
         </button>
-        <button className="btn btn-danger me-2 mb-2" onClick={() => setFilter('rejected')}>
+        <button
+          className="btn btn-danger me-2 mb-2"
+          onClick={() => setFilter("rejected")}
+        >
           Rejected
         </button>
-        <button className="btn btn-secondary mb-2" onClick={() => setFilter('')}>
+        <button
+          className="btn btn-secondary mb-2"
+          onClick={() => setFilter("")}
+        >
           All
         </button>
       </div>
@@ -114,7 +150,7 @@ const HistoryPage = () => {
                       <td>{record.user_full_name}</td>
                       <td>{record.user_email}</td>
                       <td className="d-none d-md-table-cell">
-                        {record.status === 'approve' ? (
+                        {record.status === "approve" ? (
                           <span className="text-success fw-bold">Approved</span>
                         ) : (
                           <span className="text-danger fw-bold">Rejected</span>

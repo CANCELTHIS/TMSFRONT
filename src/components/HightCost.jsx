@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { ENDPOINTS } from "../utilities/endpoints";
-import { toast, ToastContainer } from "react-toastify"; 
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaWindowClose } from "react-icons/fa"; // Import the close icon
 import Header from "./Header"; // Import the Header component
 import CustomPagination from "./CustomPagination"; // Import the CustomPagination component
-import { FaAngleLeft, FaAngleRight} from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const HightCost = () => {
   const [showForm, setShowForm] = useState(false);
@@ -25,24 +27,25 @@ const HightCost = () => {
     destination: "",
     reason: "",
   });
-  const [selectedRequest, setSelectedRequest] = useState(null); 
+  const [selectedRequest, setSelectedRequest] = useState(null);
   const [filterStatus, setFilterStatus] = useState(""); // State for filtering by status
   const [sortField, setSortField] = useState(""); // State for sorting field
   const [sortOrder, setSortOrder] = useState("asc"); // State for sorting order
   const [currentPage, setCurrentPage] = useState(1); // State for current page
   const itemsPerPage = 5; // Number of items per page
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const accessToken = localStorage.getItem("authToken");
 
   useEffect(() => {
     fetchRequests();
     fetchUsers();
-    fetchCurrentUser(); // Fetch current user
+    fetchCurrentUser();
   }, []);
 
   const fetchRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -55,7 +58,14 @@ const HightCost = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch transport requests");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch transport requests");
+      }
 
       const data = await response.json();
       setRequests(data.results || []); // Set fetched data to state
@@ -68,7 +78,7 @@ const HightCost = () => {
 
   const fetchCurrentUser = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -80,7 +90,14 @@ const HightCost = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch current user");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch current user");
+      }
 
       const data = await response.json();
       setCurrentUser(data);
@@ -92,7 +109,7 @@ const HightCost = () => {
 
   const fetchUsers = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -104,7 +121,14 @@ const HightCost = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch users");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch users");
+      }
 
       const data = await response.json();
       console.log("Users:", data);
@@ -125,7 +149,10 @@ const HightCost = () => {
 
   const handleAddEmployee = () => {
     const selectedEmployeeId = parseInt(formData.employeeName, 10);
-    if (!isNaN(selectedEmployeeId) && !formData.employees.includes(selectedEmployeeId)) {
+    if (
+      !isNaN(selectedEmployeeId) &&
+      !formData.employees.includes(selectedEmployeeId)
+    ) {
       setFormData((prev) => ({
         ...prev,
         employees: [...prev.employees, selectedEmployeeId], // Add employee ID
@@ -143,24 +170,24 @@ const HightCost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!accessToken) {
       console.error("No access token found.");
       return;
     }
-  
+
     const payload = {
       start_day: formData.startDay,
       return_day: formData.returnDay,
-      start_time: `${formData.startTime}:00`,  // Ensure time is formatted correctly
+      start_time: `${formData.startTime}:00`, // Ensure time is formatted correctly
       destination: formData.destination,
       reason: formData.reason,
       employees: formData.employees, // Submit all selected employee IDs
     };
-  
+
     setSubmitting(true);
     try {
-    const response = await fetch(ENDPOINTS.CREATE_HIGH_COST_REQEST, {
+      const response = await fetch(ENDPOINTS.CREATE_HIGH_COST_REQEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -168,16 +195,16 @@ const HightCost = () => {
         },
         body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) throw new Error("Failed to create transport request");
-  
+
       const responseData = await response.json();
       setRequests((prevRequests) => [responseData, ...prevRequests]);
-  
+
       toast.success("Request submitted! Department manager notified."); // Success toast
-  
+
       fetchNotifications(); // Fetch updated notifications to reflect the new request
-  
+
       // Clear the form after submission
       setFormData({
         startDay: "",
@@ -188,7 +215,7 @@ const HightCost = () => {
         destination: "",
         reason: "",
       });
-  
+
       setShowForm(false);
     } catch (error) {
       console.error("Submit Error:", error);
@@ -197,7 +224,7 @@ const HightCost = () => {
       setSubmitting(false);
     }
   };
-  
+
   // Fetch notifications after submission
   const fetchNotifications = async () => {
     try {
@@ -205,7 +232,7 @@ const HightCost = () => {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (!response.ok) throw new Error("Failed to fetch notifications");
-      
+
       const data = await response.json();
       console.log("Updated notifications:", data.results);
     } catch (error) {
@@ -233,7 +260,7 @@ const HightCost = () => {
   // Close detail modal
   const handleCloseDetail = () => {
     setSelectedRequest(null);
-  };  
+  };
 
   const handleFilterChange = (e) => {
     setFilterStatus(e.target.value);
@@ -289,7 +316,10 @@ const HightCost = () => {
   // Calculate paginated requests
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentRequests = sortedRequests.slice(indexOfFirstItem, indexOfLastItem);
+  const currentRequests = sortedRequests.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   // Calculate total pages
   const totalPages = Math.ceil(sortedRequests.length / itemsPerPage);
@@ -299,22 +329,40 @@ const HightCost = () => {
     setCurrentPage(pageNumber);
   };
 
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
+
   return (
     <>
-      <Header role="employee" userId={currentUser?.id} onResubmit={handleResubmit} />
-      <div className="container mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+      <Header
+        role="employee"
+        userId={currentUser?.id}
+        onResubmit={handleResubmit}
+      />
+      <div
+        className="container mt-4"
+        style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+      >
         <button
           onClick={() => setShowForm(true)}
           className="btn btn mb-3 request"
           style={{ backgroundColor: "#181E4B", color: "#fff" }}
         >
-          Request 
+          Request
         </button>
 
         {showForm && (
-          <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div
+            className="modal fade show d-block"
+            tabIndex="-1"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          >
             <div className="modal-dialog">
-              <div className="modal-content" style={{width:"550px"}}>
+              <div className="modal-content" style={{ width: "550px" }}>
                 <div className="modal-header d-flex justify-content-center align-items-center">
                   <FaWindowClose
                     style={{
@@ -329,7 +377,10 @@ const HightCost = () => {
                   <h5 className="modal-title d-flex">Transport Request Form</h5>
                 </div>
                 <div className="modal-body">
-                  <form onSubmit={handleSubmit} style={{ marginBottom: "-40px", marginTop: "-15px" }}>
+                  <form
+                    onSubmit={handleSubmit}
+                    style={{ marginBottom: "-40px", marginTop: "-15px" }}
+                  >
                     <div className="row">
                       <div className="col-md-6 mb-3">
                         <label className="form-label">Start Day:</label>
@@ -407,22 +458,33 @@ const HightCost = () => {
                         <button
                           type="button"
                           className="btn mt-2 ms-2"
-                          onClick={() => setFormData((prev) => ({ ...prev, employees: [] }))}
+                          onClick={() =>
+                            setFormData((prev) => ({ ...prev, employees: [] }))
+                          }
                           style={{ backgroundColor: "#dc3545", color: "#fff" }}
                         >
                           Clear
                         </button>
                         <div className="mt-2 d-flex flex-wrap gap-2">
                           {formData.employees.map((employeeId) => {
-                            const employee = users.find((user) => user.id === employeeId);
+                            const employee = users.find(
+                              (user) => user.id === employeeId
+                            );
                             return (
-                              <div key={employeeId} className="badge bg-primary d-flex align-items-center">
-                                <span>{employee ? employee.full_name : "Unknown"}</span>
+                              <div
+                                key={employeeId}
+                                className="badge bg-primary d-flex align-items-center"
+                              >
+                                <span>
+                                  {employee ? employee.full_name : "Unknown"}
+                                </span>
                                 <button
                                   type="button"
                                   className="btn-close btn-close-white ms-2"
                                   aria-label="Close"
-                                  onClick={() => handleRemoveEmployee(employeeId)}
+                                  onClick={() =>
+                                    handleRemoveEmployee(employeeId)
+                                  }
                                 ></button>
                               </div>
                             );
@@ -441,7 +503,11 @@ const HightCost = () => {
                       </div>
                     </div>
                     <div className="modal-footer">
-                      <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => setShowForm(false)}
+                      >
                         Cancel
                       </button>
                       <button
@@ -471,7 +537,9 @@ const HightCost = () => {
           <>
             <div className="d-flex justify-content-between align-items-center mt-4">
               <div>
-                <label htmlFor="statusFilter" className="me-2">Filter by Status:</label>
+                <label htmlFor="statusFilter" className="me-2">
+                  Filter by Status:
+                </label>
                 <select
                   id="statusFilter"
                   value={filterStatus}
@@ -490,20 +558,45 @@ const HightCost = () => {
               <table className="table table-bordered mt-4">
                 <thead className="table">
                   <tr>
-                    <th onClick={() => handleSort("start_day")} style={{ cursor: "pointer" }}>
-                      Start Day {sortField === "start_day" && (sortOrder === "asc" ? "↑" : "↓")}
+                    <th
+                      onClick={() => handleSort("start_day")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Start Day{" "}
+                      {sortField === "start_day" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
-                    <th onClick={() => handleSort("start_time")} style={{ cursor: "pointer" }}>
-                      Start Time {sortField === "start_time" && (sortOrder === "asc" ? "↑" : "↓")}
+                    <th
+                      onClick={() => handleSort("start_time")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Start Time{" "}
+                      {sortField === "start_time" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
-                    <th onClick={() => handleSort("return_day")} style={{ cursor: "pointer" }}>
-                      Return Day {sortField === "return_day" && (sortOrder === "asc" ? "↑" : "↓")}
+                    <th
+                      onClick={() => handleSort("return_day")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Return Day{" "}
+                      {sortField === "return_day" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
-                    <th onClick={() => handleSort("destination")} style={{ cursor: "pointer" }}>
-                      Destination {sortField === "destination" && (sortOrder === "asc" ? "↑" : "↓")}
+                    <th
+                      onClick={() => handleSort("destination")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Destination{" "}
+                      {sortField === "destination" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
-                    <th onClick={() => handleSort("status")} style={{ cursor: "pointer" }}>
-                      Status {sortField === "status" && (sortOrder === "asc" ? "↑" : "↓")}
+                    <th
+                      onClick={() => handleSort("status")}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Status{" "}
+                      {sortField === "status" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
                     <th>Action</th>
                   </tr>
@@ -519,7 +612,7 @@ const HightCost = () => {
                       <td>
                         <button
                           className="btn btn-sm"
-                          style={{backgroundColor:"#181E4B",color:"white"}}
+                          style={{ backgroundColor: "#181E4B", color: "white" }}
                           onClick={() => handleViewDetail(request)}
                         >
                           View Detail
@@ -539,11 +632,23 @@ const HightCost = () => {
         )}
 
         {selectedRequest && (
-          <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div
+            className="modal fade show d-block"
+            tabIndex="-1"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          >
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{
+                      width: "100px",
+                      height: "70px",
+                      marginRight: "10px",
+                    }}
+                  />
                   <h5 className="modal-title">Transport Request Details</h5>
                   <FaWindowClose
                     style={{
@@ -557,16 +662,36 @@ const HightCost = () => {
                   />
                 </div>
                 <div className="modal-body">
-                  <p><strong>Requester:</strong> {currentUser?.full_name}</p> {/* Moved requester to the top */}
-                  <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
-                  <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
-                  <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
-                  <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
-                  <p><strong>Destination:</strong> {selectedRequest.destination}</p>
-                  <p><strong>Reason:</strong> {selectedRequest.reason}</p>
+                  <p>
+                    <strong>Requester:</strong> {currentUser?.full_name}
+                  </p>{" "}
+                  {/* Moved requester to the top */}
+                  <p>
+                    <strong>Start Day:</strong> {selectedRequest.start_day}
+                  </p>
+                  <p>
+                    <strong>Start Time:</strong> {selectedRequest.start_time}
+                  </p>
+                  <p>
+                    <strong>Return Day:</strong> {selectedRequest.return_day}
+                  </p>
+                  <p>
+                    <strong>Employees:</strong>{" "}
+                    {getEmployeeNames(selectedRequest.employees)}
+                  </p>
+                  <p>
+                    <strong>Destination:</strong> {selectedRequest.destination}
+                  </p>
+                  <p>
+                    <strong>Reason:</strong> {selectedRequest.reason}
+                  </p>
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={handleCloseDetail}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCloseDetail}
+                  >
                     Close
                   </button>
                 </div>

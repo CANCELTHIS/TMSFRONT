@@ -25,6 +25,8 @@ import {
 import { useSpring, animated } from "@react-spring/web";
 import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const REQUEST_TYPES = [
   {
@@ -141,6 +143,7 @@ const Dashboard = () => {
   const [pieMonth, setPieMonth] = useState("Jan");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // State for dashboard data
   const [overviewData, setOverviewData] = useState({
@@ -163,14 +166,13 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        // Get the access token from wherever you store it (localStorage, context, etc.)
-        const token = localStorage.getItem("authToken"); // or from your auth context
-
+        const token = localStorage.getItem("authToken");
         if (!token) {
-          throw new Error("No access token found");
+          setErrorType("unauthorized");
+          setLoading(false);
+          return;
         }
 
-        // Create axios instance with authorization header
         const api = axios.create({
           headers: {
             Authorization: `Bearer ${token}`,
@@ -178,7 +180,6 @@ const Dashboard = () => {
           },
         });
 
-        // Fetch all dashboard data in parallel
         const [overviewRes, recentRes, trendsRes, distributionRes] =
           await Promise.all([
             api.get(ENDPOINTS.DASHBOARD_OVERVIEW),
@@ -189,12 +190,8 @@ const Dashboard = () => {
 
         setOverviewData(overviewRes.data);
         setRecentVehicles(recentRes.data.results || []);
-
-        // Transform monthly trends data for the chart
         const transformedTrends = transformMonthlyTrends(trendsRes.data);
         setMonthlyTrends(transformedTrends);
-
-        // Transform type distribution data for the chart
         setTypeDistribution(distributionRes.data);
 
         setLoading(false);
@@ -202,29 +199,24 @@ const Dashboard = () => {
         setLoading(false);
 
         if (err.response) {
-          // Handle different HTTP status codes
           if (err.response.status === 401) {
-            setError("Session expired. Please login again.");
-            // Optionally: redirect to login or refresh token
+            setErrorType("unauthorized");
           } else if (err.response.status === 403) {
             setError("You do not have permission to view this data.");
           } else {
-            setError(
-              err.response.data.message || "Failed to fetch dashboard data"
-            );
+            setErrorType("server");
           }
         } else if (err.message === "No access token found") {
-          setError("Please login to view the dashboard");
-          // Optionally redirect to login
+          setErrorType("unauthorized");
         } else {
-          setError(err.message || "Failed to fetch dashboard data");
+          setErrorType("server");
         }
-
         console.error("Error fetching dashboard data:", err);
       }
     };
 
     fetchDashboardData();
+    // eslint-disable-next-line
   }, []);
 
   // Transform monthly trends data from API to chart format
@@ -305,14 +297,11 @@ const Dashboard = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="container mt-5">
-        <div className="alert alert-danger" role="alert">
-          Error loading dashboard: {error}
-        </div>
-      </div>
-    );
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
   }
 
   return (

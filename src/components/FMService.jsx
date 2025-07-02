@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
-import CustomPagination from './CustomPagination';
+import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const CEOService = () => {
   const [requests, setRequests] = useState([]);
@@ -13,6 +15,7 @@ const CEOService = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -22,7 +25,7 @@ const CEOService = () => {
   const fetchRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     setLoading(true);
@@ -36,6 +39,11 @@ const CEOService = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch service requests");
       }
 
@@ -53,12 +61,12 @@ const CEOService = () => {
   const fetchRequestDetail = async (id) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
     setDetailLoading(true);
     try {
-      const endpoint = ENDPOINTS.SERVICE_REQUEST_DETAIL(id); // Use the correct endpoint
+      const endpoint = ENDPOINTS.SERVICE_REQUEST_DETAIL(id);
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {
@@ -66,7 +74,14 @@ const CEOService = () => {
           "Content-Type": "application/json",
         },
       });
-      if (!response.ok) throw new Error("Failed to fetch service request detail");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch service request detail");
+      }
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
@@ -81,6 +96,13 @@ const CEOService = () => {
     setCurrentPage(1); // Reset page on refresh
     fetchRequests();
   }, []);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -141,7 +163,10 @@ const CEOService = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -167,11 +192,14 @@ const CEOService = () => {
                     <p>
                       <strong>Created At:</strong>{" "}
                       {selectedRequest.created_at
-                        ? new Date(selectedRequest.created_at).toLocaleDateString()
+                        ? new Date(
+                            selectedRequest.created_at
+                          ).toLocaleDateString()
                         : "N/A"}
                     </p>
                     <p>
-                      <strong>Vehicle:</strong> {selectedRequest.vehicle || "N/A"}
+                      <strong>Vehicle:</strong>{" "}
+                      {selectedRequest.vehicle || "N/A"}
                     </p>
                     <p>
                       <strong>Status:</strong> {selectedRequest.status}

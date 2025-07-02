@@ -1,23 +1,26 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const RefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Fetches the list of requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -31,6 +34,11 @@ const RefuelingTable = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch refueling requests");
       }
 
@@ -48,7 +56,7 @@ const RefuelingTable = () => {
   const fetchRequestDetail = async (id) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -62,6 +70,11 @@ const RefuelingTable = () => {
         },
       });
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch refueling request detail");
       }
       const data = await response.json();
@@ -77,6 +90,13 @@ const RefuelingTable = () => {
   useEffect(() => {
     fetchRefuelingRequests();
   }, []);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -128,12 +148,23 @@ const RefuelingTable = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               {/* Modal Header (not printed) */}
               <div className="modal-header d-print-none">
-                <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "100px",
+                    height: "70px",
+                    marginRight: "10px",
+                  }}
+                />
                 <h5 className="modal-title">Refueling Request Details</h5>
                 <button
                   type="button"
@@ -146,8 +177,20 @@ const RefuelingTable = () => {
               <div className="modal-body">
                 {/* Print header for print only */}
                 <div className="d-none d-print-block text-center mb-3">
-                  <img src={Logo} alt="Logo" style={{ width: "150px", height: "100px" }} />
-                  <div style={{ marginTop: "10px", fontWeight: "bold", fontSize: "1.3rem" }}>Refueling Request Details</div>
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{ width: "150px", height: "100px" }}
+                  />
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      fontWeight: "bold",
+                      fontSize: "1.3rem",
+                    }}
+                  >
+                    Refueling Request Details
+                  </div>
                 </div>
                 {detailLoading ? (
                   <div className="text-center">
@@ -160,26 +203,69 @@ const RefuelingTable = () => {
                   <div className="container-fluid">
                     <div className="row">
                       <div className="col-md-6">
-                        <p><strong>Request Date:</strong> {new Date(selectedRequest.created_at).toLocaleString()}</p>
-                        <p><strong>Driver:</strong> {selectedRequest.requester_name || "N/A"}</p>
-                        <p><strong>Vehicle:</strong> {selectedRequest.requesters_car_name || "N/A"}</p>
-                        <p><strong>Destination:</strong> {selectedRequest.destination || "N/A"}</p>
-                        <p><strong>Estimated Distance:</strong> {selectedRequest.estimated_distance_km ?? "N/A"} km</p>
+                        <p>
+                          <strong>Request Date:</strong>{" "}
+                          {new Date(
+                            selectedRequest.created_at
+                          ).toLocaleString()}
+                        </p>
+                        <p>
+                          <strong>Driver:</strong>{" "}
+                          {selectedRequest.requester_name || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Vehicle:</strong>{" "}
+                          {selectedRequest.requesters_car_name || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Destination:</strong>{" "}
+                          {selectedRequest.destination || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Estimated Distance:</strong>{" "}
+                          {selectedRequest.estimated_distance_km ?? "N/A"} km
+                        </p>
                       </div>
                       <div className="col-md-6">
-                        <p><strong>Fuel Type:</strong> {selectedRequest.fuel_type || "N/A"}</p>
-                        <p><strong>Fuel Efficiency:</strong> {selectedRequest.fuel_efficiency ?? "N/A"} km/L</p>
-                        <p><strong>Fuel Needed:</strong> {selectedRequest.fuel_needed_liters ?? "N/A"} L</p>
-                        <p><strong>Fuel Price per Liter:</strong> {selectedRequest.fuel_price_per_liter ?? "N/A"}</p>
-                        <p><strong>Total Cost:</strong> {selectedRequest.total_cost ?? "N/A"}</p>
+                        <p>
+                          <strong>Fuel Type:</strong>{" "}
+                          {selectedRequest.fuel_type || "N/A"}
+                        </p>
+                        <p>
+                          <strong>Fuel Efficiency:</strong>{" "}
+                          {selectedRequest.fuel_efficiency ?? "N/A"} km/L
+                        </p>
+                        <p>
+                          <strong>Fuel Needed:</strong>{" "}
+                          {selectedRequest.fuel_needed_liters ?? "N/A"} L
+                        </p>
+                        <p>
+                          <strong>Fuel Price per Liter:</strong>{" "}
+                          {selectedRequest.fuel_price_per_liter ?? "N/A"}
+                        </p>
+                        <p>
+                          <strong>Total Cost:</strong>{" "}
+                          {selectedRequest.total_cost ?? "N/A"}
+                        </p>
                       </div>
                     </div>
                     {/* Signature section for print only */}
-                    <div className="d-none d-print-block mt-5" style={{ width: "100%" }}>
+                    <div
+                      className="d-none d-print-block mt-5"
+                      style={{ width: "100%" }}
+                    >
                       <div style={{ marginTop: "60px", textAlign: "center" }}>
                         <div>Signature</div>
-                        <div style={{ borderBottom: "1px solid #000", margin: "40px auto 0 auto", width: "300px" }}></div>
-                        <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                        <div
+                          style={{
+                            borderBottom: "1px solid #000",
+                            margin: "40px auto 0 auto",
+                            width: "300px",
+                          }}
+                        ></div>
+                        <div style={{ marginTop: "10px" }}>
+                          (Signature & Date)
+                        </div>
                       </div>
                     </div>
                   </div>

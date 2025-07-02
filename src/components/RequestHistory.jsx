@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ENDPOINTS } from "../utilities/endpoints";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const RequestHistory = () => {
   const itemsPerPage = 5;
@@ -14,6 +16,7 @@ const RequestHistory = () => {
     loading: false,
     error: null,
   });
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const filterOptions = [
     { label: "All", value: "all" },
@@ -28,21 +31,35 @@ const RequestHistory = () => {
       try {
         setLoading(true);
         const token = localStorage.getItem("authToken");
+        if (!token) {
+          setErrorType("unauthorized");
+          setLoading(false);
+          setHistoryRecords([]);
+          return;
+        }
         const response = await fetch(ENDPOINTS.ACTION_LOGS_LIST, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          if (response.status === 401) {
+            setErrorType("unauthorized");
+          } else {
+            setErrorType("server");
+          }
+          setLoading(false);
+          setHistoryRecords([]);
+          return;
         }
 
         const data = await response.json();
         setHistoryRecords(Array.isArray(data) ? data : data.results || []);
       } catch (err) {
+        setErrorType("server");
         setError(err.message);
       } finally {
         setLoading(false);
@@ -135,8 +152,7 @@ const RequestHistory = () => {
             : "N/A"}
         </p>
         <p>
-          <strong>Request Type:</strong>{" "}
-          {detail.request_type || "N/A"}
+          <strong>Request Type:</strong> {detail.request_type || "N/A"}
         </p>
         <p>
           <strong>Request ID:</strong> {detail.request_id || "N/A"}
@@ -192,19 +208,19 @@ const RequestHistory = () => {
             )}
             <p>
               <strong>Trip Completed:</strong>{" "}
-              {"trip_completed" in ro ? (ro.trip_completed ? "Yes" : "No") : "N/A"}
+              {"trip_completed" in ro
+                ? ro.trip_completed
+                  ? "Yes"
+                  : "No"
+                : "N/A"}
             </p>
             <p>
               <strong>Created At:</strong>{" "}
-              {ro.created_at
-                ? new Date(ro.created_at).toLocaleString()
-                : "N/A"}
+              {ro.created_at ? new Date(ro.created_at).toLocaleString() : "N/A"}
             </p>
             <p>
               <strong>Updated At:</strong>{" "}
-              {ro.updated_at
-                ? new Date(ro.updated_at).toLocaleString()
-                : "N/A"}
+              {ro.updated_at ? new Date(ro.updated_at).toLocaleString() : "N/A"}
             </p>
           </>
         );
@@ -224,16 +240,19 @@ const RequestHistory = () => {
               <strong>Destination:</strong> {ro.destination ?? "N/A"}
             </p>
             <p>
-              <strong>Estimated Distance (km):</strong> {ro.estimated_distance_km ?? "N/A"}
+              <strong>Estimated Distance (km):</strong>{" "}
+              {ro.estimated_distance_km ?? "N/A"}
             </p>
             <p>
               <strong>Fuel Efficiency:</strong> {ro.fuel_efficiency ?? "N/A"}
             </p>
             <p>
-              <strong>Fuel Needed (Liters):</strong> {ro.fuel_needed_liters ?? "N/A"}
+              <strong>Fuel Needed (Liters):</strong>{" "}
+              {ro.fuel_needed_liters ?? "N/A"}
             </p>
             <p>
-              <strong>Fuel Price per Liter:</strong> {ro.fuel_price_per_liter ?? "N/A"}
+              <strong>Fuel Price per Liter:</strong>{" "}
+              {ro.fuel_price_per_liter ?? "N/A"}
             </p>
             <p>
               <strong>Fuel Type:</strong> {ro.fuel_type ?? "N/A"}
@@ -245,7 +264,8 @@ const RequestHistory = () => {
               <strong>Requester Name:</strong> {ro.requester_name ?? "N/A"}
             </p>
             <p>
-              <strong>Requester's Car:</strong> {ro.requesters_car_name ?? "N/A"}
+              <strong>Requester's Car:</strong>{" "}
+              {ro.requesters_car_name ?? "N/A"}
             </p>
             <p>
               <strong>Status:</strong> {ro.status ?? "N/A"}
@@ -264,7 +284,8 @@ const RequestHistory = () => {
               <strong>Requester Name:</strong> {ro.requester_name ?? "N/A"}
             </p>
             <p>
-              <strong>Requester's Car:</strong> {ro.requesters_car_name ?? "N/A"}
+              <strong>Requester's Car:</strong>{" "}
+              {ro.requesters_car_name ?? "N/A"}
             </p>
             <p>
               <strong>Reason:</strong> {ro.reason ?? "N/A"}
@@ -272,7 +293,11 @@ const RequestHistory = () => {
             <p>
               <strong>Maintenance Letter:</strong>{" "}
               {ro.maintenance_letter ? (
-                <a href={ro.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={ro.maintenance_letter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Download
                 </a>
               ) : (
@@ -280,12 +305,17 @@ const RequestHistory = () => {
               )}
             </p>
             <p>
-              <strong>Maintenance Total Cost:</strong> {ro.maintenance_total_cost ?? "N/A"}
+              <strong>Maintenance Total Cost:</strong>{" "}
+              {ro.maintenance_total_cost ?? "N/A"}
             </p>
             <p>
               <strong>Receipt File:</strong>{" "}
               {ro.receipt_file ? (
-                <a href={ro.receipt_file} target="_blank" rel="noopener noreferrer">
+                <a
+                  href={ro.receipt_file}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   Download
                 </a>
               ) : (
@@ -340,7 +370,11 @@ const RequestHistory = () => {
             </p>
             <p>
               <strong>Trip Completed:</strong>{" "}
-              {"trip_completed" in ro ? (ro.trip_completed ? "Yes" : "No") : "N/A"}
+              {"trip_completed" in ro
+                ? ro.trip_completed
+                  ? "Yes"
+                  : "No"
+                : "N/A"}
             </p>
             {ro.rejection_message && (
               <p>
@@ -392,6 +426,13 @@ const RequestHistory = () => {
         </div>
       </div>
     );
+  }
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
   }
 
   return (

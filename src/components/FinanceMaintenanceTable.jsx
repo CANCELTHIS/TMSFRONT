@@ -2,16 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
-import CustomPagination from './CustomPagination';
+import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg"; // Import your logo here
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
-const CEOMaintenanceTable = () => {
+const FinanceMaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const itemsPerPage = 5;
   const printDetailRef = useRef();
@@ -25,7 +28,7 @@ const CEOMaintenanceTable = () => {
     const accessToken = localStorage.getItem("authToken");
 
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -39,6 +42,11 @@ const CEOMaintenanceTable = () => {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch maintenance requests");
       }
 
@@ -59,6 +67,13 @@ const CEOMaintenanceTable = () => {
   useEffect(() => {
     fetchMaintenanceRequests();
   }, []);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -117,13 +132,24 @@ const CEOMaintenanceTable = () => {
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               {/* Print Logo and Title - Only Visible in Print */}
               <div className="modal-header d-print-none">
                 <div className="d-flex align-items-center">
-                  <img src={Logo} alt="Logo" style={{ width: "100px", height: "70px", marginRight: "10px" }} />
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{
+                      width: "100px",
+                      height: "70px",
+                      marginRight: "10px",
+                    }}
+                  />
                   <h5 className="modal-title">Maintenance Request</h5>
                 </div>
                 <button
@@ -137,42 +163,93 @@ const CEOMaintenanceTable = () => {
               <div className="modal-body" ref={printDetailRef}>
                 {/* Print logo and title for print only */}
                 <div className="d-none d-print-block text-center mb-3">
-                  <img src={Logo} alt="Logo" style={{ width: "150px", height: "100px" }} />
-                  <div style={{ marginTop: "10px", fontWeight: "bold", fontSize: "1.3rem" }}>Maintenance Request Details</div>
+                  <img
+                    src={Logo}
+                    alt="Logo"
+                    style={{ width: "150px", height: "100px" }}
+                  />
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      fontWeight: "bold",
+                      fontSize: "1.3rem",
+                    }}
+                  >
+                    Maintenance Request Details
+                  </div>
                 </div>
                 <div className="container-fluid">
                   <div className="row">
                     <div className="col-md-6">
-                      <p><strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}</p>
-                      <p><strong>Reason:</strong> {selectedRequest.reason}</p>
-                      <p><strong>Requester Name:</strong> {selectedRequest.requester_name}</p>
-                      <p><strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}</p>
-                      <p><strong>Status:</strong> {selectedRequest.status}</p>
+                      <p>
+                        <strong>Date:</strong>{" "}
+                        {new Date(selectedRequest.date).toLocaleDateString()}
+                      </p>
+                      <p>
+                        <strong>Reason:</strong> {selectedRequest.reason}
+                      </p>
+                      <p>
+                        <strong>Requester Name:</strong>{" "}
+                        {selectedRequest.requester_name}
+                      </p>
+                      <p>
+                        <strong>Requester's Car:</strong>{" "}
+                        {selectedRequest.requesters_car_name}
+                      </p>
+                      <p>
+                        <strong>Status:</strong> {selectedRequest.status}
+                      </p>
                     </div>
                     <div className="col-md-6">
-                      <p><strong>Current Approver Role:</strong> {selectedRequest.current_approver_role}</p>
-                      <p><strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB</p>
+                      <p>
+                        <strong>Current Approver Role:</strong>{" "}
+                        {selectedRequest.current_approver_role}
+                      </p>
+                      <p>
+                        <strong>Maintenance Total Cost:</strong>{" "}
+                        {selectedRequest.maintenance_total_cost} ETB
+                      </p>
                       <p>
                         <strong>Maintenance Letter:</strong>{" "}
-                        <a href={selectedRequest.maintenance_letter} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={selectedRequest.maintenance_letter}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           View Maintenance Letter
                         </a>
                       </p>
                       <p>
                         <strong>Receipt File:</strong>{" "}
-                        <a href={selectedRequest.receipt_file} target="_blank" rel="noopener noreferrer">
+                        <a
+                          href={selectedRequest.receipt_file}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           View Receipt
                         </a>
                       </p>
-                      <p><strong>Rejection Message:</strong> {selectedRequest.rejection_message || "N/A"}</p>
+                      <p>
+                        <strong>Rejection Message:</strong>{" "}
+                        {selectedRequest.rejection_message || "N/A"}
+                      </p>
                     </div>
                   </div>
                 </div>
                 {/* Signature section for print only */}
-                <div className="d-none d-print-block mt-5" style={{ width: "100%" }}>
+                <div
+                  className="d-none d-print-block mt-5"
+                  style={{ width: "100%" }}
+                >
                   <div style={{ marginTop: "60px", textAlign: "center" }}>
                     <div>Signature</div>
-                    <div style={{ borderBottom: "1px solid #000", margin: "40px auto 0 auto", width: "300px" }}></div>
+                    <div
+                      style={{
+                        borderBottom: "1px solid #000",
+                        margin: "40px auto 0 auto",
+                        width: "300px",
+                      }}
+                    ></div>
                     <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
                   </div>
                 </div>
@@ -184,10 +261,7 @@ const CEOMaintenanceTable = () => {
                 >
                   Close
                 </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handlePrintDetail}
-                >
+                <button className="btn btn-primary" onClick={handlePrintDetail}>
                   Print
                 </button>
               </div>
@@ -229,4 +303,4 @@ const CEOMaintenanceTable = () => {
   );
 };
 
-export default CEOMaintenanceTable;
+export default FinanceMaintenanceTable;

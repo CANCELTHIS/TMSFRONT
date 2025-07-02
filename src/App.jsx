@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import "./index.css";
 import Home from "./components/Home";
 import Services from "./components/Services";
@@ -51,10 +51,12 @@ import BMService from "./components/BMService";
 import CEOService from "./components/CEOService";
 import FMService from "./components/FMService";
 import GSservice from "./components/GSservice";
-import TransportManagerDashboard from "./components/TransportManagerDashboard"
+import TransportManagerDashboard from "./components/TransportManagerDashboard";
 import MonthlyCoupon from "./components/MonthlyCoupon";
 import MonthlyCouponTM from "./components/MonthlyCouponTM";
-
+import NotFoundPage from "./components/NotFoundPage";
+import UnauthorizedPage from "./components/UnauthorizedPage";
+import ServerErrorPage from "./components/ServerErrorPage";
 const App = () => {
   const [modalType, setModalType] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -557,6 +559,9 @@ const App = () => {
                 />
 
                 <Route path="/-login" element={<PleaseLoginPage />} />
+                <Route path="/401" element={<UnauthorizedPage />} />
+                <Route path="/500" element={<ServerErrorPage />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
 
               {/* Modals */}

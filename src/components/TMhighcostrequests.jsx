@@ -10,6 +10,9 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import { IoClose } from "react-icons/io5";
 import { useLanguage } from "../context/LanguageContext";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
+
 const TMhighcostrequests = () => {
   const [requests, setRequests] = useState([]);
   const [users, setUsers] = useState([]); // State for employees
@@ -34,6 +37,7 @@ const TMhighcostrequests = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "forward", "approve", "reject"
   const [otpSent, setOtpSent] = useState(false);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   useEffect(() => {
     fetchRequests();
@@ -43,7 +47,7 @@ const TMhighcostrequests = () => {
 
   const fetchRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -58,9 +62,13 @@ const TMhighcostrequests = () => {
         requestType: "High Cost", // Label as high-cost
       }));
 
-      console.log("High-Cost Requests:", highCostRequestsWithLabel); // Debugging log
       setRequests(highCostRequestsWithLabel); // Set high-cost requests to state
     } catch (error) {
+      if (error.message && error.message.toLowerCase().includes("401")) {
+        setErrorType("unauthorized");
+      } else {
+        setErrorType("server");
+      }
       console.error("Fetch Requests Error:", error);
     } finally {
       setLoading(false);
@@ -69,7 +77,7 @@ const TMhighcostrequests = () => {
 
   const fetchUsers = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return;
     }
 
@@ -81,7 +89,14 @@ const TMhighcostrequests = () => {
         },
       });
 
-      if (!response.ok) throw new Error("Failed to fetch users");
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
+        throw new Error("Failed to fetch users");
+      }
 
       const data = await response.json();
       setUsers(data.results || []); // Set users data
@@ -92,7 +107,7 @@ const TMhighcostrequests = () => {
 
   const fetchHighCostRequests = async () => {
     if (!accessToken) {
-      console.error("No access token found.");
+      setErrorType("unauthorized");
       return [];
     }
 
@@ -104,11 +119,16 @@ const TMhighcostrequests = () => {
         },
       });
 
-      if (!response.ok)
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         throw new Error("Failed to fetch high-cost transport requests");
+      }
 
       const data = await response.json();
-      console.log("High-Cost Requests:", data.results); // Debugging log
       return data.results || []; // Return fetched high-cost requests
     } catch (error) {
       console.error("Fetch High-Cost Requests Error:", error);
@@ -377,6 +397,13 @@ const TMhighcostrequests = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div
@@ -938,21 +965,29 @@ const TMhighcostrequests = () => {
                         boxShadow: "none",
                       }}
                       value={otpValue[idx] || ""}
-                      onChange={e => {
+                      onChange={(e) => {
                         const val = e.target.value.replace(/\D/g, "");
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
                         // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(`otp-input-${idx + 1}`);
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Backspace" && !otpValue[idx] && idx > 0) {
-                          const prev = document.getElementById(`otp-input-${idx - 1}`);
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
                           if (prev) prev.focus();
                         }
                       }}

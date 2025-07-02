@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import axios from "axios"; // For API requests
+import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
-import CustomPagination from './CustomPagination';
+import CustomPagination from "./CustomPagination";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const AdminDepartmentPage = () => {
-  const [departments, setDepartments] = useState([]);  // Ensure it's always an array
+  const [departments, setDepartments] = useState([]); // Ensure it's always an array
   const [users, setUsers] = useState([]); // State for users
   const [showModal, setShowModal] = useState(false);
   const [currentDepartment, setCurrentDepartment] = useState(null);
@@ -16,6 +18,7 @@ const AdminDepartmentPage = () => {
   const [formErrors, setFormErrors] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -35,25 +38,29 @@ const AdminDepartmentPage = () => {
   useEffect(() => {
     const fetchDepartmentsAndUsers = async () => {
       try {
-        const departmentResponse = await axiosInstance.get(ENDPOINTS.DEPARTMENT_LIST);
+        const departmentResponse = await axiosInstance.get(
+          ENDPOINTS.DEPARTMENT_LIST
+        );
         const userResponse = await axiosInstance.get(ENDPOINTS.USERS);
-  
-        // Ensure responses have results
-        const fetchedDepartments = departmentResponse.data|| [];
+
+        const fetchedDepartments = departmentResponse.data || [];
         const fetchedUsers = userResponse.data.results || [];
-  
+
         setDepartments(fetchedDepartments);
         setUsers(fetchedUsers);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        if (error.response && error.response.status === 401) {
+          setErrorType("unauthorized");
+        } else {
+          setErrorType("server");
+        }
         setDepartments([]);
         setUsers([]);
       }
     };
-  
+
     fetchDepartmentsAndUsers();
   }, []);
-  
 
   const validateInput = () => {
     const errors = {};
@@ -81,7 +88,7 @@ const AdminDepartmentPage = () => {
       } else {
         // Add new department
         response = await axiosInstance.post(
-          ENDPOINTS.DEPARTMENT_LIST, 
+          ENDPOINTS.DEPARTMENT_LIST,
           formValues
         );
         setDepartments((prev) => [...prev, response.data]);
@@ -105,8 +112,18 @@ const AdminDepartmentPage = () => {
     setShowModal(true);
   };
 
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
+
   return (
-    <div className="d-flex mt-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
+    <div
+      className="d-flex mt-4"
+      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
+    >
       <div className="flex-grow-1">
         <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
           <h2 className="h5">Department Management</h2>
@@ -114,15 +131,24 @@ const AdminDepartmentPage = () => {
 
         <div className="container py-4">
           <div className="d-flex justify-content-start align-items-center mb-2">
-            <button className="btn" style={{backgroundColor:"#0b455b",color:"#fff",height:"50px",width:"200px"}} onClick={() => setShowModal(true)}>
+            <button
+              className="btn"
+              style={{
+                backgroundColor: "#0b455b",
+                color: "#fff",
+                height: "50px",
+                width: "200px",
+              }}
+              onClick={() => setShowModal(true)}
+            >
               + Add Department
             </button>
           </div>
 
           <div className="card shadow-sm">
             <div className="card-body">
-            <div className="table-responsive">
-            <table className="table table-hover align-middle">
+              <div className="table-responsive">
+                <table className="table table-hover align-middle">
                   <thead className="table-light">
                     <tr>
                       <th>#</th>
@@ -131,33 +157,36 @@ const AdminDepartmentPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-  {currentDepartments.length > 0 ? (
-    currentDepartments.map((dept, index) => (
-      <tr key={dept.id}>
-        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td> {/* Correct numbering */}
-        <td>{dept.name}</td>
-        <td>{dept.department_manager ? dept.department_manager : "No Manager Assigned"}</td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="3" className="text-center">
-        No departments added yet.
-      </td>
-    </tr>
-  )}
-</tbody>
-
+                    {currentDepartments.length > 0 ? (
+                      currentDepartments.map((dept, index) => (
+                        <tr key={dept.id}>
+                          <td>
+                            {(currentPage - 1) * itemsPerPage + index + 1}
+                          </td>{" "}
+                          {/* Correct numbering */}
+                          <td>{dept.name}</td>
+                          <td>
+                            {dept.department_manager
+                              ? dept.department_manager
+                              : "No Manager Assigned"}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="3" className="text-center">
+                          No departments added yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
                 </table>
               </div>
             </div>
           </div>
         </div>
 
-        <div
-          className="d-flex justify-content-center align-items-center"
-         
-        >
+        <div className="d-flex justify-content-center align-items-center">
           <CustomPagination
             currentPage={currentPage}
             totalPages={Math.ceil(departments.length / itemsPerPage)}
@@ -166,12 +195,21 @@ const AdminDepartmentPage = () => {
         </div>
 
         {showModal && (
-          <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
+          <div
+            className="modal fade show d-block"
+            style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          >
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">
-                  <h5 className="modal-title">{currentDepartment ? "Edit Department" : "Add Department"}</h5>
-                  <button type="button" className="btn-close" onClick={handleCloseModal}></button>
+                  <h5 className="modal-title">
+                    {currentDepartment ? "Edit Department" : "Add Department"}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleCloseModal}
+                  ></button>
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
@@ -181,17 +219,28 @@ const AdminDepartmentPage = () => {
                       className="form-control"
                       name="name"
                       value={formValues.name}
-                      onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormValues({ ...formValues, name: e.target.value })
+                      }
                     />
-                    {formErrors.name && <small className="text-danger">{formErrors.name}</small>}
+                    {formErrors.name && (
+                      <small className="text-danger">{formErrors.name}</small>
+                    )}
                   </div>
-                  
                 </div>
                 <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={handleCloseModal}
+                  >
                     Cancel
                   </button>
-                  <button type="button" className="btn btn-primary" onClick={handleAddOrEdit}>
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={handleAddOrEdit}
+                  >
                     Save
                   </button>
                 </div>
@@ -199,7 +248,6 @@ const AdminDepartmentPage = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

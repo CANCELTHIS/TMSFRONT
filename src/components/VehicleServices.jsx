@@ -6,6 +6,8 @@ import { ENDPOINTS } from "../utilities/endpoints";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UnauthorizedPage from "./UnauthorizedPage";
+import ServerErrorPage from "./ServerErrorPage";
 
 const VehicleServices = () => {
   const [showForm, setShowForm] = useState(false);
@@ -19,30 +21,45 @@ const VehicleServices = () => {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [kilometerLogs, setKilometerLogs] = useState([]);
+  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   // Fetch kilometer logs
   const fetchKilometerLogs = async () => {
     try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        setErrorType("unauthorized");
+        return;
+      }
       const response = await axios.get(ENDPOINTS.KILOMETER_LOGS, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setKilometerLogs(response.data.results || []);
     } catch (error) {
-      console.error("Error fetching kilometer logs:", error);
-      if (error.response?.status === 403) {
+      if (error.response?.status === 401) {
+        setErrorType("unauthorized");
+      } else if (error.response?.status === 403) {
         toast.error("Access denied to kilometer logs");
+      } else {
+        setErrorType("server");
       }
+      console.error("Error fetching kilometer logs:", error);
     }
   };
 
   // Fetch user vehicles
   const fetchUserVehicles = async () => {
     try {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        setErrorType("unauthorized");
+        return;
+      }
       const response = await axios.get(ENDPOINTS.CURRENT_USER_VEHICLES, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       const vehiclesData = Array.isArray(response.data)
@@ -51,6 +68,11 @@ const VehicleServices = () => {
       setVehicles(vehiclesData);
       if (vehiclesData.length > 0) setSelectedVehicleId(vehiclesData[0].id);
     } catch (error) {
+      if (error.response?.status === 401) {
+        setErrorType("unauthorized");
+      } else {
+        setErrorType("server");
+      }
       console.error("Error fetching user vehicles:", error);
       toast.error("Failed to load vehicles");
     }
@@ -67,13 +89,23 @@ const VehicleServices = () => {
     // Convert "2025-05" to "May 2025"
     const [year, monthNum] = formData.month.split("-");
     const monthNames = [
-      "January", "February", "March", "April", "May", "June",
-      "July", "August", "September", "October", "November", "December"
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     const formattedMonth = `${monthNames[parseInt(monthNum, 10) - 1]} ${year}`;
 
     // Check for duplicate month
-    if (kilometerLogs.some(log => log.month === formattedMonth)) {
+    if (kilometerLogs.some((log) => log.month === formattedMonth)) {
       setInlineError("You have already added a log for this month");
       return;
     }
@@ -95,7 +127,7 @@ const VehicleServices = () => {
 
       // Refetch the updated logs to get complete data
       await fetchKilometerLogs();
-      
+
       setShowForm(false);
       setFormData({ month: "", kilometers_driven: "" });
       setInlineError("");
@@ -113,8 +145,15 @@ const VehicleServices = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  if (errorType === "unauthorized") {
+    return <UnauthorizedPage />;
+  }
+  if (errorType === "server") {
+    return <ServerErrorPage />;
+  }
 
   return (
     <div className="container mt-5">
@@ -137,7 +176,10 @@ const VehicleServices = () => {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -190,7 +232,9 @@ const VehicleServices = () => {
                   </div>
 
                   {inlineError && (
-                    <div className="alert alert-warning py-2">{inlineError}</div>
+                    <div className="alert alert-warning py-2">
+                      {inlineError}
+                    </div>
                   )}
 
                   <button
@@ -239,7 +283,11 @@ const VehicleServices = () => {
                   <td>{log.kilometers_driven}</td>
                   <td>{log.vehicle || "Loading..."}</td>
                   <td>{log.recorded_by || "Loading..."}</td>
-                  <td>{log.created_at ? new Date(log.created_at).toLocaleString() : "Loading..."}</td>
+                  <td>
+                    {log.created_at
+                      ? new Date(log.created_at).toLocaleString()
+                      : "Loading..."}
+                  </td>
                 </tr>
               ))
             )}
