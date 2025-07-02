@@ -81,10 +81,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/transport-manager/high_cost",
       icon: <FaGaugeHigh size={22} />,
-      label:
-        mylanguage === "EN"
-          ? "Highcost Vehicle Requests"
-          : "የከፍተኛ ዋጋ ተሽከርካሪ ጥያቄዎች",
+      label: mylanguage === "EN" ? "Field Trip" : "የከፍተኛ ዋጋ ተሽከርካሪ ጥያቄዎች",
     },
     {
       path: "/transport-manager/report",
@@ -133,7 +130,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/driver/high-cost-schedule",
       icon: <FaGaugeHigh />,
-      label: "High Cost Schedule",
+      label: "Field Trip Schedule",
     },
     {
       path: "/driver/maintenance-request",
@@ -181,7 +178,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/department-manager/hight-cost",
       icon: <FaGaugeHigh />,
-      label: "High Cost",
+      label: "Field Trip",
     },
     {
       path: "/department-manager/history",
@@ -199,7 +196,7 @@ const Sidebar = ({ role }) => {
     {
       path: "/finance-manager/hight-cost",
       icon: <FaGaugeHigh />,
-      label: "High Cost",
+      label: "Field Trip",
     },
     {
       path: "/finance-manager/financemaintenance-table",
