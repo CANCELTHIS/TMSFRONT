@@ -396,7 +396,7 @@ const GSmaintenance = () => {
                   {selectedRequest.requesters_car_name}
                 </p>
                 <p>
-                  <a href="https://lms.gdop.gov.et">
+                  <a href="http://lms.gdop.gov.et">
                     <strong>Message to Maintenance Provider</strong>
                   </a>
                 </p>

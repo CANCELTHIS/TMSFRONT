@@ -290,7 +290,7 @@ const ListServiceRequestsTable = () => {
                   {selectedRequest.requesters_car_name || "N/A"}
                 </p>
                 <p>
-                  <a href="https://lms.gdop.gov.et">
+                  <a href="http://lms.gdop.gov.et">
                     <strong>Message to service Provider</strong>
                   </a>
                 </p>
