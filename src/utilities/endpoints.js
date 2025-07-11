@@ -1,4 +1,4 @@
-const BASE_URL = "http://172.30.61.194/api/";
+const BASE_URL =  "http://tms.gdop.gov.et/api/"; // Replace with your actual base URL
 
 export const ENDPOINTS = {
   // Department endpoints
@@ -91,12 +91,16 @@ export const ENDPOINTS = {
     `${BASE_URL}maintenance-requests/${request_id}/action/`, // Approve/Reject a maintenance request
   SUBMIT_MAINTENANCE_FILES: (request_id) =>
     `${BASE_URL}maintenance-requests/${request_id}/submit-files/`, // Submit files for a maintenance request
-  MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`, // List current user's maintenance requests
-MAINTAINED_VEHICLES: `${BASE_URL}maintenance-requests/maintained-vehicles/`, // GET method, empty json
+  MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`,
+  // List current user's maintenance requests
 
-  // New: Mark maintenance vehicle available (POST)
-  MARK_MAINTENANCE_VEHICLE_AVAILABLE: (vehicle_id) =>
-    `${BASE_URL}maintenance-requests/${vehicle_id}/mark-available/`, // POST method, empty json
+  MAINTAINED_VEHICLES: `${BASE_URL}vehicles/under-maintenance/list/`, // GET method, empty json
+
+  // Add this endpoint for maintained vehicles under maintenance-requests
+  MAINTENANCE_REQUESTS_MAINTAINED_VEHICLES: `${BASE_URL}maintenance-requests/maintained-vehicles/`, // GET method, empty json
+
+  MARK_AS_MAINTENANCE: (vehicle_id) => `${BASE_URL}vehicles/${vehicle_id}/mark-as-maintenance/`,
+  MARK_MAINTENANCE_VEHICLE_AVAILABLE: (vehicle_id) => `${BASE_URL}maintenance-requests/${vehicle_id}/mark-available/`, 
   // Report endpoints (corrected and explicit)
   REPORT_LIST: `${BASE_URL}report/`, // GET method, returns JSON, no params
   REPORT_TRANSPORT: `${BASE_URL}report/?request_type=Transport`,

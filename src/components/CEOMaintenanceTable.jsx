@@ -58,6 +58,7 @@ const CEOMaintenanceTable = () => {
       }
 
       const data = await response.json();
+      console.log("Fetched maintenance requests:@@@", data);
       setMaintenanceRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -321,8 +322,9 @@ const CEOMaintenanceTable = () => {
                     href={selectedRequest.maintenance_letter}
                     target="_blank"
                     rel="noopener noreferrer"
+                    download
                   >
-                    View Maintenance Letter
+                    Download Maintenance Letter
                   </a>
                 </p>
                 <p>
@@ -331,8 +333,9 @@ const CEOMaintenanceTable = () => {
                     href={selectedRequest.receipt_file}
                     target="_blank"
                     rel="noopener noreferrer"
+                    download
                   >
-                    View Receipt
+                    Download Receipt
                   </a>
                 </p>
                 <p>

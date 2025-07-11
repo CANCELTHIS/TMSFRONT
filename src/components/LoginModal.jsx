@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignupModal from './SignupModal';
 import { useLanguage } from '../context/LanguageContext';
@@ -21,6 +21,13 @@ const LoginModal = ({ onClose }) => {
   const { mylanguage } = useLanguage();
   const { myTheme } = useTheme();
   const navigate = useNavigate();
+  const emailInputRef = useRef(null);
+
+  useEffect(() => {
+    if (emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
+  }, []);
 
   if (showSignup) {
     return <SignupModal onClose={() => setShowSignup(false)} />;
@@ -84,7 +91,7 @@ const LoginModal = ({ onClose }) => {
           {error && <div className="alert alert-danger">{error}</div>}
 
           <form onSubmit={handleLogin}>
-            <button className="btn-close mb-5" onClick={onClose}><IoClose size={30} /></button>
+            <button className="btn-close mb-5" onClick={onClose} type="button"><IoClose size={30} /></button>
             <h1 className="text-center mb-4">
               {mylanguage === 'EN' ? 'Login' : 'መግቢያ'}
             </h1>
@@ -100,6 +107,7 @@ const LoginModal = ({ onClose }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                ref={emailInputRef}
               />
             </div>
 
@@ -109,7 +117,7 @@ const LoginModal = ({ onClose }) => {
                 {mylanguage === 'EN' ? 'Password' : 'ፓስወርድ'}
               </label>
               <input
-                type={passwordVisible ? 'text' : 'password'}  // Toggle input type
+                type={passwordVisible ? 'text' : 'password'}
                 className="form-control"
                 id="password"
                 placeholder={mylanguage === 'EN' ? 'Your password' : 'ፓስወርድዎን ያስገቡ'}
@@ -119,14 +127,19 @@ const LoginModal = ({ onClose }) => {
               />
               <span
                 className="password-toggle"
-                onClick={() => setPasswordVisible(!passwordVisible)}  // Toggle visibility
+                onClick={() => setPasswordVisible(!passwordVisible)}
                 style={{ position: 'absolute', top: '70%', right: '10px', cursor: 'pointer', transform: 'translateY(-50%)' }}
               >
-                {passwordVisible ? <IoEyeOff size={20} /> : <IoEye size={20} />}  {/* Eye icon */}
+                {passwordVisible ? <IoEyeOff size={20} /> : <IoEye size={20} />}
               </span>
             </div>
 
-            <button type="submit" className="btn w-100 login-btn" style={{ backgroundColor: '#F09F33', color: 'white' }}>
+            <button
+              type="submit"
+              className="btn w-100 login-btn"
+              style={{ backgroundColor: '#F09F33', color: 'white' }}
+              disabled={!email || !password}
+            >
               {mylanguage === 'EN' ? 'Login' : 'ይግቡ'}
             </button>
           </form>

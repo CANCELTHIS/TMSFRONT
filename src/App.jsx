@@ -57,6 +57,9 @@ import MonthlyCouponTM from "./components/MonthlyCouponTM";
 import NotFoundPage from "./components/NotFoundPage";
 import UnauthorizedPage from "./components/UnauthorizedPage";
 import ServerErrorPage from "./components/ServerErrorPage";
+import { Import } from "lucide-react";
+import CEODashboard from "./components/CEODashboard";
+import UnderMaintanaceVechile from "./components/UnderMaintanaceVechile";
 const App = () => {
   const [modalType, setModalType] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -336,6 +339,10 @@ const App = () => {
                               path="vehicle-services"
                               element={<VehicleServices />}
                             />
+                            <Route
+                              path="dashboard"
+                              element={<CEODashboard />}
+                            />
                           </Routes>
                         </div>
                       </div>
@@ -467,6 +474,10 @@ const App = () => {
                             <Route
                               path="vehicle-services"
                               element={<VehicleServices />}
+                            />
+                               <Route
+                              path="under-maintanace-vechile"
+                              element={<UnderMaintanaceVechile />}
                             />
                           </Routes>
                         </div>

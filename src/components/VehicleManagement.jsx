@@ -36,6 +36,9 @@ const VehicleManagement = () => {
   const itemsPerPage = 5;
   const [viewVehicle, setViewVehicle] = useState(null);
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [departments, setDepartments] = useState([]);
+  const [viewVehicleDetail, setViewVehicleDetail] = useState(null);
+  const [viewDetailLoading, setViewDetailLoading] = useState(false);
 
   const token = localStorage.getItem("authToken");
 
@@ -80,6 +83,7 @@ const VehicleManagement = () => {
         const userData = await fetchUsers();
         setDrivers(userData);
         await fetchVehicles();
+        await fetchDepartments();
       } catch (error) {
         // Already handled in fetchUsers/fetchVehicles
       } finally {
@@ -118,6 +122,17 @@ const VehicleManagement = () => {
       }
       setVehicles([]);
       console.error("Error fetching vehicles:", error);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get(ENDPOINTS.DEPARTMENT_LIST, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDepartments(response.data.results || response.data || []);
+    } catch {
+      setDepartments([]);
     }
   };
 
@@ -264,6 +279,22 @@ const VehicleManagement = () => {
     setShowModal(true);
   };
 
+  // Fetch vehicle detail by id
+  const handleViewDetail = async (vehicleId) => {
+    setViewDetailLoading(true);
+    try {
+      const response = await axios.get(ENDPOINTS.VEHICLE_DETAIL(vehicleId), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setViewVehicleDetail(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch vehicle details.");
+      setViewVehicleDetail(null);
+    } finally {
+      setViewDetailLoading(false);
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -312,6 +343,7 @@ const VehicleManagement = () => {
               <th>Capacity</th>
               <th>Total KM</th>
               <th>Status</th>
+              <th>Ownership</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -346,6 +378,13 @@ const VehicleManagement = () => {
                   </td>
                   <td>{vehicle.status}</td>
                   <td>
+                    {vehicle.source === "organization"
+                     ? "Owned"
+                      : vehicle.source === "rented"
+                      ? "Rented"
+                      : "-"}
+                  </td>
+                  <td>
                     <button
                       className="btn btn-sm me-2"
                       onClick={() => handleEdit(vehicle)}
@@ -360,11 +399,11 @@ const VehicleManagement = () => {
                       Deactivate
                     </button>
                     <button
-                      className="btn btn-sm"
-                      onClick={() => setViewVehicle(vehicle)}
-                      style={{ color: "#fff", backgroundColor: "#0bc55e" }}
+                      className="btn btn-info btn-sm"
+                      onClick={() => handleViewDetail(vehicle.id)}
+                      style={{ color: "#fff", backgroundColor: "#17a2b8" }}
                     >
-                      View More
+                      View Detail
                     </button>
                   </td>
                 </tr>
@@ -443,7 +482,7 @@ const VehicleManagement = () => {
                 )}
                 <form onSubmit={handleSubmit}>
                   <div className="row mb-3">
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Driver
                       </label>
@@ -465,7 +504,7 @@ const VehicleManagement = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         License Plate
                       </label>
@@ -481,10 +520,7 @@ const VehicleManagement = () => {
                         }
                       />
                     </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Model
                       </label>
@@ -500,7 +536,7 @@ const VehicleManagement = () => {
                         }
                       />
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Capacity
                       </label>
@@ -517,10 +553,7 @@ const VehicleManagement = () => {
                         min="1"
                       />
                     </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Source
                       </label>
@@ -535,7 +568,7 @@ const VehicleManagement = () => {
                       </select>
                     </div>
                     {newVehicle.source === "rented" && (
-                      <div className="col-md-6">
+                      <div className="col-md-6 mb-3">
                         <label className="form-label fw-semibold text-secondary">
                           Rental Company
                         </label>
@@ -552,10 +585,7 @@ const VehicleManagement = () => {
                         />
                       </div>
                     )}
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Fuel Type
                       </label>
@@ -574,7 +604,7 @@ const VehicleManagement = () => {
                         <option value="naphtha">Naphtha</option>
                       </select>
                     </div>
-                    <div className="col-md-6">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Fuel Efficiency (km/l)
                       </label>
@@ -593,10 +623,7 @@ const VehicleManagement = () => {
                         step="0.01"
                       />
                     </div>
-                  </div>
-
-                  <div className="row mb-3">
-                    <div className="col-md-4">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Libre Number
                       </label>
@@ -613,7 +640,7 @@ const VehicleManagement = () => {
                         placeholder="Enter Libre Number"
                       />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Motor Number
                       </label>
@@ -630,7 +657,7 @@ const VehicleManagement = () => {
                         placeholder="Enter Motor Number"
                       />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-6 mb-3">
                       <label className="form-label fw-semibold text-secondary">
                         Chassis Number
                       </label>
@@ -648,7 +675,6 @@ const VehicleManagement = () => {
                       />
                     </div>
                   </div>
-
                   <div className="d-flex gap-2 mt-4 justify-content-end">
                     <button
                       type="submit"
@@ -685,9 +711,10 @@ const VehicleManagement = () => {
                           status: "available",
                           fuel_type: "",
                           fuel_efficiency: "",
-                          libre_number: "LIBRE-001-XYZ", // default value from your JSON
-                          motor_number: "MTR-001-XYZ", // default value from your JSON
-                          chassis_number: "CHS-001-XYZ", // default value from your JSON
+                          libre_number: "LIBRE-001-XYZ",
+                          motor_number: "MTR-001-XYZ",
+                          chassis_number: "CHS-001-XYZ",
+                          department: "",
                         })
                       }
                     >
@@ -725,18 +752,30 @@ const VehicleManagement = () => {
                   type="button"
                   onClick={() => setViewVehicle(null)}
                   aria-label="Close"
+                  style={{
+                    position: "absolute",
+                    right: "16px",
+                    top: "16px",
+                    zIndex: 2,
+                    background: "transparent",
+                    border: "none",
+                    fontSize: "1.5rem",
+                  }}
                 >
                   <IoMdClose size={24} />
                 </button>
               </div>
               <div
                 className="modal-body"
-                style={{ background: "#f4f7fa", padding: "2rem 2.5rem" }}
+                style={{
+                  background: "#f4f7fa",
+                  padding: "2rem 2.5rem",
+                  borderRadius: "0 0 20px 20px",
+                }}
               >
-                <div className="row mb-2">
+                <div className="row mb-3">
                   <div className="col-md-6 mb-2">
-                    <strong>Driver:</strong>{" "}
-                    {getDriverNameById(viewVehicle.driver)}
+                    <strong>Driver:</strong> {getDriverNameById(viewVehicle.driver)}
                   </div>
                   <div className="col-md-6 mb-2">
                     <strong>License Plate:</strong> {viewVehicle.license_plate}
@@ -748,40 +787,155 @@ const VehicleManagement = () => {
                     <strong>Capacity:</strong> {viewVehicle.capacity}
                   </div>
                   <div className="col-md-6 mb-2">
-                    <strong>Source:</strong> {viewVehicle.source}
-                  </div>
-                  <div className="col-md-6 mb-2">
-                    <strong>Rental Company:</strong>{" "}
-                    {viewVehicle.rental_company || "-"}
+                    <strong>Ownership:</strong>{" "}
+                    {viewVehicle.source === "organization"
+                      ? "Owned"
+                      : viewVehicle.source === "rented"
+                      ? "Rented"
+                      : "-"}
                   </div>
                   <div className="col-md-6 mb-2">
                     <strong>Status:</strong> {viewVehicle.status}
                   </div>
+                  {viewVehicle.source === "rented" && (
+                    <div className="col-md-6 mb-2">
+                      <strong>Rental Company:</strong> {viewVehicle.rental_company || "-"}
+                    </div>
+                  )}
                   <div className="col-md-6 mb-2">
                     <strong>Fuel Type:</strong> {viewVehicle.fuel_type}
                   </div>
                   <div className="col-md-6 mb-2">
-                    <strong>Fuel Efficiency:</strong>{" "}
-                    {viewVehicle.fuel_efficiency}
+                    <strong>Fuel Efficiency:</strong> {viewVehicle.fuel_efficiency}
                   </div>
                   <div className="col-md-6 mb-2">
                     <strong>Total KM:</strong> {viewVehicle.total_km}
                   </div>
-                  <div className="col-md-4 mb-2">
+                  <div className="col-md-6 mb-2">
                     <strong>Libre Number:</strong> {viewVehicle.libre_number}
                   </div>
-                  <div className="col-md-4 mb-2">
+                  <div className="col-md-6 mb-2">
                     <strong>Motor Number:</strong> {viewVehicle.motor_number}
                   </div>
-                  <div className="col-md-4 mb-2">
-                    <strong>Chassis Number:</strong>{" "}
-                    {viewVehicle.chassis_number}
+                  <div className="col-md-6 mb-2">
+                    <strong>Chassis Number:</strong> {viewVehicle.chassis_number}
                   </div>
                 </div>
                 <div className="d-flex justify-content-end">
                   <button
                     className="btn btn-secondary"
                     onClick={() => setViewVehicle(null)}
+                    style={{ minWidth: "110px" }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vehicle Detail Modal */}
+      {viewVehicleDetail && (
+        <div
+          className="modal fade show d-block"
+          tabIndex="-1"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div
+              className="modal-content"
+              style={{
+                borderRadius: "20px",
+                boxShadow: "0 8px 32px rgba(44,62,80,0.18)",
+                border: "none",
+                overflow: "hidden",
+                position: "relative",
+              }}
+            >
+              <div className="modal-header">
+                <h5 className="mb-0">Vehicle Detail</h5>
+                <button
+                  type="button"
+                  onClick={() => setViewVehicleDetail(null)}
+                  aria-label="Close"
+                  style={{
+                    position: "absolute",
+                    right: "16px",
+                    top: "16px",
+                    zIndex: 2,
+                    background: "transparent",
+                    border: "none",
+                    fontSize: "1.5rem",
+                  }}
+                >
+                  <IoMdClose size={24} />
+                </button>
+              </div>
+              <div
+                className="modal-body"
+                style={{
+                  background: "#f4f7fa",
+                  padding: "2rem 2.5rem",
+                  borderRadius: "0 0 20px 20px",
+                }}
+              >
+                {viewDetailLoading ? (
+                  <div>Loading...</div>
+                ) : (
+                  <div className="row mb-3">
+                    <div className="col-md-6 mb-2">
+                      <strong>Driver:</strong> {viewVehicleDetail.driver_name}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>License Plate:</strong> {viewVehicleDetail.license_plate}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Model:</strong> {viewVehicleDetail.model}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Capacity:</strong> {viewVehicleDetail.capacity}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Ownership:</strong>{" "}
+                      {viewVehicleDetail.source === "organization"
+                        ? "Owned"
+                        : viewVehicleDetail.source === "rented"
+                        ? "Rented"
+                        : "-"}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Status:</strong> {viewVehicleDetail.status}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Department:</strong>{" "}
+                      {departments.find((d) => d.id === viewVehicleDetail.department)?.name || "-"}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Fuel Type:</strong> {viewVehicleDetail.fuel_type}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Fuel Efficiency:</strong> {viewVehicleDetail.fuel_efficiency}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Total KM:</strong> {viewVehicleDetail.total_kilometers}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Libre Number:</strong> {viewVehicleDetail.libre_number}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Motor Number:</strong> {viewVehicleDetail.motor_number}
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <strong>Chassis Number:</strong> {viewVehicleDetail.chassis_number}
+                    </div>
+                  </div>
+                )}
+                <div className="d-flex justify-content-end">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setViewVehicleDetail(null)}
                     style={{ minWidth: "110px" }}
                   >
                     Close

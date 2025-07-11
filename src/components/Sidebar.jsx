@@ -120,6 +120,11 @@ const Sidebar = ({ role }) => {
       icon: <MdAttachEmail size={22} />,
       label: "Transport Coupons",
     },
+     {
+      path: "/transport-manager/under-maintanace-vechile",
+      icon: <FaTools size={22} />,
+      label: mylanguage === "EN" ? "Under Maintenance" : "በጥገና ላይ ያሉ መኪናዎች",
+    },
   ];
 
   const driverMenus = [
@@ -232,6 +237,11 @@ const Sidebar = ({ role }) => {
   ];
 
   const ceoMenus = [
+    {
+      path: "/ceo/dashboard",
+      icon: <MdOutlineDashboard size={22} />,
+      label: "Dashboard",
+    },
     {
       path: "/ceo/high_cost",
       icon: <FaRoute />,
@@ -402,42 +412,54 @@ const Sidebar = ({ role }) => {
           borderBottom: "none",
           backgroundColor: "rgba(219, 219, 219, 0.9)",
           backdropFilter: "blur(10px)",
+          overflowY: "auto",
+          scrollbarWidth: "none",        // Firefox
+          msOverflowStyle: "none",       // IE and Edge
         }}
       >
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div className="text-center">
-            <img
-              src={Logo || "/placeholder.svg"}
-              alt="Logo"
-              className="img-fluid"
-              style={{ maxWidth: "80px" }}
-            />
+        <style>
+          {`
+            .sidebar-hide-scrollbar::-webkit-scrollbar {
+              display: none;
+            }
+          `}
+        </style>
+        <div className="sidebar-hide-scrollbar d-flex flex-column h-100">
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="text-center">
+              <img
+                src={Logo || "/placeholder.svg"}
+                alt="Logo"
+                className="img-fluid"
+                style={{ maxWidth: "80px" }}
+              />
+            </div>
+            <button
+              className="btn "
+              onClick={toggleSidebar}
+              aria-label="Close sidebar"
+            >
+              <IoClose size={24} />
+            </button>
           </div>
-          <button
-            className="btn "
-            onClick={toggleSidebar}
-            aria-label="Close sidebar"
-          >
-            <IoClose size={24} />
-          </button>
-        </div>
 
-        <ul className="nav flex-column">
-          {menus.map((menu, index) => (
-            <li className="nav-item" key={index}>
-              <Link
-                to={menu.path}
-                className={`nav-link d-flex align-items-center ${getActiveClass(
-                  menu.path
-                )} sidebar-link`}
-                onClick={() => setIsOpen(false)} // Close sidebar when a link is clicked
-              >
-                {menu.icon}
-                <span className="ms-2">{menu.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+          <ul className="nav flex-column">
+            {menus.map((menu, index) => (
+              <li className="nav-item" key={index}>
+                <Link
+                  to={menu.path}
+                  className={`nav-link d-flex align-items-center ${getActiveClass(
+                    menu.path
+                  )} sidebar-link`}
+                  onClick={() => setIsOpen(false)} // Close sidebar when a link is clicked
+                >
+                  {menu.icon}
+                  <span className="ms-2">{menu.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
       {/* Overlay when sidebar is open on mobile */}

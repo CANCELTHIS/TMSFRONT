@@ -7,22 +7,13 @@ import "react-toastify/dist/ReactToastify.css";
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaGasPump, FaSearch, FaSync, FaCheck, FaTimes } from "react-icons/fa";
 
 const TMRefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
   const [rejectionMessage, setRejectionMessage] = useState("");
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [showFuelCostModal, setShowFuelCostModal] = useState(false);
-  const [fuelType, setFuelType] = useState("Petrol");
-  const [fuelCost, setFuelCost] = useState("");
-  const [showCalculateModal, setShowCalculateModal] = useState(false);
-  const [distance, setDistance] = useState("");
-  const [fuelPrice, setFuelPrice] = useState("");
-  const [fuelEfficiency, setFuelEfficiency] = useState(15);
-  const [totalCost, setTotalCost] = useState(null);
 
   // OTP-related states
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -34,18 +25,14 @@ const TMRefuelingTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const totalPages = Math.ceil(refuelingRequests.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentRequests = refuelingRequests.slice(startIndex, endIndex);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
 
-  const handleNextPage = () =>
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const handlePreviousPage = () =>
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const totalPages = Math.ceil(refuelingRequests.length / itemsPerPage);
 
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
+  // Fetch refueling requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
@@ -53,6 +40,7 @@ const TMRefuelingTable = () => {
       return;
     }
     try {
+      setLoading(true);
       const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
         headers: {
@@ -78,6 +66,7 @@ const TMRefuelingTable = () => {
     }
   };
 
+  // Fetch request detail
   const fetchRequestDetail = async (requestId) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
@@ -130,39 +119,6 @@ const TMRefuelingTable = () => {
       setErrorType("server");
       console.error("Error fetching refueling request details:", error);
       toast.error("Failed to fetch request details.");
-    }
-  };
-
-  const handleFuelCostUpdate = async () => {
-    const accessToken = localStorage.getItem("authToken");
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-    if (!fuelCost) {
-      toast.error("Please enter the fuel cost.");
-      return;
-    }
-    try {
-      const response = await fetch(ENDPOINTS.UPDATE_FUEL_COST, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fuel_type: fuelType,
-          fuel_cost: parseFloat(fuelCost),
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update fuel cost");
-      }
-      toast.success(`${fuelType} cost updated successfully!`);
-      setShowFuelCostModal(false);
-    } catch (error) {
-      console.error("Error updating fuel cost:", error);
-      toast.error("Failed to update fuel cost. Please try again.");
     }
   };
 
@@ -287,7 +243,50 @@ const TMRefuelingTable = () => {
     }
   };
 
-  // Fetch data when the component mounts
+  // Search, filter, and sort logic
+  const filterRequests = () => {
+    let filtered = refuelingRequests;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          (r.destination && r.destination.toLowerCase().includes(term)) ||
+          (r.requester_name && r.requester_name.toLowerCase().includes(term)) ||
+          (r.status && r.status.toLowerCase().includes(term)) ||
+          (r.id && r.id.toString().includes(term))
+      );
+    }
+    return filtered;
+  };
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc")
+      direction = "desc";
+    setSortConfig({ key, direction });
+  };
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSearch className="text-muted ms-1" />;
+    return sortConfig.direction === "asc" ? (
+      <FaCheck className="text-primary ms-1" />
+    ) : (
+      <FaTimes className="text-primary ms-1" />
+    );
+  };
+  const getSortedRequests = (requests) => {
+    if (!sortConfig.key) return requests;
+    return [...requests].sort((a, b) => {
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const filteredRequests = getSortedRequests(filterRequests());
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
+
   useEffect(() => {
     fetchRefuelingRequests();
   }, []);
@@ -300,74 +299,174 @@ const TMRefuelingTable = () => {
   }
 
   return (
-    <div className="container mt-5">
+    <div className="container py-4">
       <ToastContainer />
-      <h2 className="text-center mb-4">Refueling Requests</h2>
-      {loading ? (
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading refueling requests...</p>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="mb-0 d-flex align-items-center">
+            <FaGasPump className="me-2 text-success" />
+            Refueling Requests
+          </h1>
         </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered table-striped">
-            <thead className="thead-dark">
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Destination</th>
-                <th>Driver</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentRequests.length > 0 ? (
-                currentRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                    <td>{request.destination || "N/A"}</td>
-                    <td>{request.requester_name || "N/A"}</td>
-                    <td>{request.status || "N/A"}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => fetchRequestDetail(request.id)}
-                      >
-                        View Detail
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center">
-                    No refueling requests found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div
-            className="d-flex justify-content-center align-items-center"
-            style={{ height: "100px" }}
-          >
-            <CustomPagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(refuelingRequests.length / itemsPerPage)}
-              handlePageChange={(page) => setCurrentPage(page)}
+        <div className="d-flex gap-2">
+          <div className="input-group shadow-sm" style={{ maxWidth: "300px" }}>
+            <span className="input-group-text bg-white border-end-0">
+              <FaSearch className="text-muted" />
+            </span>
+            <input
+              type="text"
+              className="form-control border-start-0"
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <button
+            className="btn btn-outline-success d-flex align-items-center"
+            onClick={fetchRefuelingRequests}
+            disabled={loading}
+          >
+            <FaSync className={loading ? "me-2 spin" : "me-2"} />
+            Refresh
+          </button>
+        </div>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th onClick={() => handleSort("created_at")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Date{getSortIcon("created_at")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("destination")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Destination{getSortIcon("destination")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("requester_name")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Driver{getSortIcon("requester_name")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("status")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Status{getSortIcon("status")}
+                    </div>
+                  </th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="ms-3">Loading refueling requests...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : currentRequests.length > 0 ? (
+                  currentRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{new Date(request.created_at).toLocaleDateString()}</td>
+                      <td>{request.destination || "N/A"}</td>
+                      <td>{request.requester_name || "N/A"}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "pending"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => fetchRequestDetail(request.id)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaGasPump className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          {searchTerm
+                            ? "No requests match your search"
+                            : "No refueling requests found."}
+                        </p>
+                        <small className="text-muted">
+                          {searchTerm
+                            ? "Try adjusting your search term"
+                            : "Check back later"}
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-0">
+          <div className="text-muted small">
+            Showing{" "}
+            <span className="fw-medium">{filteredRequests.length}</span>{" "}
+            requests
+            <span>
+              {" "}
+              of{" "}
+              <span className="fw-medium">{refuelingRequests.length}</span>
+            </span>
+          </div>
+          <div className="d-flex gap-2">
+            {searchTerm && (
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear Search
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* Pagination */}
+      {filteredRequests.length > itemsPerPage && (
+        <div className="d-flex justify-content-center mt-4">
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
+            handlePageChange={setCurrentPage}
+          />
         </div>
       )}
       {/* Modal for Viewing Details */}
       {selectedRequest && (
         <div
-          className="modal d-block"
+          className="modal fade show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
           <div className="modal-dialog modal-dialog-centered">
@@ -489,7 +588,7 @@ const TMRefuelingTable = () => {
       {/* OTP Modal */}
       {otpModalOpen && (
         <div
-          className="modal d-block"
+          className="modal fade show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
           <div className="modal-dialog modal-dialog-centered">
@@ -564,20 +663,6 @@ const TMRefuelingTable = () => {
                     />
                   ))}
                 </div>
-                {/* Hide the old input */}
-                {/* 
-                <input
-                  type="text"
-                  className="form-control"
-                  maxLength={6}
-                  value={otpValue}
-                  onChange={(e) =>
-                    setOtpValue(e.target.value.replace(/\D/g, ""))
-                  }
-                  disabled={otpLoading}
-                  placeholder="Enter OTP"
-                />
-                */}
                 {otpAction === "reject" && (
                   <textarea
                     className="form-control mt-3"
@@ -628,71 +713,31 @@ const TMRefuelingTable = () => {
           </div>
         </div>
       )}
-      {/* Fuel Cost Update Modal */}
-      {showFuelCostModal && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h4 className="modal-title">Update Fuel Costs</h4>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowFuelCostModal(false)}
-                >
-                  <MdOutlineClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label htmlFor="fuelType" className="form-label">
-                    Select Fuel Type
-                  </label>
-                  <select
-                    id="fuelType"
-                    className="form-select"
-                    value={fuelType}
-                    onChange={(e) => setFuelType(e.target.value)}
-                  >
-                    <option value="Petrol">Petrol</option>
-                    <option value="Diesel">Diesel</option>
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="fuelCost" className="form-label">
-                    {fuelType} Cost (per liter)
-                  </label>
-                  <input
-                    type="number"
-                    id="fuelCost"
-                    className="form-control"
-                    value={fuelCost}
-                    onChange={(e) => setFuelCost(e.target.value)}
-                    placeholder={`Enter ${fuelType.toLowerCase()} cost`}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowFuelCostModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-primary"
-                  onClick={handleFuelCostUpdate}
-                >
-                  Update Cost
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

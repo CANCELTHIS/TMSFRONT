@@ -6,27 +6,38 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ENDPOINTS } from "../utilities/endpoints";
-import "../index.css"; // Ensure you have the correct path to your CSS file
+import "../index.css";
+import { IoEye, IoEyeOff } from "react-icons/io5";
+import { InputGroup, FormControl, Button, Spinner } from "react-bootstrap";
+import classNames from "classnames"; // npm install classnames
+
 const Header = ({ setRole, onResubmit }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     phone_number: "",
-    password: "",
+    old_password: "",
+    new_password: "",
+    confirm_password: "",
   });
   const [signature, setSignature] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [initialUserData, setInitialUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState({
+    old: false,
+    new: false,
+    confirm: false,
+  });
+  const [errors, setErrors] = useState({});
+  const [shake, setShake] = useState({});
 
-  // Notification states
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const navigate = useNavigate();
 
-  // Fetch current user data when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -40,7 +51,6 @@ const Header = ({ setRole, onResubmit }) => {
 
         if (setRole) setRole(user.role);
 
-        // Prefill form data with user info
         setFormData({
           full_name: user.full_name || "",
           phone_number: user.phone_number || "",
@@ -57,7 +67,6 @@ const Header = ({ setRole, onResubmit }) => {
     // eslint-disable-next-line
   }, []);
 
-  // Helper function to construct full signature URL
   const getFullSignatureUrl = (signaturePath) => {
     if (!signaturePath) return null;
     if (signaturePath.startsWith("http")) return signaturePath;
@@ -67,13 +76,11 @@ const Header = ({ setRole, onResubmit }) => {
     return `https://tms-api-23gs.onrender.com/${signaturePath}`;
   };
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle signature upload and preview
   const handleSignatureChange = (e) => {
     const file = e.target.files[0];
     setSignature(file);
@@ -92,9 +99,56 @@ const Header = ({ setRole, onResubmit }) => {
     }
   };
 
-  // Handle form submission with FormData for file upload
+  // Password strength check
+  const isStrongPassword = (password) => {
+    // At least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special char
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+      password
+    );
+  };
+
+  // Validation
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.full_name.trim())
+      newErrors.full_name = "Full name is required";
+    if (!formData.phone_number.trim())
+      newErrors.phone_number = "Phone number is required";
+    if (
+      formData.old_password ||
+      formData.new_password ||
+      formData.confirm_password
+    ) {
+      if (!formData.old_password)
+        newErrors.old_password = "Old password is required";
+      if (!formData.new_password)
+        newErrors.new_password = "New password is required";
+      else if (!isStrongPassword(formData.new_password))
+        newErrors.new_password =
+          "Password must be at least 8 characters, include uppercase, lowercase, number, and special character";
+      if (formData.new_password !== formData.confirm_password)
+        newErrors.confirm_password = "Passwords do not match";
+    }
+    return newErrors;
+  };
+
+  // Handle form submission with validation and shake effect
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    const validationErrors = validate();
+    setErrors(validationErrors);
+
+    // Shake effect for invalid fields
+    if (Object.keys(validationErrors).length > 0) {
+      const newShake = {};
+      Object.keys(validationErrors).forEach((key) => {
+        newShake[key] = true;
+      });
+      setShake(newShake);
+      setTimeout(() => setShake({}), 500);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -102,8 +156,15 @@ const Header = ({ setRole, onResubmit }) => {
       formDataToSend.append("full_name", formData.full_name);
       formDataToSend.append("phone_number", formData.phone_number);
 
-      if (formData.password) {
-        formDataToSend.append("password", formData.password);
+      // Only send password fields if all are filled
+      if (
+        formData.old_password.trim() &&
+        formData.new_password.trim() &&
+        formData.confirm_password.trim()
+      ) {
+        formDataToSend.append("old_password", formData.old_password);
+        formDataToSend.append("new_password", formData.new_password);
+        formDataToSend.append("confirm_password", formData.confirm_password);
       }
 
       if (signature) {
@@ -130,11 +191,47 @@ const Header = ({ setRole, onResubmit }) => {
       setSignature(null);
       setFormData((prev) => ({
         ...prev,
-        password: "",
+        old_password: "",
+        new_password: "",
+        confirm_password: "",
       }));
+      setErrors({});
     } catch (error) {
-      console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
+      // Custom error handling
+      let customErrors = {};
+      const apiError =
+        error.response?.data?.error || error.response?.data?.detail || "";
+      if (apiError) {
+        if (
+          apiError.toLowerCase().includes("old password") ||
+          apiError.toLowerCase().includes("incorrect")
+        ) {
+          customErrors.old_password = "Old password is not correct";
+        } else if (
+          apiError.toLowerCase().includes("match") ||
+          apiError.toLowerCase().includes("do not match")
+        ) {
+          customErrors.confirm_password = "New passwords do not match";
+        } else if (
+          apiError.toLowerCase().includes("strong") ||
+          apiError.toLowerCase().includes("weak")
+        ) {
+          customErrors.new_password =
+            "Password must be at least 8 characters, include uppercase, lowercase, number, and special character";
+        } else {
+          customErrors.submit = apiError;
+        }
+      } else {
+        customErrors.submit = "Failed to update profile.";
+      }
+      setErrors(customErrors);
+      // Shake effect for error fields
+      const newShake = {};
+      Object.keys(customErrors).forEach((key) => {
+        newShake[key] = true;
+      });
+      setShake(newShake);
+      setTimeout(() => setShake({}), 500);
     } finally {
       setIsLoading(false);
     }
@@ -315,6 +412,21 @@ const Header = ({ setRole, onResubmit }) => {
     );
   };
 
+  const profileRef = React.useRef(null);
+
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsEditing(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isEditing]);
+
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light px-4 shadow-sm">
       <div className="ms-auto d-flex align-items-center position-relative">
@@ -398,128 +510,280 @@ const Header = ({ setRole, onResubmit }) => {
         {/* Edit Profile Dropdown */}
         {isEditing && (
           <div
+            ref={profileRef}
             className="dropdown-menu show position-absolute end-0 mt-2 shadow rounded p-3 bg-white"
-            style={{ zIndex: 1050, top: "100%", width: "280px" }}
+            style={{ zIndex: 1050, top: "100%", width: "320px" }}
           >
-            <button
-              type="button"
-              className="btn btn-link text-dark d-flex align-items-center mb-3"
-              onClick={() => setIsEditing(false)}
-            >
-              <FaArrowLeft size={16} className="me-2" />
-              <span>Back</span>
-            </button>
-
             <h5 className="mb-3 text-center" style={{ fontSize: "16px" }}>
               Edit Profile
             </h5>
-
-            <form onSubmit={handleFormSubmit}>
-              <div className="mb-2">
-                <label
-                  htmlFor="full_name"
-                  className="form-label"
-                  style={{ fontSize: "12px" }}
-                >
+            <form onSubmit={handleFormSubmit} autoComplete="off">
+              <div className="mb-3">
+                <label htmlFor="full_name" className="form-label fw-semibold">
                   Full Name
                 </label>
                 <input
                   type="text"
-                  className="form-control form-control-sm"
+                  className={classNames("form-control", {
+                    "is-invalid": errors.full_name,
+                    shake: shake.full_name,
+                  })}
                   id="full_name"
                   name="full_name"
                   value={formData.full_name}
                   onChange={handleChange}
                   required
+                  autoComplete="off"
+                  placeholder={initialUserData?.full_name || "Full Name"}
                 />
+                {errors.full_name && (
+                  <div className="invalid-feedback">{errors.full_name}</div>
+                )}
               </div>
 
-              <div className="mb-2">
+              <div className="mb-3">
                 <label
                   htmlFor="phone_number"
-                  className="form-label"
-                  style={{ fontSize: "12px" }}
+                  className="form-label fw-semibold"
                 >
                   Phone Number
                 </label>
                 <input
                   type="tel"
-                  className="form-control form-control-sm"
+                  className={classNames("form-control", {
+                    "is-invalid": errors.phone_number,
+                    shake: shake.phone_number,
+                  })}
                   id="phone_number"
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
                   required
+                  autoComplete="off"
+                  placeholder={initialUserData?.phone_number || "Phone Number"}
                 />
+                {errors.phone_number && (
+                  <div className="invalid-feedback">{errors.phone_number}</div>
+                )}
               </div>
 
-              <div className="mb-2">
+              <div className="mb-3">
                 <label
-                  htmlFor="password"
-                  className="form-label"
-                  style={{ fontSize: "12px" }}
+                  htmlFor="old_password"
+                  className="form-label fw-semibold"
+                >
+                  Old Password
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={passwordVisible.old ? "text" : "password"}
+                    className={classNames("form-control", {
+                      "is-invalid": errors.old_password,
+                      shake: shake.old_password,
+                    })}
+                    id="old_password"
+                    name="old_password"
+                    value={formData.old_password}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    placeholder="Enter old password to change"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() =>
+                      setPasswordVisible((v) => ({ ...v, old: !v.old }))
+                    }
+                    style={{
+                      position: "absolute",
+                      right: "8px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      margin: 0,
+                      outline: "none",
+                      cursor: "pointer",
+                      color: "#888",
+                      height: "24px",
+                      width: "24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    aria-label={
+                      passwordVisible.old ? "Hide password" : "Show password"
+                    }
+                  >
+                    {passwordVisible.old ? (
+                      <IoEyeOff size={20} />
+                    ) : (
+                      <IoEye size={20} />
+                    )}
+                  </button>
+                </div>
+                {errors.old_password && (
+                  <div className="invalid-feedback">{errors.old_password}</div>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <label
+                  htmlFor="new_password"
+                  className="form-label fw-semibold"
                 >
                   New Password
                 </label>
-                <input
-                  type="password"
-                  className="form-control form-control-sm"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  autoComplete="new-password"
-                  placeholder="Leave blank to keep current"
-                />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={passwordVisible.new ? "text" : "password"}
+                    className={classNames("form-control", {
+                      "is-invalid": errors.new_password,
+                      shake: shake.new_password,
+                    })}
+                    id="new_password"
+                    name="new_password"
+                    value={formData.new_password}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    placeholder="Leave blank to keep current"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() =>
+                      setPasswordVisible((v) => ({ ...v, new: !v.new }))
+                    }
+                    style={{
+                      position: "absolute",
+                      right: "8px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      margin: 0,
+                      outline: "none",
+                      cursor: "pointer",
+                      color: "#888",
+                      height: "24px",
+                      width: "24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    aria-label={
+                      passwordVisible.new ? "Hide password" : "Show password"
+                    }
+                  >
+                    {passwordVisible.new ? (
+                      <IoEyeOff size={20} />
+                    ) : (
+                      <IoEye size={20} />
+                    )}
+                  </button>
+                </div>
+                {errors.new_password && (
+                  <div className="invalid-feedback">{errors.new_password}</div>
+                )}
               </div>
 
-              <div className="mb-2">
+              <div className="mb-3">
                 <label
-                  htmlFor="signature_image"
-                  className="form-label"
-                  style={{ fontSize: "12px" }}
+                  htmlFor="confirm_password"
+                  className="form-label fw-semibold"
                 >
-                  Signature (Image)
+                  Confirm New Password
                 </label>
-                <input
-                  type="file"
-                  className="form-control form-control-sm"
-                  id="signature_image"
-                  name="signature_image"
-                  accept="image/*"
-                  onChange={handleSignatureChange}
-                />
-                {signaturePreview && (
-                  <div className="mt-2 text-center">
-                    <img
-                      src={signaturePreview}
-                      alt="Signature preview"
-                      style={{
-                        maxWidth: "100%",
-                        maxHeight: "80px",
-                        border: "1px solid #ddd",
-                      }}
-                      onError={(e) => {
-                        console.error("Error loading signature image");
-                        e.target.style.display = "none";
-                      }}
-                    />
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={passwordVisible.confirm ? "text" : "password"}
+                    className={classNames("form-control", {
+                      "is-invalid": errors.confirm_password,
+                      shake: shake.confirm_password,
+                    })}
+                    id="confirm_password"
+                    name="confirm_password"
+                    value={formData.confirm_password}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() =>
+                      setPasswordVisible((v) => ({ ...v, confirm: !v.confirm }))
+                    }
+                    style={{
+                      position: "absolute",
+                      right: "8px",
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      border: "none",
+                      background: "none",
+                      padding: 0,
+                      margin: 0,
+                      outline: "none",
+                      cursor: "pointer",
+                      color: "#888",
+                      height: "24px",
+                      width: "24px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    aria-label={
+                      passwordVisible.confirm
+                        ? "Hide password"
+                        : "Show password"
+                    }
+                  >
+                    {passwordVisible.confirm ? (
+                      <IoEyeOff size={20} />
+                    ) : (
+                      <IoEye size={20} />
+                    )}
+                  </button>
+                </div>
+                {errors.confirm_password && (
+                  <div className="invalid-feedback">
+                    {errors.confirm_password}
                   </div>
                 )}
               </div>
 
-              <div className="d-flex justify-content-between mt-3">
+              {errors.submit && (
+                <div className="alert alert-danger py-2">{errors.submit}</div>
+              )}
+
+              <div className="d-flex justify-content-between mt-4">
                 <button
                   type="submit"
+                  className="btn w-100 text-white"
                   style={{ backgroundColor: "#0B455B" }}
-                  className="btn w-90 text-white"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Saving..." : "Save"}
+                  {isLoading ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        role="status"
+                        aria-hidden="true"
+                        className="me-2"
+                      />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save"
+                  )}
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="btn btn-link text-danger p-0"
+                  className="btn btn-link text-danger p-0 ms-3"
                   style={{ fontSize: "12px" }}
                   type="button"
                 >
@@ -527,8 +791,23 @@ const Header = ({ setRole, onResubmit }) => {
                   Logout
                 </button>
               </div>
-              <div className="d-flex justify-content-center mt-2"></div>
             </form>
+            {/* Add shake animation style */}
+            <style>
+              {`
+                .shake {
+                  animation: shake 0.3s;
+                }
+                @keyframes shake {
+                  0% { transform: translateX(0); }
+                  20% { transform: translateX(-6px); }
+                  40% { transform: translateX(6px); }
+                  60% { transform: translateX(-4px); }
+                  80% { transform: translateX(4px); }
+                  100% { transform: translateX(0); }
+                }
+              `}
+            </style>
           </div>
         )}
       </div>
@@ -537,3 +816,5 @@ const Header = ({ setRole, onResubmit }) => {
 };
 
 export default Header;
+
+//

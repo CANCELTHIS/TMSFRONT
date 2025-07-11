@@ -434,17 +434,62 @@ const FIHighCost = () => {
                     className="d-none d-print-block mt-5"
                     style={{ width: "100%" }}
                   >
-                    <div style={{ marginTop: "60px", textAlign: "center" }}>
-                      <div>Signature</div>
-                      <div
-                        style={{
-                          borderBottom: "1px solid #000",
-                          margin: "40px auto 0 auto",
-                          width: "300px",
-                        }}
-                      ></div>
-                      <div style={{ marginTop: "10px" }}>
-                        (Signature & Date)
+                    <div style={{ marginTop: "30px", textAlign: "center" }}>
+                      <div className="row" style={{ justifyContent: "center" }}>
+                        <div
+                          className="col-4"
+                          style={{
+                            display: "inline-block",
+                            width: "32%",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div>Requester</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "10px auto 0 auto",
+                              width: "100px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "4px" }}>(Signature & Date)</div>
+                        </div>
+                        <div
+                          className="col-4"
+                          style={{
+                            display: "inline-block",
+                            width: "32%",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div>Finance Manager</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "10px auto 0 auto",
+                              width: "100px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "4px" }}>(Signature & Date)</div>
+                        </div>
+                        <div
+                          className="col-4"
+                          style={{
+                            display: "inline-block",
+                            width: "32%",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div>Approver</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "10px auto 0 auto",
+                              width: "100px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "4px" }}>(Signature & Date)</div>
+                        </div>
                       </div>
                     </div>
                   </div>

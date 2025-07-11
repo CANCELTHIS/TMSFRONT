@@ -1,11 +1,21 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLanguage } from "../context/LanguageContext";
-import "../index.css";
+import {
+  FaCar,
+  FaSearch,
+  FaSync,
+  FaUser,
+  FaTools,
+  FaWrench,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+} from "react-icons/fa";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
 
@@ -21,18 +31,25 @@ const MaintenanceTable = () => {
   const [otpAction, setOtpAction] = useState(null); // "forward", "reject", or "approve"
   const [rejectionMessage, setRejectionMessage] = useState("");
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({
+    key: "date",
+    direction: "desc",
+  });
 
   const itemsPerPage = 5;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentPageRequests = maintenanceRequests.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
   const { mylanguage } = useLanguage();
+
+  // Helper for auth token
+  const getAuthToken = () =>
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("token");
 
   // Fetch maintenance requests
   const fetchMaintenanceRequests = useCallback(async () => {
-    const token = localStorage.getItem("authToken");
+    const token = getAuthToken();
     if (!token) {
       setErrorType("unauthorized");
       toast.error(
@@ -43,6 +60,7 @@ const MaintenanceTable = () => {
     }
 
     try {
+      setLoading(true);
       const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -66,7 +84,6 @@ const MaintenanceTable = () => {
       const data = await response.json();
       setMaintenanceRequests(data.results || []);
     } catch (error) {
-      console.error("Fetch error:", error);
       toast.error(error.message);
     } finally {
       setLoading(false);
@@ -77,7 +94,7 @@ const MaintenanceTable = () => {
   const sendOtp = async () => {
     setOtpLoading(true);
     try {
-      const token = localStorage.getItem("authToken");
+      const token = getAuthToken();
       const response = await fetch(ENDPOINTS.OTP_REQUEST, {
         method: "POST",
         headers: {
@@ -104,11 +121,11 @@ const MaintenanceTable = () => {
     }
   };
 
-  // Handle OTP verification and action (forward, reject, or approve)
+  // Handle OTP verification and action (forward, reject, approve)
   const handleOtpAction = async (otp, action) => {
     setOtpLoading(true);
     try {
-      const token = localStorage.getItem("authToken");
+      const token = getAuthToken();
       let payload = { action, otp_code: otp };
 
       if (action === "reject") {
@@ -159,6 +176,7 @@ const MaintenanceTable = () => {
       setOtpSent(false);
       setOtpAction(null);
       setRejectionMessage("");
+      setOtpDigits(["", "", "", "", "", ""]);
 
       // Refresh the requests list
       fetchMaintenanceRequests();
@@ -174,6 +192,80 @@ const MaintenanceTable = () => {
     fetchMaintenanceRequests();
   }, [fetchMaintenanceRequests]);
 
+  // OTP input handlers
+  const handleOtpChange = (e, idx) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (!value) return;
+    const newOtp = [...otpDigits];
+    newOtp[idx] = value[0];
+    setOtpDigits(newOtp);
+    // Move to next input if not last
+    if (value && idx < 5) {
+      document.getElementById(`otp-input-${idx + 1}`)?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e, idx) => {
+    if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) {
+      document.getElementById(`otp-input-${idx - 1}`)?.focus();
+    }
+  };
+
+  const otpValueCombined = otpDigits.join("");
+
+  // Search and filter logic
+  const filterRequests = () => {
+    let filtered = maintenanceRequests;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          (r.requesters_car_name &&
+            r.requesters_car_name.toLowerCase().includes(term)) ||
+          (r.requester_name && r.requester_name.toLowerCase().includes(term)) ||
+          (r.status && r.status.toLowerCase().includes(term)) ||
+          (r.id && r.id.toString().includes(term))
+      );
+    }
+    return filtered;
+  };
+
+  // Sorting logic
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc")
+      direction = "desc";
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSort className="text-muted ms-1" />;
+    return sortConfig.direction === "asc" ? (
+      <FaSortUp className="text-primary ms-1" />
+    ) : (
+      <FaSortDown className="text-primary ms-1" />
+    );
+  };
+
+  const getSortedRequests = (requests) => {
+    if (!sortConfig.key) return requests;
+    return [...requests].sort((a, b) => {
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  // Compose filtered and sorted data
+  const filteredRequests = getSortedRequests(filterRequests());
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentPageRequests = filteredRequests.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
   if (errorType === "unauthorized") {
     return <UnauthorizedPage />;
   }
@@ -182,78 +274,233 @@ const MaintenanceTable = () => {
   }
 
   return (
-    <div className="container mt-5">
-      <ToastContainer position="top-center" autoClose={5000} />
-
-      <h2 className="text-center mb-4">
-        {mylanguage === "EN" ? "Maintenance Requests" : "የጥገና ጥያቄዎች"}
-      </h2>
-
-      {loading ? (
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">
-              {mylanguage === "EN" ? "Loading..." : "በመጫን ላይ..."}
-            </span>
-          </div>
+    <div className="container py-4">
+      <ToastContainer position="top-right" autoClose={3000} />
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="mb-0 d-flex align-items-center">
+            <FaTools className="me-2 text-warning" />
+            {mylanguage === "EN" ? "Maintenance Requests" : "የጥገና ጥያቄዎች"}
+          </h1>
         </div>
-      ) : (
-        <>
+        <div className="d-flex gap-2">
+          <div className="input-group shadow-sm" style={{ maxWidth: "300px" }}>
+            <span className="input-group-text bg-white border-end-0">
+              <FaSearch className="text-muted" />
+            </span>
+            <input
+              type="text"
+              className="form-control border-start-0"
+              placeholder={
+                mylanguage === "EN"
+                  ? "Search requests..."
+                  : "ጥያቄ ፈልግ..."
+              }
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button
+            className="btn btn-outline-primary d-flex align-items-center"
+            onClick={fetchMaintenanceRequests}
+            disabled={loading}
+          >
+            <FaSync className={loading ? "me-2 spin" : "me-2"} />
+            {mylanguage === "EN" ? "Refresh" : "ዳግም አስተካክል"}
+          </button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-bordered table-hover">
-              <thead>
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
                 <tr>
                   <th>#</th>
-                  <th>{mylanguage === "EN" ? "Date" : "ቀን"}</th>
-                  <th>{mylanguage === "EN" ? "Requester" : "ለማን"}</th>
-                  <th>{mylanguage === "EN" ? "Vehicle" : "መኪና"}</th>
-                  <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
-                  <th>{mylanguage === "EN" ? "Actions" : "ድርጊቶች"}</th>
+                  <th
+                    onClick={() => handleSort("date")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Date" : "ቀን"}
+                      {getSortIcon("date")}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort("requester_name")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Requester" : "ለማን"}
+                      {getSortIcon("requester_name")}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort("requesters_car_name")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Vehicle" : "መኪና"}
+                      {getSortIcon("requesters_car_name")}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort("status")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Status" : "ሁኔታ"}
+                      {getSortIcon("status")}
+                    </div>
+                  </th>
+                  <th className="text-center">
+                    {mylanguage === "EN" ? "Actions" : "ድርጊቶች"}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {currentPageRequests.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div
+                          className="spinner-border text-warning"
+                          role="status"
+                        >
+                          <span className="visually-hidden">
+                            {mylanguage === "EN"
+                              ? "Loading..."
+                              : "በመጫን ላይ..."}
+                          </span>
+                        </div>
+                        <span className="ms-3">
+                          {mylanguage === "EN"
+                            ? "Loading maintenance requests..."
+                            : "የጥገና ጥያቄዎችን በመጫን ላይ..."}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : currentPageRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaTools className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          {searchTerm
+                            ? mylanguage === "EN"
+                              ? "No requests match your search"
+                              : "ምንም ጥያቄ አልተገኘም"
+                            : mylanguage === "EN"
+                            ? "No maintenance requests found"
+                            : "የጥገና ጥያቄዎች አልተገኙም"}
+                        </p>
+                        <small className="text-muted">
+                          {searchTerm
+                            ? mylanguage === "EN"
+                              ? "Try adjusting your search term"
+                              : "የፍለጋ ቃልዎን ይቀይሩ"
+                            : mylanguage === "EN"
+                            ? "Check back later"
+                            : "በኋላ ይመልከቱ"}
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
                   currentPageRequests.map((request, index) => (
                     <tr key={request.id}>
                       <td>{startIndex + index + 1}</td>
-                      <td>{new Date(request.date).toLocaleDateString()}</td>
-                      <td>{request.requester_name}</td>
-                      <td>{request.requesters_car_name}</td>
                       <td>
-                        <span>{request.status}</span>
+                        {request.date
+                          ? new Date(request.date).toLocaleDateString()
+                          : ""}
                       </td>
                       <td>
+                        <div className="d-flex align-items-center">
+                          <div className="bg-light rounded-circle p-2 me-2">
+                            <FaUser className="fs-5" />
+                          </div>
+                          <span>{request.requester_name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center">
+                          <div className="bg-light rounded p-2 me-2">
+                            <FaCar className="fs-5 text-primary" />
+                          </div>
+                          <span>{request.requesters_car_name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "pending"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
                         <button
-                          className="btn btn-sm"
-                          style={{ backgroundColor: "#14183E", color: "#fff" }}
+                          className="btn btn-sm btn-outline-primary d-flex align-items-center"
                           onClick={() => setSelectedRequest(request)}
                         >
+                          <FaSearch className="me-1" />
                           {mylanguage === "EN" ? "View" : "እይታ"}
                         </button>
                       </td>
                     </tr>
                   ))
-                ) : (
-                  <tr>
-                    <td colSpan="6" className="text-center py-4">
-                      {mylanguage === "EN"
-                        ? "No maintenance requests found"
-                        : "የጥገና ጥያቄዎች አልተገኙም"}
-                    </td>
-                  </tr>
                 )}
               </tbody>
             </table>
           </div>
+        </div>
 
-          {maintenanceRequests.length > 0 && (
-            <CustomPagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
-              handlePageChange={setCurrentPage}
-            />
-          )}
-        </>
+        <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-0">
+          <div className="text-muted small">
+            Showing{" "}
+            <span className="fw-medium">{filteredRequests.length}</span>{" "}
+            requests
+            <span>
+              {" "}
+              of{" "}
+              <span className="fw-medium">{maintenanceRequests.length}</span>
+            </span>
+          </div>
+          <div className="d-flex gap-2">
+            {searchTerm && (
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSearchTerm("")}
+              >
+                {mylanguage === "EN" ? "Clear Search" : "ፍለጋ አጥፋ"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {filteredRequests.length > itemsPerPage && (
+        <div className="d-flex justify-content-center mt-4">
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
+            handlePageChange={setCurrentPage}
+          />
+        </div>
       )}
 
       {/* Request Details Modal */}
@@ -287,7 +534,9 @@ const MaintenanceTable = () => {
                     </p>
                     <p>
                       <strong>{mylanguage === "EN" ? "Date:" : "ቀን፡"}</strong>{" "}
-                      {new Date(selectedRequest.date).toLocaleString()}
+                      {selectedRequest.date
+                        ? new Date(selectedRequest.date).toLocaleString()
+                        : ""}
                     </p>
                     <p>
                       <strong>
@@ -307,7 +556,10 @@ const MaintenanceTable = () => {
                       <strong>
                         {mylanguage === "EN" ? "Status:" : "ሁኔታ፡"}
                       </strong>{" "}
-                      {selectedRequest.status}
+                      {selectedRequest.status
+                        ? selectedRequest.status.charAt(0).toUpperCase() +
+                          selectedRequest.status.slice(1)
+                        : ""}
                     </p>
                   </div>
                 </div>
@@ -375,6 +627,7 @@ const MaintenanceTable = () => {
                     setOtpSent(false);
                     setOtpAction(null);
                     setRejectionMessage("");
+                    setOtpDigits(["", "", "", "", "", ""]);
                   }}
                   disabled={otpLoading}
                 ></button>
@@ -385,30 +638,43 @@ const MaintenanceTable = () => {
                     ? "Enter the OTP code sent to your phone number."
                     : "ወደ ስልክዎ የተላከውን OTP ያስገቡ።"}
                 </p>
-                <input
-                  type="text"
-                  className="form-control"
-                  maxLength={6}
-                  value={otpValue}
-                  onChange={(e) =>
-                    setOtpValue(e.target.value.replace(/\D/g, ""))
-                  }
-                  disabled={otpLoading}
-                  placeholder={mylanguage === "EN" ? "Enter OTP" : "OTP ያስገቡ"}
-                />
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {otpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      id={`otp-input-${idx}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      className="form-control text-center"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        fontSize: "1.5rem",
+                        borderRadius: "8px",
+                        border: "1px solid #ccc",
+                      }}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e, idx)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                      disabled={otpLoading}
+                      autoFocus={idx === 0}
+                    />
+                  ))}
+                </div>
                 <div className="d-flex gap-2 mt-3">
                   <button
                     className="btn flex-fill"
                     style={{ backgroundColor: "#14183E", color: "#fff" }}
-                    disabled={otpLoading || otpValue.length !== 6}
-                    onClick={() => handleOtpAction(otpValue, "forward")}
+                    disabled={otpLoading || otpValueCombined.length !== 6}
+                    onClick={() => handleOtpAction(otpValueCombined, "forward")}
                   >
                     {mylanguage === "EN" ? "Forward" : "ቀጥል"}
                   </button>
                   <button
                     className="btn btn-danger flex-fill"
-                    disabled={otpLoading || otpValue.length !== 6}
-                    onClick={() => handleOtpAction(otpValue, "reject")}
+                    disabled={otpLoading || otpValueCombined.length !== 6}
+                    onClick={() => handleOtpAction(otpValueCombined, "reject")}
                   >
                     {mylanguage === "EN" ? "Reject" : "አትቀበል"}
                   </button>
@@ -446,6 +712,7 @@ const MaintenanceTable = () => {
                     setOtpSent(false);
                     setOtpAction(null);
                     setRejectionMessage("");
+                    setOtpDigits(["", "", "", "", "", ""]);
                   }}
                   disabled={otpLoading}
                 >
@@ -456,6 +723,32 @@ const MaintenanceTable = () => {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

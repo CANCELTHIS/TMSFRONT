@@ -30,6 +30,7 @@ const GSmaintenance = () => {
   const [otpAction, setOtpAction] = useState(null); // "approve" or "reject"
   const [otpSent, setOtpSent] = useState(false);
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -280,6 +281,26 @@ const GSmaintenance = () => {
   if (errorType === "server") {
     return <ServerErrorPage />;
   }
+
+  const handleOtpChange = (e, idx) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (!value) return;
+    const newOtp = [...otpDigits];
+    newOtp[idx] = value[0];
+    setOtpDigits(newOtp);
+    // Move to next input if not last
+    if (value && idx < 5) {
+      document.getElementById(`otp-input-${idx + 1}`).focus();
+    }
+  };
+
+  const handleOtpKeyDown = (e, idx) => {
+    if (e.key === "Backspace" && !otpDigits[idx] && idx > 0) {
+      document.getElementById(`otp-input-${idx - 1}`).focus();
+    }
+  };
+
+  const otpValueCombined = otpDigits.join("");
 
   return (
     <div className="container mt-5">
@@ -536,6 +557,7 @@ const GSmaintenance = () => {
                     setOtpSent(false);
                     setOtpAction(null);
                     setRejectionMessage("");
+                    setOtpDigits(["", "", "", "", "", ""]);
                   }}
                   disabled={otpLoading}
                 >
@@ -544,17 +566,30 @@ const GSmaintenance = () => {
               </div>
               <div className="modal-body">
                 <p>Enter the OTP code sent to your phone number.</p>
-                <input
-                  type="text"
-                  className="form-control"
-                  maxLength={6}
-                  value={otpValue}
-                  onChange={(e) =>
-                    setOtpValue(e.target.value.replace(/\D/g, ""))
-                  }
-                  disabled={otpLoading}
-                  placeholder="Enter OTP"
-                />
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {otpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      id={`otp-input-${idx}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      className="form-control text-center"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        fontSize: "1.5rem",
+                        borderRadius: "8px",
+                        border: "1px solid #ccc",
+                      }}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(e, idx)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                      disabled={otpLoading}
+                      autoFocus={idx === 0}
+                    />
+                  ))}
+                </div>
                 {otpAction === "reject" && (
                   <textarea
                     className="form-control mt-3"
@@ -578,8 +613,8 @@ const GSmaintenance = () => {
                 <button
                   className="btn"
                   style={{ backgroundColor: "#181E4B", color: "white" }}
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                  disabled={otpLoading || otpValueCombined.length !== 6}
+                  onClick={() => handleOtpAction(otpValueCombined, otpAction)}
                 >
                   {otpAction === "forward" ? "Forward" : "Reject"}
                 </button>
@@ -591,6 +626,7 @@ const GSmaintenance = () => {
                     setOtpSent(false);
                     setOtpAction(null);
                     setRejectionMessage("");
+                    setOtpDigits(["", "", "", "", "", ""]);
                   }}
                   disabled={otpLoading}
                 >

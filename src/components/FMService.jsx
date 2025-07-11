@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
 import { IoClose } from "react-icons/io5";
@@ -16,6 +16,7 @@ const CEOService = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const printDetailRef = useRef();
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -97,6 +98,11 @@ const CEOService = () => {
     fetchRequests();
   }, []);
 
+  // Print handler
+  const handlePrintDetail = () => {
+    window.print();
+  };
+
   if (errorType === "unauthorized") {
     return <UnauthorizedPage />;
   }
@@ -168,7 +174,7 @@ const CEOService = () => {
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div className="modal-content" ref={printDetailRef}>
               <div className="modal-header">
                 <h5 className="modal-title">Service Request Details</h5>
                 <button
@@ -232,21 +238,96 @@ const CEOService = () => {
                         </a>
                       </p>
                     )}
+
+                    {/* Print Button (screen only) */}
+                    <div className="mt-3 d-print-none text-end">
+                      <button
+                        className="btn btn-primary"
+                        onClick={handlePrintDetail}
+                      >
+                        Print
+                      </button>
+                    </div>
+
+                    {/* Signature section for print only */}
+                    <div
+                      className="d-none d-print-block mt-5"
+                      style={{ width: "100%" }}
+                    >
+                      <div className="row" style={{ marginTop: "60px" }}>
+                        <div className="col-4 text-center">
+                          <div>Requested By</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "40px auto 0 auto",
+                              width: "180px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                        </div>
+                        <div className="col-4 text-center">
+                          <div>Checked By</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "40px auto 0 auto",
+                              width: "180px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                        </div>
+                        <div className="col-4 text-center">
+                          <div>Approved By</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "40px auto 0 auto",
+                              width: "180px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                        </div>
+                      </div>
+                    </div>
                   </>
                 )}
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setSelectedRequest(null)}
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          .modal-content, .modal-content * {
+            visibility: visible;
+          }
+          .modal-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            background: white;
+            box-shadow: none;
+            border: none;
+          }
+          .btn, .pagination, .modal-footer, .Toastify__toast-container, .btn-close, .d-print-none {
+            display: none !important;
+          }
+          .d-print-block {
+            display: block !important;
+          }
+        }
+        @page {
+          size: auto;
+          margin: 20mm;
+        }
+      `}</style>
     </div>
   );
 };

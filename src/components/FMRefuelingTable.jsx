@@ -254,17 +254,39 @@ const RefuelingTable = () => {
                       className="d-none d-print-block mt-5"
                       style={{ width: "100%" }}
                     >
-                      <div style={{ marginTop: "60px", textAlign: "center" }}>
-                        <div>Signature</div>
-                        <div
-                          style={{
-                            borderBottom: "1px solid #000",
-                            margin: "40px auto 0 auto",
-                            width: "300px",
-                          }}
-                        ></div>
-                        <div style={{ marginTop: "10px" }}>
-                          (Signature & Date)
+                      <div className="row" style={{ marginTop: "60px" }}>
+                        <div className="col-4 text-center">
+                          <div>Requested By</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "40px auto 0 auto",
+                              width: "180px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                        </div>
+                        <div className="col-4 text-center">
+                          <div>Checked By</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "40px auto 0 auto",
+                              width: "180px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                        </div>
+                        <div className="col-4 text-center">
+                          <div>Approved By</div>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              margin: "40px auto 0 auto",
+                              width: "180px",
+                            }}
+                          ></div>
+                          <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
                         </div>
                       </div>
                     </div>
