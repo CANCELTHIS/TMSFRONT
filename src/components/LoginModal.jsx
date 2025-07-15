@@ -53,11 +53,11 @@ const LoginModal = ({ onClose }) => {
       } else if (decodedToken.role === 2) {
         navigate('/department-manager/vehicle-request');
       } else if (decodedToken.role === 3) {
-        navigate('/finance-manager/hight-cost');
+        navigate('/finance-manager/refueling');
       } else if (decodedToken.role === 4) {
-        navigate('/transport-manager/transport-dashbord');
+        navigate('/transport-manager/dashbord');
       } else if (decodedToken.role === 5) {
-        navigate('/ceo/high_cost');
+        navigate('/ceo/dashbord');
       } else if (decodedToken.role === 6) {
         navigate('/driver/high-cost-schedule');
       } else if (decodedToken.role === 7) {

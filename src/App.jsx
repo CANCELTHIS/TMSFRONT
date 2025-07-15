@@ -58,8 +58,8 @@ import NotFoundPage from "./components/NotFoundPage";
 import UnauthorizedPage from "./components/UnauthorizedPage";
 import ServerErrorPage from "./components/ServerErrorPage";
 import { Import } from "lucide-react";
-import CEODashboard from "./components/CEODashboard";
 import UnderMaintanaceVechile from "./components/UnderMaintanaceVechile";
+import CEODashboard from "./components/CEODashboard";
 const App = () => {
   const [modalType, setModalType] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -138,10 +138,10 @@ const App = () => {
               navigate("/finance-manager");
               break;
             case "transport_manager":
-              navigate("/transport-manager/transport-dashbord");
+              navigate("/transport-manager/dashbord");
               break;
             case "ceo":
-              navigate("/ceo/vehicle-request");
+              navigate("/ceo/dashbord");
               break;
             case "driver":
               navigate("/driver/driver-schedule");
@@ -250,11 +250,30 @@ const App = () => {
                               path="maintenance-request"
                               element={<MaintenanceRequest />}
                             />
-                            <Route path="hight-cost" element={<HightCost />} />
+                            <Route path="hight-cost-request" element={<HightCost />} />
                             <Route
                               path="monthly-coupon"
                               element={<MonthlyCoupon />}
                             />
+                            <Route
+                              path="vehicle-services"
+                              element={<VehicleServices />}
+                            />
+                            <Route
+                              path="refueling-request"
+                              element={<RefuelingRequest />}
+                            />
+                            <Route
+                              path="history"
+                              element={<RequestHistory />}
+                            />
+                            <Route
+                              path="maintenance-request"
+                              element={<MaintenanceRequest />}
+                            />
+                            <Route path="hight-cost"
+                             element={<HightCost />} />
+                            
                             <Route
                               path="vehicle-services"
                               element={<VehicleServices />}
@@ -297,6 +316,28 @@ const App = () => {
                               path="vehicle-services"
                               element={<VehicleServices />}
                             />
+                            <Route
+                              path="refueling-request"
+                              element={<RefuelingRequest />}
+                            />
+                            <Route
+                              path="history"
+                              element={<RequestHistory />}
+                            />
+                            <Route
+                              path="maintenance-request"
+                              element={<MaintenanceRequest />}
+                            />
+                            <Route path="hight-cost" element={<HightCost />} />
+                            <Route
+                              path="monthly-coupon"
+                              element={<MonthlyCoupon />}
+                            />
+                            <Route
+                              path="vehicle-services"
+                              element={<VehicleServices />}
+                            />
+                              <Route path="hight-cost-request" element={<HightCost />} />
                           </Routes>
                         </div>
                       </div>
@@ -340,9 +381,30 @@ const App = () => {
                               element={<VehicleServices />}
                             />
                             <Route
-                              path="dashboard"
-                              element={<CEODashboard />}
+                              path="refueling-request"
+                              element={<RefuelingRequest />}
                             />
+                            <Route
+                              path="history"
+                              element={<RequestHistory />}
+                            />
+                            <Route
+                              path="maintenance-request"
+                              element={<MaintenanceRequest />}
+                            />
+                            <Route path="hight-cost-request" element={<HightCost />} />
+                            <Route
+                              path="monthly-coupon"
+                              element={<MonthlyCoupon />}
+                            />
+                            <Route
+                              path="vehicle-services"
+                              element={<VehicleServices />}
+                            />
+                              <Route
+                              path="dashbord"
+                              element={<CEODashboard />}
+                            />            
                           </Routes>
                         </div>
                       </div>
@@ -439,7 +501,7 @@ const App = () => {
                               element={<TransportRequest />}
                             />
                             <Route
-                              path="transport-dashbord"
+                              path="dashbord"
                               element={<TransportManagerDashboard />}
                             />
                             <Route
@@ -471,11 +533,32 @@ const App = () => {
                               path="monthly-coupons"
                               element={<MonthlyCouponTM />}
                             />
+                             <Route
+                              path="vehicle-services"
+                              element={<VehicleServices />}
+                            />
+                            <Route
+                              path="refueling-request"
+                              element={<RefuelingRequest />}
+                            />
+                            <Route
+                              path="history"
+                              element={<RequestHistory />}
+                            />
+                            <Route
+                              path="maintenance-request"
+                              element={<MaintenanceRequest />}
+                            />
+                            <Route path="hight-cost-request" element={<HightCost />} />
+                            <Route
+                              path="monthly-coupon"
+                              element={<MonthlyCoupon />}
+                            />
                             <Route
                               path="vehicle-services"
                               element={<VehicleServices />}
                             />
-                               <Route
+                            <Route
                               path="under-maintanace-vechile"
                               element={<UnderMaintanaceVechile />}
                             />
@@ -522,6 +605,28 @@ const App = () => {
                               path="vehicle-services"
                               element={<VehicleServices />}
                             />
+                            <Route
+                              path="refueling-request"
+                              element={<RefuelingRequest />}
+                            />
+                            <Route
+                              path="history"
+                              element={<RequestHistory />}
+                            />
+                            <Route
+                              path="maintenance-request"
+                              element={<MaintenanceRequest />}
+                            />
+                            <Route path="hight-cost" element={<HightCost />} />
+                             <Route
+                              path="monthly-coupon"
+                              element={<MonthlyCoupon />}
+                            />
+                            <Route
+                              path="vehicle-services"
+                              element={<VehicleServices />}
+                            />
+                            <Route path="hight-cost-request" element={<HightCost />} />
                           </Routes>
                         </div>
                       </div>
@@ -538,6 +643,7 @@ const App = () => {
                         <Sidebar role="general-service" />
                         <div className="container">
                           <Routes>
+                          
                             <Route path="high_cost" element={<CEOhighcost />} />
 
                             <Route
@@ -562,6 +668,7 @@ const App = () => {
                               path="vehicle-services"
                               element={<VehicleServices />}
                             />
+                            <Route path="hight-cost-request" element={<HightCost />} />
                           </Routes>
                         </div>
                       </div>

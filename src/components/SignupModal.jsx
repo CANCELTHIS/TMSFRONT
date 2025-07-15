@@ -168,28 +168,29 @@ const SignupModal = ({ onClose }) => {
               />
             </div>
             <div className="mb-3">
-            <select
-  name="department"
-  className="form-control"
-  value={formData.department}
-  onChange={handleChange}
-  required
->
-  <option value="">
-    {loading
-      ? "Loading..."
-      : mylanguage === "EN"
-      ? "Select Department"
-      : "ክፍል ይምረጡ"}
-  </option>
-
-  {departments && departments.map((dept) => (
-    <option key={dept.id} value={dept.id}>
-      {dept.name}
-    </option>
-  ))}
-</select>
-
+              <label className="form-label fw-semibold text-secondary">
+                {mylanguage === "EN" ? "Assign Department" : "ክፍል ይመድቡ"}
+              </label>
+              <select
+                name="department"
+                className="form-control"
+                value={formData.department}
+                onChange={handleChange}
+                required
+              >
+                <option value="">
+                  {loading
+                    ? (mylanguage === "EN" ? "Loading..." : "በመጫን ላይ...")
+                    : mylanguage === "EN"
+                    ? "Select Department"
+                    : "ክፍል ይምረጡ"}
+                </option>
+                {departments && departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="mb-3 position-relative">
               <input

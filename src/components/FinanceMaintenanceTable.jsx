@@ -51,6 +51,7 @@ const FinanceMaintenanceTable = () => {
       }
 
       const data = await response.json();
+      console.log("main",data);
       setMaintenanceRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
@@ -138,9 +139,9 @@ const FinanceMaintenanceTable = () => {
         >
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
-              {/* Print Logo and Title - Only Visible in Print */}
+              {/* Modal Header */}
               <div className="modal-header d-print-none">
-                <div className="d-flex align-items-center">
+                <div className="d-flex ">
                   <img
                     src={Logo}
                     alt="Logo"
@@ -160,120 +161,134 @@ const FinanceMaintenanceTable = () => {
                   <IoClose />
                 </button>
               </div>
+              {/* Modal Body */}
               <div className="modal-body" ref={printDetailRef}>
-                {/* Print logo and title for print only */}
-                <div className="d-none d-print-block text-center mb-3">
+                {/* Print-only Amharic content */}
+                <div className="d-none d-print-block" style={{ textAlign: "center" }}>
                   <img
                     src={Logo}
                     alt="Logo"
-                    style={{ width: "150px", height: "100px" }}
+                    style={{ width: "150px", height: "100px", display: "block", margin: "0 auto 0px auto" }}
                   />
-                  <div
-                    style={{
-                      marginTop: "10px",
-                      fontWeight: "bold",
-                      fontSize: "1.3rem",
-                    }}
-                  >
-                    Maintenance Request Details
-                  </div>
-                </div>
-                <div className="container-fluid">
-                  <div className="row">
-                    <div className="col-md-6">
+                  
+                  <div style={{ display: "flex", justifyContent: "start" }}>
+                    <div style={{ textAlign: "left", minWidth: "350px" }}>
                       <p>
-                        <strong>Date:</strong>{" "}
-                        {new Date(selectedRequest.date).toLocaleDateString()}
+                        <strong>ቀን:</strong> {new Date(selectedRequest.date).toLocaleDateString()}
                       </p>
                       <p>
-                        <strong>Reason:</strong> {selectedRequest.reason}
+                        <strong>ምክንያት:</strong> {selectedRequest.reason}
                       </p>
                       <p>
-                        <strong>Requester Name:</strong>{" "}
-                        {selectedRequest.requester_name}
+                        <strong>የጠያቂው ስም:</strong> {selectedRequest.requester_name}
                       </p>
                       <p>
-                        <strong>Requester's Car:</strong>{" "}
-                        {selectedRequest.requesters_car_name}
+                        <strong>የጠያቂው መኪና:</strong> {selectedRequest.requesters_car_name}
                       </p>
                       <p>
-                        <strong>Status:</strong> {selectedRequest.status}
-                      </p>
-                    </div>
-                    <div className="col-md-6">
-                      <p>
-                        <strong>Current Approver Role:</strong>{" "}
-                        {selectedRequest.current_approver_role}
-                      </p>
-                      <p>
-                        <strong>Maintenance Total Cost:</strong>{" "}
-                        {selectedRequest.maintenance_total_cost} ETB
-                      </p>
-                      <p>
-                        <strong>Maintenance Letter:</strong>{" "}
-                        <a
-                          href={selectedRequest.maintenance_letter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View Maintenance Letter
-                        </a>
-                      </p>
-                      <p>
-                        <strong>Receipt File:</strong>{" "}
-                        <a
-                          href={selectedRequest.receipt_file}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View Receipt
-                        </a>
-                      </p>
-                      <p>
-                        <strong>Rejection Message:</strong>{" "}
-                        {selectedRequest.rejection_message || "N/A"}
+                        <strong>የጥገና ጠቅላላ ወጪ:</strong> {selectedRequest.maintenance_total_cost} ብር
                       </p>
                     </div>
                   </div>
+                  {/* Signature section for print only */}
+                  <div className="mt-5" style={{ width: "100%", textAlign: "center" }}>
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} style={{ marginBottom: "30px", display: "flex", justifyContent: "center", alignItems: "center", gap: "40px" }}>
+                        <div style={{ fontWeight: "bold", minWidth: "220px", textAlign: "left" ,marginLeft: "50px"}}>
+                          {i === 1 && "የጠያቂው ክፍል ሰራተኛ"}
+                          {i === 2 && "የደገፈው ሃላፊ "}
+                          {i === 3 && "ያፀደቀው ኃላፊ "}
+                        </div>
+                        <div>
+                          <span>ስም:</span>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              width: "120px",
+                              height: "24px",
+                              margin: "0 0 0 10px",
+                              display: "inline-block",
+                              verticalAlign: "middle",
+                            }}
+                          ></div>
+                        </div>
+                        <div>
+                          <span>ፊርማ:</span>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              width: "120px",
+                              height: "24px",
+                              margin: "0 0 0 10px",
+                              display: "inline-block",
+                              verticalAlign: "middle",
+                            }}
+                          ></div>
+                        </div>
+                        <div>
+                          <span>ቀን:</span>
+                          <div
+                            style={{
+                              borderBottom: "1px solid #000",
+                              width: "80px",
+                              height: "24px",
+                              margin: "0 0 0 10px",
+                              display: "inline-block",
+                              verticalAlign: "middle",
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                {/* Signature section for print only */}
-                <div
-                  className="d-none d-print-block mt-5"
-                  style={{ width: "100%" }}
-                >
-                  <div className="row" style={{ marginTop: "60px" }}>
-                    <div className="col-4 text-center">
-                      <div>Requested By</div>
-                      <div
-                        style={{
-                          borderBottom: "1px solid #000",
-                          margin: "40px auto 0 auto",
-                          width: "180px",
-                        }}
-                      ></div>
-                      <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
-                    </div>
-                    <div className="col-4 text-center">
-                      <div>Checked By</div>
-                      <div
-                        style={{
-                          borderBottom: "1px solid #000",
-                          margin: "40px auto 0 auto",
-                          width: "180px",
-                        }}
-                      ></div>
-                      <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
-                    </div>
-                    <div className="col-4 text-center">
-                      <div>Approved By</div>
-                      <div
-                        style={{
-                          borderBottom: "1px solid #000",
-                          margin: "40px auto 0 auto",
-                          width: "180px",
-                        }}
-                      ></div>
-                      <div style={{ marginTop: "10px" }}>(Signature & Date)</div>
+                {/* Normal view detail content (English, not print) */}
+                <div className="d-print-none">
+                  <div className="container-fluid">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <p>
+                          <strong>Date:</strong>{" "}
+                          {new Date(selectedRequest.date).toLocaleDateString()}
+                        </p>
+                        <p>
+                          <strong>Reason:</strong> {selectedRequest.reason}
+                        </p>
+                        <p>
+                          <strong>Requester Name:</strong>{" "}
+                          {selectedRequest.requester_name}
+                        </p>
+                        <p>
+                          <strong>Requester's Car:</strong>{" "}
+                          {selectedRequest.requesters_car_name}
+                        </p>
+                      </div>
+                      <div className="col-md-6">
+                        <p>
+                          <strong>Maintenance Total Cost:</strong>{" "}
+                          {selectedRequest.maintenance_total_cost} ETB
+                        </p>
+                        <p>
+                          <strong>Maintenance Letter:</strong>{" "}
+                          <a
+                            href={selectedRequest.maintenance_letter}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View Maintenance Letter
+                          </a>
+                        </p>
+                        <p>
+                          <strong>Receipt File:</strong>{" "}
+                          <a
+                            href={selectedRequest.receipt_file}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            View Receipt
+                          </a>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -293,6 +308,7 @@ const FinanceMaintenanceTable = () => {
           </div>
         </div>
       )}
+
       {/* Print styles for detail modal */}
       <style>{`
         @media print {
@@ -303,22 +319,48 @@ const FinanceMaintenanceTable = () => {
             visibility: visible !important;
           }
           .modal-content {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            background: white;
-            box-shadow: none;
-            border: none;
+            position: fixed !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 700px !important;
+            max-width: 95vw !important;
+            background: white !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
           .btn, .pagination, .modal-footer, .Toastify__toast-container, .btn-close, .d-print-none, .modal-header.d-print-none {
             display: none !important;
           }
           .d-print-block {
             display: block !important;
+            text-align: center !important;
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
           }
-          /* Hide Vite/React print footer if present */
-          [data-testid="vite-react-info"], .vite-powered, .vite-react-footer {
+          .d-print-block * {
+            text-align: left !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            font-family: "Noto Sans Ethiopic", "Arial", sans-serif !important;
+          }
+          .container-fluid, .row, .col-md-6 {
+            width: 100% !important;
+            display: block !important;
+            text-align: left !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+          p, div, img, h2, h5 {
+            text-align: left !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            font-family: "Noto Sans Ethiopic", "Arial", sans-serif !important;
+          }
+          a {
             display: none !important;
           }
         }

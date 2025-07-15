@@ -60,6 +60,7 @@ const MonthlyCouponTM = () => {
         throw new Error("Failed to load coupon requests");
       }
       const logsData = await logsResponse.json();
+      console.log("Transport Manager incoming coupon data:", logsData); // <-- log incoming data
       setRefuelLogs(Array.isArray(logsData.results) ? logsData.results : []);
     } catch (error) {
       setErrorType("server");
@@ -73,152 +74,22 @@ const MonthlyCouponTM = () => {
     fetchRefuelLogs();
   }, [fetchRefuelLogs]);
 
-  // Submit new coupon request
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    // Check if coupon for current month already exists
-    const alreadyRequested = refuelLogs.some(
-      (log) => log.month === currentMonth
-    );
-    if (alreadyRequested) {
-      toast.error("Coupon request already added for this month.");
-      setLoading(false);
-      return;
-    }
-
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      toast.error("You are not authorized. Please log in.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const payload = { month: currentMonth };
-      const response = await fetch(ENDPOINTS.CREATE_COUPON_REQUEST, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.status === 401) {
-        toast.error("You are not authorized. Please log in.");
-        setLoading(false);
-        return;
-      }
-
-      if (!response.ok) {
-        // Try to get backend error message
-        let errorMsg = "Failed to submit coupon";
-        try {
-          const errData = await response.json();
-          errorMsg =
-            typeof errData === "string"
-              ? errData
-              : errData.detail || JSON.stringify(errData);
-        } catch {}
-        toast.error(errorMsg);
-        setLoading(false);
-        return;
-      }
-      toast.success("Refueling coupon submitted!");
-      setShowForm(false);
-      fetchRefuelLogs();
-    } catch (error) {
-      toast.error(error.message || "Failed to submit coupon");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   if (errorType === "unauthorized") {
     return <UnauthorizedPage />;
   }
   if (errorType === "server") {
-    return <ServerErrorPage />;
+    return (
+      <div className="container d-flex flex-column justify-content-center align-items-center" style={{ minHeight: "60vh", background: "#222", color: "#fff" }}>
+        <h4 className="mb-4">Unable to load coupon requests.</h4>
+      </div>
+    );
   }
 
   return (
     <div className="container mt-5">
       <ToastContainer position="top-center" autoClose={3000} />
-      <button
-        className="btn mb-4"
-        style={{
-          width: "200px",
-          backgroundColor: "rgba(31, 41, 55, 0.9)",
-          color: "#fff",
-        }}
-        onClick={() => setShowForm(true)}
-      >
-        Add Refueling Coupon
-      </button>
-
-      {/* Modal Form */}
-      {showForm && (
-        <div
-          className="modal show d-block"
-          tabIndex="-1"
-          role="dialog"
-          aria-modal="true"
-          style={{ background: "rgba(0,0,0,0.4)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered" role="document">
-            <div className="modal-content">
-              <form onSubmit={handleSubmit}>
-                <div className="modal-header d-flex justify-content-between align-items-start">
-                  <h5 className="modal-title">Add Refueling Coupon</h5>
-                  <button
-                    type="button"
-                    className="btn p-0"
-                    aria-label="Close"
-                    onClick={() => setShowForm(false)}
-                    style={{
-                      border: "none",
-                      background: "none",
-                      fontSize: "1.5rem",
-                      lineHeight: 1,
-                      position: "absolute",
-                      top: "16px",
-                      right: "20px",
-                    }}
-                  >
-                    <IoClose />
-                  </button>
-                </div>
-                <div className="modal-body">
-                  <div className="mb-3 text-center">
-                    <h3>{formatDisplayMonth(currentMonth)}</h3>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => setShowForm(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn"
-                    style={{
-                      backgroundColor: "rgba(31, 41, 55, 0.9)",
-                      color: "#fff",
-                    }}
-                  >
-                    {loading ? "Submitting..." : "Submit"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* REMOVE create button for transport manager */}
+      {/* <button ...>Add Refueling Coupon</button> */}
 
       {/* Card Display */}
       <div className="row">
@@ -252,8 +123,9 @@ const MonthlyCouponTM = () => {
                     <tr key={log.id}>
                       <td>{idx + 1}</td>
                       <td>{formatDisplayMonth(log.month)}</td>
-                      <td>{log.requester}</td>
-                      <td>{log.vehicle}</td>
+                      {/* Use requester_name and vehicle_name instead of id */}
+                      <td>{log.requester_name}</td>
+                      <td>{log.vehicle_name}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -18,346 +18,499 @@ import { AiOutlineCar, AiOutlineFileText } from "react-icons/ai";
 import { FaGaugeHigh } from "react-icons/fa6";
 import { LetterTextIcon, Settings, Wrench } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
-import { FaRoute } from "react-icons/fa"; // For Field Trip icon
+import { FaRoute } from "react-icons/fa";
+
 const Sidebar = ({ role }) => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const { mylanguage } = useLanguage();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
-  const { mylanguage } = useLanguage();
+
   const getActiveClass = (path) =>
     location.pathname === path ? "active text-primary fw-bold" : "text-dark";
 
+  // Helper function to translate labels
+  const t = (en, am) => (mylanguage === "EN" ? en : am);
+
   const adminMenus = [
     {
-      path: "/admin/admin",
-      icon: <MdOutlineDashboard size={22} />,
-      label: "Dashboard",
+      title: t("Management", "አስተዳደር"),
+      items: [
+        {
+          path: "/admin/admin",
+          icon: <MdOutlineDashboard size={18} />,
+          label: "Dashboard",
+        },
+        {
+          path: "/admin/admin-department",
+          icon: <IoBusiness size={18} />,
+          label: "Departments",
+        },
+        {
+          path: "/admin/account-page",
+          icon: <FaUserCog size={18} />,
+          label: "Accounts",
+        },
+      ],
     },
     {
-      path: "/admin/admin-department",
-      icon: <IoBusiness size={22} />,
-      label: "Departments",
-    },
-    {
-      path: "/admin/account-page",
-      icon: <FaUserCog size={22} />,
-      label: "Accounts",
-    },
-    {
-      path: "/admin/history",
-      icon: <MdOutlineHistory size={22} />,
-      label: "History",
+      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      items: [
+        {
+          path: "/admin/history",
+          icon: <MdOutlineHistory size={18} />,
+          label: "History",
+        },
+      ],
     },
   ];
 
   const transportMenus = [
     {
-      path: "/transport-manager/transport-dashbord",
-      icon: <MdOutlineDashboard size={22} />,
-      label: mylanguage === "EN" ? "Dashboard" : "ዳሽቦርድ",
+      title: t("Overview", "አጠቃላይ እይታ"),
+      items: [
+        {
+          path: "/transport-manager/dashbord",
+          icon: <MdOutlineDashboard size={18} />,
+          label: t("Dashboard", "ዳሽቦርድ"),
+        },
+      ],
     },
     {
-      path: "/transport-manager/vehicle-request",
-      icon: <MdOutlineRequestPage size={22} />,
-      label: mylanguage === "EN" ? "Vehicle Request" : "የተሽከርካሪ ጥያቄ",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/transport-manager/vehicle-request",
+          icon: <MdOutlineRequestPage size={18} />,
+          label: t("Vehicle Request", "የተሽከርካሪ ጥያቄ"),
+        },
+        {
+          path: "/transport-manager/maintenance-request",
+          icon: <FaTools size={18} />,
+          label: t("Create Maintenance Request", "የጥገና ጥያቄ ፍጠር"),
+        },
+        {
+          path: "/transport-manager/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/transport-manager/hight-cost-request",
+          icon: <FaRoute />,
+          label: "Field Trip Request",
+        },
+      ],
     },
     {
-      path: "/transport-manager/vehicle-management",
-      icon: <AiOutlineCar size={22} />,
-      label: mylanguage === "EN" ? "Vehicle Management" : "የተሽከርካሪ አስተዳደር",
+      title: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+      items: [
+        {
+          path: "/transport-manager/vehicle-management",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+        },
+        {
+          path: "/transport-manager/under-maintanace-vechile",
+          icon: <FaTools size={18} />,
+          label: t("Under Maintenance", "በጥገና ላይ ያሉ መኪናዎች"),
+        },
+      ],
     },
     {
-      path: "/transport-manager/maintenance-table",
-      icon: <FaTools size={22} />,
-      label: mylanguage === "EN" ? "Maintenance" : "ጥገና",
+      title: t("Maintenance & Services", "ጥገና እና አገልግሎቶች"),
+      items: [
+        {
+          path: "/transport-manager/maintenance-table",
+          icon: <FaTools size={18} />,
+          label: t("Maintenance", "ጥገና"),
+        },
+        {
+          path: "/transport-manager/service",
+          icon: <Wrench size={18} />,
+          label: t("Vehicle Service", "የተሽከርካሪ አገልግሎት"),
+        },
+      ],
     },
     {
-      path: "/transport-manager/refueling",
-      icon: <FaGasPump size={22} />,
-      label: mylanguage === "EN" ? "Refueling" : "እንደገና ማሙላት",
+      title: t("Fuel Management", "የነዳጅ አስተዳደር"),
+      items: [
+        {
+          path: "/transport-manager/refueling",
+          icon: <FaGasPump size={18} />,
+          label: t("Refueling", "እንደገና ማሙላት"),
+        },
+        {
+          path: "/transport-manager/monthly-coupons",
+          icon: <MdAttachEmail size={18} />,
+          label: "Transport Coupons",
+        },
+      ],
     },
     {
-      path: "/transport-manager/high_cost",
-      icon: <FaRoute size={22} />,
-      label: mylanguage === "EN" ? "Field Trip" : "የመውጫ ጉዞ",
-    },
-    {
-      path: "/transport-manager/report",
-      icon: <AiOutlineFileText size={22} />,
-      label: mylanguage === "EN" ? "Report" : "ሪፖርት",
-    },
-    {
-      path: "/transport-manager/history",
-      icon: <MdOutlineHistory size={22} />,
-      label: mylanguage === "EN" ? "History" : "ታሪክ",
-    },
-    {
-      path: "/transport-manager/maintenance-request",
-      icon: <FaTools size={22} />,
-      label:
-        mylanguage === "EN" ? "Create Maintenance Request" : "የጥገና ጥያቄ ፍጠር",
-    },
-    {
-      path: "/transport-manager/vehicle-services",
-      icon: <Settings size={22} />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/transport-manager/service",
-      icon: <Wrench size={22} />,
-      label: mylanguage === "EN" ? "Vehicle Service" : "የተሽከርካሪ አገልግሎት",
-    },
-    {
-      path: "/transport-manager/monthly-coupon",
-      icon: <LetterTextIcon size={22} />,
-      label: "Request Coupon",
-    },
-    {
-      path: "/transport-manager/monthly-coupons",
-      icon: <MdAttachEmail size={22} />,
-      label: "Transport Coupons",
-    },
-     {
-      path: "/transport-manager/under-maintanace-vechile",
-      icon: <FaTools size={22} />,
-      label: mylanguage === "EN" ? "Under Maintenance" : "በጥገና ላይ ያሉ መኪናዎች",
+      title: t("Reports & History", "ሪፖርቶች እና ታሪክ"),
+      items: [
+        {
+          path: "/transport-manager/report",
+          icon: <AiOutlineFileText size={18} />,
+          label: t("Report", "ሪፖርት"),
+        },
+        {
+          path: "/transport-manager/history",
+          icon: <MdOutlineHistory size={18} />,
+          label: t("History", "ታሪክ"),
+        },
+      ],
     },
   ];
 
   const driverMenus = [
     {
-      path: "/driver/driver-schedule",
-      icon: <MdSchedule />,
-      label: "Driver Schedules",
+      title: t("Schedules", "ስክድዩሎች"),
+      items: [
+        {
+          path: "/driver/driver-schedule",
+          icon: <MdSchedule />,
+          label: "Driver Schedules",
+        },
+        {
+          path: "/driver/high-cost-schedule",
+          icon: <FaGaugeHigh />,
+          label: "High Cost Schedule",
+        },
+      ],
     },
     {
-      path: "/driver/high-cost-schedule",
-      icon: <FaGaugeHigh />,
-      label: "High Cost Schedule",
-    },
-    {
-      path: "/driver/maintenance-request",
-      icon: <FaTools />,
-      label: "Create Maintenance Request",
-    },
-    {
-      path: "/driver/refueling-request",
-      icon: <FaGasPump />,
-      label: "Refueling Request",
-    },
-    {
-      path: "/driver/vehicle-services",
-      icon: <Settings />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/driver/monthly-coupon",
-      icon: <LetterTextIcon />,
-      label: "Request Coupon",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/driver/maintenance-request",
+          icon: <FaTools />,
+          label: "Create Maintenance Request",
+        },
+        {
+          path: "/driver/refueling-request",
+          icon: <FaGasPump />,
+          label: "Refueling Request",
+        },
+        {
+          path: "/driver/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/driver/monthly-coupon",
+          icon: <LetterTextIcon />,
+          label: "Request Coupon",
+        },
+      ],
     },
   ];
 
   const departmentManagerMenus = [
     {
-      path: "/department-manager/vehicle-request",
-      icon: <MdOutlineRequestPage />,
-      label: "Vehicle Request",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/department-manager/vehicle-request",
+          icon: <MdOutlineRequestPage />,
+          label: "Vehicle Request",
+        },
+        {
+          path: "/department-manager/refueling-request",
+          icon: <FaGasPump />,
+          label: "Refueling",
+        },
+        {
+          path: "/department-manager/maintenance-request",
+          icon: <FaTools />,
+          label: "Maintenance Request",
+        },
+        {
+          path: "/department-manager/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/department-manager/hight-cost-request",
+          icon: <FaRoute />,
+          label: "Field Trip Request",
+        },
+        {
+          path: "/department-manager/monthly-coupon",
+          icon: <LetterTextIcon />,
+          label: "Request Coupon",
+        },
+      ],
     },
     {
-      path: "/department-manager/refueling-request",
-      icon: <FaGasPump />,
-      label: "Refueling",
-    },
-    {
-      path: "/department-manager/maintenance-request",
-      icon: <FaTools />,
-      label: "Maintenance Request",
-    },
-    {
-      path: "/department-manager/vehicle-services",
-      icon: <Settings />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/department-manager/hight-cost",
-      icon: <FaGaugeHigh />,
-      label: "High Cost",
-    },
-    {
-      path: "/department-manager/history",
-      icon: <MdOutlineHistory />,
-      label: "History",
-    },
-    {
-      path: "/department-manager/monthly-coupon",
-      icon: <LetterTextIcon />,
-      label: "Request Coupon",
+      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      items: [
+        {
+          path: "/department-manager/history",
+          icon: <MdOutlineHistory />,
+          label: "History",
+        },
+      ],
     },
   ];
 
   const financeManagerMenus = [
     {
-      path: "/finance-manager/hight-cost",
-      icon: <FaGaugeHigh />,
-      label: "High Cost",
+      title: t("Operations", "ኦፕሬሽኖች"),
+      items: [
+        {
+          path: "/finance-manager/hight-cost",
+          icon: <FaGaugeHigh />,
+          label: "Field Trip",
+        },
+        {
+          path: "/finance-manager/refueling",
+          icon: <FaGasPump />,
+          label: "Refueling",
+        },
+      ],
     },
     {
-      path: "/finance-manager/financemaintenance-table",
-      icon: <FaTools />,
-      label: "Maintenance Request",
+      title: t("Maintenance", "ጥገና"),
+      items: [
+        {
+          path: "/finance-manager/financemaintenance-table",
+          icon: <FaTools />,
+          label: "Maintenance Request",
+        },
+        {
+          path: "/finance-manager/service",
+          icon: <Wrench />,
+          label: "Vehicle Service",
+        },
+      ],
     },
     {
-      path: "/finance-manager/vehicle-services",
-      icon: <Settings />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/finance-manager/refueling",
-      icon: <FaGasPump />,
-      label: "Refueling",
-    },
-    {
-      path: "/finance-manager/maintenance-request",
-      icon: <FaTools />,
-      label: "Create Maintenance Request",
-    },
-    {
-      path: "/finance-manager/service",
-      icon: <Wrench />,
-      label: "Vehicle Service",
-    },
-    {
-      path: "/finance-manager/monthly-coupon",
-      icon: <LetterTextIcon />,
-      label: "Request Coupon",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/finance-manager/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/finance-manager/maintenance-request",
+          icon: <FaTools />,
+          label: "Create Maintenance Request",
+        },
+        {
+          path: "/finance-manager/monthly-coupon",
+          icon: <LetterTextIcon />,
+          label: "Request Coupon",
+        },
+        {
+          path: "/finance-manager/hight-cost-request",
+          icon: <FaRoute />,
+          label: "Field Trip request",
+        },
+      ],
     },
   ];
 
   const ceoMenus = [
     {
-      path: "/ceo/dashboard",
-      icon: <MdOutlineDashboard size={22} />,
-      label: "Dashboard",
+      title: t("Overview", "አጠቃላይ እይታ"),
+      items: [
+        {
+          path: "/ceo/dashbord",
+          icon: <MdOutlineDashboard size={18} />,
+          label: t("Dashboard", "ዳሽቦርድ"),
+        },
+      ],
     },
     {
-      path: "/ceo/high_cost",
-      icon: <FaRoute />,
-      label: "Field Trip",
-    },
-    { path: "/ceo/refueling", icon: <FaGasPump />, label: "Refueling" },
-    {
-      path: "/ceo/ceomaintenance-table",
-      icon: <FaTools />,
-      label: "Maintenance",
-    },
-    {
-      path: "/ceo/vehicle-services",
-      icon: <Settings />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/ceo/maintenance-request",
-      icon: <FaTools />,
-      label: "Create Maintenance Request",
-    },
-    { path: "/ceo/history", icon: <MdOutlineHistory />, label: "History" },
-    {
-      path: "/ceo/service",
-      icon: <Wrench />,
-      label: "Vehicle Service",
+      title: t("Operations", "ኦፕሬሽኖች"),
+      items: [
+        {
+          path: "/ceo/high_cost",
+          icon: <FaRoute />,
+          label: "Field Trip",
+        },
+        {
+          path: "/ceo/refueling",
+          icon: <FaGasPump />,
+          label: "Refueling",
+        },
+        {
+          path: "/ceo/ceomaintenance-table",
+          icon: <FaTools />,
+          label: "Maintenance",
+        },
+        {
+          path: "/ceo/service",
+          icon: <Wrench />,
+          label: "Vehicle Service",
+        },
+      ],
     },
     {
-      path: "/ceo/monthly-coupon",
-      icon: <LetterTextIcon />,
-      label: "Request Coupon",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/ceo/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/ceo/maintenance-request",
+          icon: <FaTools />,
+          label: "Create Maintenance Request",
+        },
+        {
+          path: "/ceo/monthly-coupon",
+          icon: <LetterTextIcon />,
+          label: "Request Coupon",
+        },
+        {
+          path: "/ceo/hight-cost-request",
+          icon: <FaRoute />,
+          label: "Field Trip Request",
+        },
+      ],
+    },
+    {
+      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      items: [
+        {
+          path: "/ceo/history",
+          icon: <MdOutlineHistory />,
+          label: "History",
+        },
+      ],
     },
   ];
+
   const BudgetManagerMenus = [
     {
-      path: "/budget-manager/refueling",
-      icon: <FaGasPump />,
-      label: "Refueling",
+      title: t("Operations", "ኦፕሬሽኖች"),
+      items: [
+        {
+          path: "/budget-manager/refueling",
+          icon: <FaGasPump />,
+          label: "Refueling",
+        },
+        {
+          path: "/budget-manager/high_cost",
+          icon: <FaRoute />,
+          label: "Field Trip",
+        },
+        {
+          path: "/budget-manager/maintenance",
+          icon: <FaTools />,
+          label: "Maintenance",
+        },
+        {
+          path: "/budget-manager/service",
+          icon: <Wrench />,
+          label: "Vehicle Service",
+        },
+      ],
     },
     {
-      path: "/budget-manager/high_cost",
-      icon: <FaRoute />,
-      label: "Field Trip",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/budget-manager/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/budget-manager/maintenance-request",
+          icon: <FaTools />,
+          label: "Create Maintenance Request",
+        },
+        {
+          path: "/budget-manager/monthly-coupon",
+          icon: <LetterTextIcon />,
+          label: "Request Coupon",
+        },
+        {
+          path: "/budget-manager/hight-cost-request",
+          icon: <FaRoute />,
+          label: "Field Trip Request",
+        },
+      ],
     },
     {
-      path: "/budget-manager/maintenance",
-      icon: <FaTools />,
-      label: "Maintenance",
-    },
-    {
-      path: "/budget-manager/vehicle-services",
-      icon: <Settings />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/budget-manager/maintenance-request",
-      icon: <FaTools />,
-      label: "Create Maintenance Request",
-    },
-    {
-      path: "/budget-manager/history",
-      icon: <MdOutlineHistory />,
-      label: "History",
-    },
-    {
-      path: "/budget-manager/service",
-      icon: <Wrench />,
-      label: "Vehicle Service",
-    },
-    {
-      path: "/budget-manager/monthly-coupon",
-      icon: <LetterTextIcon />,
-      label: "Request Coupon",
+      title: t("Records", "ቀዳሚ �ማስታወሻዎች"),
+      items: [
+        {
+          path: "/budget-manager/history",
+          icon: <MdOutlineHistory />,
+          label: "History",
+        },
+      ],
     },
   ];
 
   const GeneralSystemExcuterMenus = [
     {
-      path: "/general-service/refueling",
-      icon: <FaGasPump />,
-      label: "Refueling",
+      title: t("Operations", "ኦፕሬሽኖች"),
+      items: [
+        {
+          path: "/general-service/refueling",
+          icon: <FaGasPump />,
+          label: "Refueling",
+        },
+        {
+          path: "/general-service/high_cost",
+          icon: <FaRoute />,
+          label: "Field Trip",
+        },
+        {
+          path: "/general-service/maintenance",
+          icon: <Wrench />,
+          label: "Maintenance",
+        },
+        {
+          path: "/general-service/service",
+          icon: <Wrench />,
+          label: "Vehicle Service",
+        },
+      ],
     },
     {
-      path: "/general-service/high_cost",
-      icon: <FaRoute />,
-      label: "Field Trip",
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
+        {
+          path: "/general-service/vehicle-services",
+          icon: <Settings />,
+          label: "Create Service Request",
+        },
+        {
+          path: "/general-service/maintenance-request",
+          icon: <FaTools />,
+          label: "Create Maintenance Request",
+        },
+        {
+          path: "/general-service/monthly-coupon",
+          icon: <LetterTextIcon />,
+          label: "Request Coupon",
+        },
+        {
+          path: "/general-service/hight-cost-request",
+          icon: <FaRoute />,
+          label: "Field Trip Request",
+        },
+      ],
     },
     {
-      path: "/general-service/maintenance",
-      icon: <Wrench />,
-      label: "Maintenance",
-    },
-    {
-      path: "/general-service/vehicle-services",
-      icon: <Settings />,
-      label: "Create Service Request",
-    },
-    {
-      path: "/general-service/maintenance-request",
-      icon: <FaTools />,
-      label: "Create Maintenance Request",
-    },
-    {
-      path: "/general-service/history",
-      icon: <MdOutlineHistory />,
-      label: "History",
-    },
-    {
-      path: "/general-service/service",
-      icon: <Wrench />,
-      label: "Vehicle Service",
-    },
-    {
-      path: "/general-service/monthly-coupon",
-      icon: <LetterTextIcon />,
-      label: "Request Coupon",
+      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      items: [
+        {
+          path: "/general-service/history",
+          icon: <MdOutlineHistory />,
+          label: "History",
+        },
+      ],
     },
   ];
 
@@ -369,13 +522,13 @@ const Sidebar = ({ role }) => {
     "/finance-manager": financeManagerMenus,
     "/ceo": ceoMenus,
     "/general-service": GeneralSystemExcuterMenus,
-    "/budget-manager": BudgetManagerMenus, // Added Budget Officer menus
+    "/budget-manager": BudgetManagerMenus,
   };
 
   const activeMenu = Object.keys(menuMappings).find((key) =>
     location.pathname.startsWith(key)
   );
-  const menus = activeMenu ? menuMappings[activeMenu] : [];
+  const menuGroups = activeMenu ? menuMappings[activeMenu] : [];
 
   return (
     <>
@@ -413,8 +566,8 @@ const Sidebar = ({ role }) => {
           backgroundColor: "rgba(219, 219, 219, 0.9)",
           backdropFilter: "blur(10px)",
           overflowY: "auto",
-          scrollbarWidth: "none",        // Firefox
-          msOverflowStyle: "none",       // IE and Edge
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
         }}
       >
         <style>
@@ -422,41 +575,53 @@ const Sidebar = ({ role }) => {
             .sidebar-hide-scrollbar::-webkit-scrollbar {
               display: none;
             }
+            .sidebar-section-title {
+              font-size: 0.75rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              color: #6c757d;
+              margin-top: 1rem;
+              margin-bottom: 0.5rem;
+              padding-left: 0.5rem;
+            }
           `}
         </style>
-        <div className="sidebar-hide-scrollbar d-flex flex-column h-100">
+        <div className="sidebar-hide-scrollbar d-flex flex-column h-85">
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div className="text-center">
               <img
                 src={Logo || "/placeholder.svg"}
                 alt="Logo"
                 className="img-fluid"
-                style={{ maxWidth: "80px" }}
+                style={{ maxWidth: "80px", marginLeft: "90px" }}
               />
             </div>
-            <button
-              className="btn "
-              onClick={toggleSidebar}
-              aria-label="Close sidebar"
-            >
-              <IoClose size={24} />
-            </button>
           </div>
 
           <ul className="nav flex-column">
-            {menus.map((menu, index) => (
-              <li className="nav-item" key={index}>
-                <Link
-                  to={menu.path}
-                  className={`nav-link d-flex align-items-center ${getActiveClass(
-                    menu.path
-                  )} sidebar-link`}
-                  onClick={() => setIsOpen(false)} // Close sidebar when a link is clicked
+            {menuGroups.map((group, groupIndex) => (
+              <div key={groupIndex}>
+                <div
+                  className="sidebar-section-title"
+                  style={{ fontSize: "16px", color: "#545250bc" }}
                 >
-                  {menu.icon}
-                  <span className="ms-2">{menu.label}</span>
-                </Link>
-              </li>
+                  {group.title}
+                </div>
+                {group.items.map((menu, index) => (
+                  <li className="nav-item" key={`${groupIndex}-${index}`}>
+                    <Link
+                      to={menu.path}
+                      className={`nav-link d-flex align-items-center ${getActiveClass(
+                        menu.path
+                      )} sidebar-link`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {menu.icon}
+                      <span className="ms-2">{menu.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </div>
             ))}
           </ul>
         </div>

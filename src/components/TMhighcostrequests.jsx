@@ -1,43 +1,43 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { toast, ToastContainer } from "react-toastify"; // For toast messages
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg"; // Import the logo image
-import { IoMdClose } from "react-icons/io";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
-import Button from "@mui/material/Button";
-import Stack from "@mui/material/Stack";
-import { IoClose } from "react-icons/io5";
-import { useLanguage } from "../context/LanguageContext";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaSearch, FaSync, FaCheck, FaTimes, FaGasPump } from "react-icons/fa";
+import { IoClose } from "react-icons/io5";
+import Logo from "../assets/Logo.jpg";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import { useLanguage } from "../context/LanguageContext";
 
 const TMhighcostrequests = () => {
   const [requests, setRequests] = useState([]);
-  const [users, setUsers] = useState([]); // State for employees
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
-  const [rejectionReason, setRejectionReason] = useState(""); // State for rejection reason
-  const [showRejectionModal, setShowRejectionModal] = useState(false); // State for rejection modal
-  const [showConfirmation, setShowConfirmation] = useState(false); // State for rejection confirmation dialog
-  const [showApproveConfirmation, setShowApproveConfirmation] = useState(false); // State for approve confirmation dialog
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [showEstimateModal, setShowEstimateModal] = useState(false);
+  const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of items per page
-  const [availableVehicles, setAvailableVehicles] = useState([]); // State for available vehicles
-  const [selectedVehicleId, setSelectedVehicleId] = useState(""); // Initialize with an empty string
-  const [estimatedDistance, setEstimatedDistance] = useState(""); // State for estimated distance
-  const [fuelPrice, setFuelPrice] = useState(""); // State for fuel price per liter
-  const [isCostCalculated, setIsCostCalculated] = useState(false); // State to track cost calculation
-  const [showEstimateModal, setShowEstimateModal] = useState(false); // State for estimate modal
-  const { mylanguage } = useLanguage(); // Use the language context
-  const accessToken = localStorage.getItem("authToken");
+  const itemsPerPage = 5;
+  const [availableVehicles, setAvailableVehicles] = useState([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [estimatedDistance, setEstimatedDistance] = useState("");
+  const [fuelPrice, setFuelPrice] = useState("");
+  const [isCostCalculated, setIsCostCalculated] = useState(false);
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpAction, setOtpAction] = useState(null); // "forward", "approve", "reject"
+  const [otpAction, setOtpAction] = useState(null);
   const [otpSent, setOtpSent] = useState(false);
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "start_day", direction: "desc" });
+  const [errorType, setErrorType] = useState(null);
+  const { mylanguage } = useLanguage();
+  const accessToken = localStorage.getItem("authToken");
 
   useEffect(() => {
     fetchRequests();
@@ -50,25 +50,13 @@ const TMhighcostrequests = () => {
       setErrorType("unauthorized");
       return;
     }
-
     setLoading(true);
     try {
-      // Fetch high-cost requests
       const highCostRequests = await fetchHighCostRequests();
-
-      // Add a "requestType" property to high-cost requests
-      const highCostRequestsWithLabel = highCostRequests.map((request) => ({
-        ...request,
-        requestType: "High Cost", // Label as high-cost
-      }));
-
-      setRequests(highCostRequestsWithLabel); // Set high-cost requests to state
+      setRequests(highCostRequests.map((r) => ({ ...r, requestType: "High Cost" })));
     } catch (error) {
-      if (error.message && error.message.toLowerCase().includes("401")) {
-        setErrorType("unauthorized");
-      } else {
-        setErrorType("server");
-      }
+      if (error.message && error.message.toLowerCase().includes("401")) setErrorType("unauthorized");
+      else setErrorType("server");
       console.error("Fetch Requests Error:", error);
     } finally {
       setLoading(false);
@@ -80,7 +68,6 @@ const TMhighcostrequests = () => {
       setErrorType("unauthorized");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.USER_LIST, {
         headers: {
@@ -88,18 +75,13 @@ const TMhighcostrequests = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch users");
       }
-
       const data = await response.json();
-      setUsers(data.results || []); // Set users data
+      setUsers(data.results || []);
     } catch (error) {
       console.error("Fetch Users Error:", error);
     }
@@ -110,7 +92,6 @@ const TMhighcostrequests = () => {
       setErrorType("unauthorized");
       return [];
     }
-
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
         headers: {
@@ -118,18 +99,13 @@ const TMhighcostrequests = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch high-cost transport requests");
       }
-
       const data = await response.json();
-      return data.results || []; // Return fetched high-cost requests
+      return data.results || [];
     } catch (error) {
       console.error("Fetch High-Cost Requests Error:", error);
       return [];
@@ -137,11 +113,7 @@ const TMhighcostrequests = () => {
   };
 
   const fetchAvailableVehicles = async () => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
+    if (!accessToken) return;
     try {
       const response = await fetch(ENDPOINTS.AVAILABLE_VEHICLES, {
         headers: {
@@ -149,11 +121,9 @@ const TMhighcostrequests = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) throw new Error("Failed to fetch available vehicles");
-
       const data = await response.json();
-      setAvailableVehicles(data.results || []); // Set available vehicles
+      setAvailableVehicles(data.results || []);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
       toast.error("Failed to fetch available vehicles.");
@@ -161,11 +131,7 @@ const TMhighcostrequests = () => {
   };
 
   const fetchHighCostDetails = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
+    if (!accessToken) return;
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_DETAIL(requestId), {
         headers: {
@@ -173,18 +139,15 @@ const TMhighcostrequests = () => {
           "Content-Type": "application/json",
         },
       });
-
-      if (!response.ok)
-        throw new Error("Failed to fetch high-cost request details");
-
+      if (!response.ok) throw new Error("Failed to fetch high-cost request details");
       const data = await response.json();
-      setSelectedRequest(data); // Set the fetched data to state
+      setSelectedRequest(data);
     } catch (error) {
       console.error("Fetch High-Cost Details Error:", error);
       toast.error("Failed to fetch high-cost request details.");
     }
   };
-  // Get employee names from IDs
+
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
       .map((id) => {
@@ -196,56 +159,18 @@ const TMhighcostrequests = () => {
 
   const handleViewDetail = (request) => {
     setSelectedRequest(request);
+    setIsCostCalculated(!!request.total_cost);
   };
 
   const handleCloseDetail = () => {
     setSelectedRequest(null);
     setRejectionReason("");
-    setShowRejectionModal(false);
-    setShowConfirmation(false);
-    setShowApproveConfirmation(false);
+    setShowEstimateModal(false);
+    setOtpModalOpen(false);
+    setOtpAction(null);
+    setOtpValue("");
+    setOtpSent(false);
     setIsCostCalculated(false);
-  };
-
-  const handleApproveReject = async (action) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: action, // "forward" or "reject"
-            rejection_message:
-              action === "reject" ? rejectionReason : undefined, // Include rejection reason if rejecting
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error(`Failed to ${action} request`);
-
-      toast.success(
-        `Request ${
-          action === "forward" ? "forwarded" : "rejected"
-        } successfully!`
-      );
-      setSelectedRequest(null); // Close the modal
-      fetchRequests(); // Refresh the list of requests
-    } catch (error) {
-      console.error(
-        `${action === "forward" ? "Forward" : "Reject"} Error:`,
-        error
-      );
-      toast.error(`Failed to ${action} request.`);
-    }
   };
 
   const estimateCost = async () => {
@@ -253,7 +178,6 @@ const TMhighcostrequests = () => {
       toast.error("Please provide all required inputs.");
       return;
     }
-
     try {
       const response = await fetch(
         ENDPOINTS.ESTIMATE_HIGH_COST(selectedRequest.id),
@@ -270,50 +194,17 @@ const TMhighcostrequests = () => {
           }),
         }
       );
-
       if (!response.ok) throw new Error("Failed to estimate cost");
-
       toast.success("Cost estimated successfully!");
-      setShowEstimateModal(false); // Close the estimate modal
-      fetchHighCostDetails(selectedRequest.id); // Refresh details in the first modal
-      setIsCostCalculated(true); // Mark cost as calculated
+      setShowEstimateModal(false);
+      fetchHighCostDetails(selectedRequest.id);
+      setIsCostCalculated(true);
     } catch (error) {
       console.error("Estimate Cost Error:", error);
       toast.error("Failed to estimate cost.");
     }
   };
 
-  const assignVehicle = async () => {
-    try {
-      const response = await fetch(
-        ENDPOINTS.ASSIGN_VEHICLE(selectedRequest.id),
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({}),
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        const errorMessage =
-          JSON.parse(errorText).error || "Failed to assign vehicle.";
-        toast.error(errorMessage);
-        return;
-      }
-
-      toast.success("Vehicle assigned successfully!");
-      fetchHighCostDetails(selectedRequest.id); // Refresh details
-    } catch (error) {
-      console.error("Assign Vehicle Error:", error);
-      toast.error("Failed to assign vehicle.");
-    }
-  };
-
-  // Send OTP using backend endpoint
   const sendOtp = async () => {
     setOtpLoading(true);
     try {
@@ -326,11 +217,7 @@ const TMhighcostrequests = () => {
         },
         body: JSON.stringify({}),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to send OTP");
-      }
-
+      if (!response.ok) throw new Error("Failed to send OTP");
       setOtpSent(true);
       toast.success("OTP sent to your phone");
     } catch (err) {
@@ -340,7 +227,6 @@ const TMhighcostrequests = () => {
     }
   };
 
-  // Handle OTP verification and action (forward, approve, reject)
   const handleOtpAction = async (otp, action) => {
     setOtpLoading(true);
     try {
@@ -354,7 +240,6 @@ const TMhighcostrequests = () => {
         }
         payload.rejection_message = rejectionReason;
       }
-
       const response = await fetch(
         ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
         {
@@ -366,12 +251,10 @@ const TMhighcostrequests = () => {
           body: JSON.stringify(payload),
         }
       );
-
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.detail || `Failed to ${action} request`);
       }
-
       toast.success(
         action === "approve"
           ? "Request approved!"
@@ -379,13 +262,7 @@ const TMhighcostrequests = () => {
           ? "Request forwarded!"
           : "Request rejected!"
       );
-
-      setSelectedRequest(null);
-      setOtpModalOpen(false);
-      setOtpValue("");
-      setOtpSent(false);
-      setOtpAction(null);
-      setRejectionReason("");
+      handleCloseDetail();
       fetchRequests();
     } catch (err) {
       toast.error(err.message);
@@ -394,120 +271,262 @@ const TMhighcostrequests = () => {
     }
   };
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPageRequests = requests.slice(startIndex, endIndex);
+  const filterRequests = () => {
+    let filtered = requests;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          (r.destination && r.destination.toLowerCase().includes(term)) ||
+          (r.requester && r.requester.toLowerCase().includes(term)) ||
+          (r.status && r.status.toLowerCase().includes(term)) ||
+          (r.id && r.id.toString().includes(term))
+      );
+    }
+    return filtered;
+  };
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSearch className="text-muted ms-1" />;
+    return sortConfig.direction === "asc" ? (
+      <FaCheck className="text-primary ms-1" />
+    ) : (
+      <FaTimes className="text-primary ms-1" />
+    );
+  };
+
+  const getSortedRequests = (requests) => {
+    if (!sortConfig.key) return requests;
+    return [...requests].sort((a, b) => {
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const filteredRequests = getSortedRequests(filterRequests());
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentPageRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
+
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
-    <div
-      className="container mt-4"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
-    >
+    <div className="container py-4">
       <ToastContainer />
-      {loading ? (
-        <div className="text-center mt-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">
-              {mylanguage === "EN" ? "Loading data..." : "በመጫን ላይ..."}
-            </span>
-          </div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="mb-0 d-flex align-items-center">
+            <FaGasPump className="me-2 text-success" />
+            {mylanguage === "EN" ? "High Cost Requests" : "የከፍተኛ ወጪ ጥያቄዎች"}
+          </h1>
         </div>
-      ) : (
-        <div
-          className="table-responsive"
-          style={{ width: "100%", overflowX: "auto" }}
-        >
-          <table className="table table-hover align-middle">
-            <thead className="table">
-              <tr>
-                <th>#</th>
-                <th>{mylanguage === "EN" ? "Start Day" : "የመጀመሪያ ቀን"}</th>
-                <th>{mylanguage === "EN" ? "Start Time" : "የመጀመሪያ ሰዓት"}</th>
-                <th>{mylanguage === "EN" ? "Return Day" : "የመመለሻ ቀን"}</th>
-                <th>{mylanguage === "EN" ? "Destination" : "መድረሻ"}</th>
-                <th>{mylanguage === "EN" ? "Request Type" : "የጥያቄ አይነት"}</th>
-                <th>{mylanguage === "EN" ? "Status" : "ሁኔታ"}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.length > 0 ? (
-                currentPageRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td>{request.start_day}</td>
-                    <td>{request.start_time}</td>
-                    <td>{request.return_day}</td>
-                    <td>{request.destination}</td>
-                    <td>{request.status}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => handleViewDetail(request)}
-                      >
-                        {mylanguage === "EN" ? "View Detail" : "ዝርዝር ይመልከቱ"}
-                      </button>
+        <div className="d-flex gap-2">
+          <div className="input-group shadow-sm" style={{ maxWidth: "300px" }}>
+            <span className="input-group-text bg-white border-end-0">
+              <FaSearch className="text-muted" />
+            </span>
+            <input
+              type="text"
+              className="form-control border-start-0"
+              placeholder={mylanguage === "EN" ? "Search requests..." : "ጥያቄዎችን ይፈልጉ..."}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button
+            className="btn btn-outline-success d-flex align-items-center"
+            onClick={fetchRequests}
+            disabled={loading}
+          >
+            <FaSync className={loading ? "me-2 spin" : "me-2"} />
+            {mylanguage === "EN" ? "Refresh" : "ዳግም ያድሱ"}
+          </button>
+        </div>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th onClick={() => handleSort("start_day")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Start Day" : "የመጀመሪያ ቀን"}
+                      {getSortIcon("start_day")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("start_time")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Start Time" : "የመጀመሪያ ሰዓት"}
+                      {getSortIcon("start_time")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("return_day")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Return Day" : "የመመለሻ ቀን"}
+                      {getSortIcon("return_day")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("destination")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Destination" : "መድረሻ"}
+                      {getSortIcon("destination")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("requestType")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Request Type" : "የጥያቄ አይነት"}
+                      {getSortIcon("requestType")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("status")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      {mylanguage === "EN" ? "Status" : "ሁኔታ"}
+                      {getSortIcon("status")}
+                    </div>
+                  </th>
+                  <th className="text-center">
+                    {mylanguage === "EN" ? "Action" : "ተግባር"}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">
+                            {mylanguage === "EN" ? "Loading data..." : "በመጫን ላይ..."}
+                          </span>
+                        </div>
+                        <span className="ms-3">
+                          {mylanguage === "EN" ? "Loading high cost requests..." : "የከፍተኛ ወጪ ጥያቄዎች በመጫን ላይ..."}
+                        </span>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center">
-                    {mylanguage === "EN"
-                      ? "No transport requests found."
-                      : "ምንም የትራንስፖርት ጥያቄዎች አልተገኙም።"}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{request.start_day}</td>
+                      <td>{request.start_time}</td>
+                      <td>{request.return_day}</td>
+                      <td>{request.destination}</td>
+                      <td>{request.requestType}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "pending"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => handleViewDetail(request)}
+                        >
+                          <FaSearch className="me-1" />
+                          {mylanguage === "EN" ? "View Detail" : "ዝርዝር ይመልከቱ"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaGasPump className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          {searchTerm
+                            ? (mylanguage === "EN"
+                              ? "No requests match your search"
+                              : "ምንም ጥያቄ የፍለጋዎን ውጤት አልተመለከተም")
+                            : (mylanguage === "EN"
+                              ? "No high cost requests found."
+                              : "ምንም የከፍተኛ ወጪ ጥያቄዎች አልተገኙም።")}
+                        </p>
+                        <small className="text-muted">
+                          {searchTerm
+                            ? (mylanguage === "EN"
+                              ? "Try adjusting your search term"
+                              : "የፍለጋዎን ቃል ይቀይሩ")
+                            : (mylanguage === "EN"
+                              ? "Check back later"
+                              : "ተመልከቱ ቅርብ ጊዜ")}
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-0">
+          <div className="text-muted small">
+            Showing{" "}
+            <span className="fw-medium">{filteredRequests.length}</span>{" "}
+            requests
+            <span>
+              {" "}
+              of{" "}
+              <span className="fw-medium">{requests.length}</span>
+            </span>
+          </div>
+          <div className="d-flex gap-2">
+            {searchTerm && (
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSearchTerm("")}
+              >
+                {mylanguage === "EN" ? "Clear Search" : "ፍለጋ ይዝጉ"}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      {/* Pagination */}
+      {filteredRequests.length > itemsPerPage && (
+        <div className="d-flex justify-content-center mt-4">
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
+            handlePageChange={setCurrentPage}
+          />
         </div>
       )}
-
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100px" }}
-      >
-        <CustomPagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(requests.length / itemsPerPage)}
-          handlePageChange={(page) => setCurrentPage(page)}
-        />
-      </div>
-
+      {/* Modal for Viewing Details */}
       {selectedRequest && (
         <div
           className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div
-            className="modal-dialog"
-            style={{
-              width: "90%",
-              maxWidth: "1200px",
-              margin: "0 auto",
-            }}
-          >
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "700px" }}>
             <div className="modal-content">
               <div className="modal-header">
                 <div className="d-flex align-items-center">
-                  <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{
-                      width: "100px",
-                      height: "70px",
-                      marginRight: "10px",
-                    }}
-                  />
+                  <img src={Logo} alt="Logo" style={{ width: "80px", height: "50px", marginRight: "10px" }} />
                   <h5 className="modal-title">
                     {mylanguage === "EN"
                       ? "Estimate Cost and Assign Vehicle"
@@ -524,106 +543,66 @@ const TMhighcostrequests = () => {
               </div>
               <div className="modal-body">
                 <p>
-                  <strong>
-                    {mylanguage === "EN" ? "Requester:" : "ጠየቀው ሰው:"}
-                  </strong>{" "}
-                  {selectedRequest.requester}
+                  <strong>{mylanguage === "EN" ? "Requester:" : "ጠየቀው ሰው:"}</strong> {selectedRequest.requester}
                 </p>
                 <p>
-                  <strong>
-                    {mylanguage === "EN" ? "Employees:" : "ሰራተኞች:"}
-                  </strong>{" "}
-                  {selectedRequest.employees?.join(", ") ||
-                    (mylanguage === "EN" ? "N/A" : "አልተገኙም")}
+                  <strong>{mylanguage === "EN" ? "Employees:" : "ሰራተኞች:"}</strong>{" "}
+                  {selectedRequest.employees?.join(", ") || (mylanguage === "EN" ? "N/A" : "አልተገኙም")}
                 </p>
                 <p>
-                  <strong>
-                    {mylanguage === "EN" ? "Start Day:" : "የመጀመሪያ ቀን:"}
-                  </strong>{" "}
-                  {selectedRequest.start_day}
+                  <strong>{mylanguage === "EN" ? "Start Day:" : "የመጀመሪያ ቀን:"}</strong> {selectedRequest.start_day}
                 </p>
                 <p>
-                  <strong>
-                    {mylanguage === "EN" ? "Return Day:" : "የመመለሻ ቀን:"}
-                  </strong>{" "}
-                  {selectedRequest.return_day}
+                  <strong>{mylanguage === "EN" ? "Return Day:" : "የመመለሻ ቀን:"}</strong> {selectedRequest.return_day}
                 </p>
                 <p>
-                  <strong>
-                    {mylanguage === "EN" ? "Destination:" : "መድረሻ:"}
-                  </strong>{" "}
-                  {selectedRequest.destination}
+                  <strong>{mylanguage === "EN" ? "Destination:" : "መድረሻ:"}</strong> {selectedRequest.destination}
                 </p>
                 <p>
-                  <strong>{mylanguage === "EN" ? "Reason:" : "ምክንያት:"}</strong>{" "}
-                  {selectedRequest.reason}
+                  <strong>{mylanguage === "EN" ? "Reason:" : "ምክንያት:"}</strong> {selectedRequest.reason}
                 </p>
-
-                {/* Display cost details if available */}
                 {isCostCalculated && (
                   <>
                     <p>
-                      <strong>
-                        {mylanguage === "EN"
-                          ? "Estimated Vehicle:"
-                          : "ተገመተው የተመደበ ተሽከርካሪ:"}
-                      </strong>{" "}
+                      <strong>{mylanguage === "EN" ? "Estimated Vehicle:" : "ተገመተው የተመደበ ተሽከርካሪ:"}</strong>{" "}
                       {selectedRequest.estimated_vehicle}
                     </p>
                     <p>
-                      <strong>
-                        {mylanguage === "EN"
-                          ? "Estimated Distance (km):"
-                          : "ተገመተው ርቀት (ኪ.ሜ):"}
-                      </strong>{" "}
+                      <strong>{mylanguage === "EN" ? "Estimated Distance (km):" : "ተገመተው ርቀት (ኪ.ሜ):"}</strong>{" "}
                       {selectedRequest.estimated_distance_km}
                     </p>
                     <p>
-                      <strong>
-                        {mylanguage === "EN"
-                          ? "Fuel Price per Liter:"
-                          : "የነዳጅ ዋጋ በሊትር:"}
-                      </strong>{" "}
+                      <strong>{mylanguage === "EN" ? "Fuel Price per Liter:" : "የነዳጅ ዋጋ በሊትር:"}</strong>{" "}
                       {selectedRequest.fuel_price_per_liter}
                     </p>
                     <p>
-                      <strong>
-                        {mylanguage === "EN"
-                          ? "Fuel Needed (Liters):"
-                          : "የሚያስፈልገው ነዳጅ (ሊትር):"}
-                      </strong>{" "}
+                      <strong>{mylanguage === "EN" ? "Fuel Needed (Liters):" : "የሚያስፈልገው ነዳጅ (ሊትር):"}</strong>{" "}
                       {selectedRequest.fuel_needed_liters}
                     </p>
                     <p>
-                      <strong>
-                        {mylanguage === "EN" ? "Total Cost:" : "ጠቅላላ ወጪ:"}
-                      </strong>{" "}
+                      <strong>{mylanguage === "EN" ? "Total Cost:" : "ጠቅላላ ወጪ:"}</strong>{" "}
                       {selectedRequest.total_cost} ETB
                     </p>
                   </>
                 )}
               </div>
-
               <div className="modal-footer">
-                {/* Conditionally render buttons based on status and cost calculation */}
-                {selectedRequest.status === "forwarded" &&
-                  !isCostCalculated && (
-                    <Button
-                      style={{
-                        color: "#ffffff",
-                        backgroundColor: "#1976d2",
-                        width: "150px",
-                      }}
-                      onClick={() => setShowEstimateModal(true)}
-                    >
-                      {mylanguage === "EN" ? "Estimate Cost" : "ወጪ ይቅዱ"}
-                    </Button>
-                  )}
-
+                {selectedRequest.status === "forwarded" && !isCostCalculated && (
+                  <Button
+                    style={{
+                      color: "#ffffff",
+                      backgroundColor: "#181E4B",
+                      width: "150px",
+                    }}
+                    onClick={() => setShowEstimateModal(true)}
+                  >
+                    {mylanguage === "EN" ? "Estimate Cost" : "ወጪ ይቅዱ"}
+                  </Button>
+                )}
                 {selectedRequest.status === "forwarded" && isCostCalculated && (
                   <Stack direction="row" spacing={2}>
                     <Button
-                      style={{ color: "#ffffff", backgroundColor: "#1976d2" }}
+                      style={{ color: "#ffffff", backgroundColor: "#181E4B" }}
                       onClick={async () => {
                         setOtpAction("forward");
                         setOtpModalOpen(true);
@@ -650,7 +629,6 @@ const TMhighcostrequests = () => {
                     </Button>
                   </Stack>
                 )}
-
                 {selectedRequest.status === "approved" && (
                   <Button
                     style={{
@@ -667,12 +645,18 @@ const TMhighcostrequests = () => {
                     {mylanguage === "EN" ? "Assign Vehicle" : "ተሽከርካሪ ይመድቡ"}
                   </Button>
                 )}
+                <Button
+                  variant="outlined"
+                  style={{ color: "#181E4B", borderColor: "#181E4B" }}
+                  onClick={handleCloseDetail}
+                >
+                  {mylanguage === "EN" ? "Close" : "ዝጋ"}
+                </Button>
               </div>
             </div>
           </div>
         </div>
       )}
-
       {showEstimateModal && (
         <div className="modal fade show d-block">
           <div className="modal-dialog">
@@ -739,7 +723,7 @@ const TMhighcostrequests = () => {
               <div className="modal-footer">
                 <Stack direction="row" spacing={2}>
                   <Button
-                    style={{ color: "#ffffff", backgroundColor: "#1976d2" }}
+                    style={{ color: "#ffffff", backgroundColor: "#181E4B" }}
                     onClick={estimateCost}
                   >
                     {mylanguage === "EN" ? "Calculate" : "አስላክ"}
@@ -757,190 +741,26 @@ const TMhighcostrequests = () => {
           </div>
         </div>
       )}
-
-      {showRejectionModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {mylanguage === "EN" ? "Reject Request" : "ጥያቄ አትቀበሉ"}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowRejectionModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label htmlFor="rejectionReason" className="form-label">
-                    {mylanguage === "EN"
-                      ? "Rejection Reason"
-                      : "የመቀበል መክሰስ ምክንያት"}
-                  </label>
-                  <textarea
-                    id="rejectionReason"
-                    className="form-control"
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    placeholder={
-                      mylanguage === "EN"
-                        ? "Provide a reason for rejection"
-                        : "የመቀበል መክሰስ ምክንያት ያስገቡ"
-                    }
-                    required
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant="contained"
-                    style={{ color: "#ffffff", backgroundColor: "#d32f2f" }}
-                    onClick={() => handleApproveReject("reject")}
-                  >
-                    {mylanguage === "EN" ? "Submit Rejection" : "መክሰስ ያስገቡ"}
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    style={{ color: "#1976d2", borderColor: "#1976d2" }}
-                    onClick={() => setShowRejectionModal(false)}
-                  >
-                    {mylanguage === "EN" ? "Cancel" : "ይቅር"}
-                  </Button>
-                </Stack>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showConfirmation && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {mylanguage === "EN" ? "Confirm Rejection" : "መክሰስ ያረጋግጡ"}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowConfirmation(false)}
-                >
-                  <IoMdClose size={30} />
-                </button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  {mylanguage === "EN"
-                    ? "Are you sure you want to reject this request?"
-                    : "ይህን ጥያቄ ለመክሰስ እርግጠኛ ነዎት?"}
-                </p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowConfirmation(false)}
-                >
-                  {mylanguage === "EN" ? "Cancel" : "ይቅር"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleConfirmAction}
-                >
-                  {mylanguage === "EN" ? "Confirm Rejection" : "መክሰስ ያረጋግጡ"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showApproveConfirmation && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {mylanguage === "EN" ? "Confirm Approval" : "ማጽደቅ ያረጋግጡ"}
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowApproveConfirmation(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <p>
-                  {mylanguage === "EN"
-                    ? "Are you sure you want to forward this request to the transport manager?"
-                    : "ይህን ጥያቄ ወደ ትራንስፖርት አስተዳዳሪ ለመላክ እርግጠኛ ነዎት?"}
-                </p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowApproveConfirmation(false)}
-                >
-                  {mylanguage === "EN" ? "Cancel" : "ይቅር"}
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleConfirmApprove}
-                >
-                  {mylanguage === "EN" ? "Confirm Approval" : "ማጽደቅ ያረጋግጡ"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* OTP Modal */}
       {otpModalOpen && (
         <div
-          className="modal d-block"
+          className="modal fade show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP and confirm{" "}
-                  {otpAction === "approve"
-                    ? "approval"
+                  Enter OTP to {otpAction === "approve"
+                    ? "assign vehicle"
                     : otpAction === "forward"
-                    ? "forward"
-                    : "rejection"}
+                    ? "forward request"
+                    : "reject request"}
                 </h5>
                 <button
                   type="button"
                   className="btn-close"
-                  onClick={() => {
-                    setOtpModalOpen(false);
-                    setOtpValue("");
-                    setOtpSent(false);
-                    setOtpAction(null);
-                    setRejectionReason("");
-                  }}
+                  onClick={handleCloseDetail}
                   disabled={otpLoading}
                 >
                   <IoClose />
@@ -970,7 +790,6 @@ const TMhighcostrequests = () => {
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
-                        // Move to next input if not last
                         if (val && idx < 5) {
                           const next = document.getElementById(
                             `otp-input-${idx + 1}`
@@ -1017,27 +836,23 @@ const TMhighcostrequests = () => {
                 </Button>
                 <Button
                   variant="contained"
-                  style={{ backgroundColor: "#1976d2", color: "#fff" }}
+                  style={{ backgroundColor: "#181E4B", color: "#fff" }}
                   disabled={otpLoading || otpValue.length !== 6}
                   onClick={() => handleOtpAction(otpValue, otpAction)}
                 >
-                  Confirm{" "}
-                  {otpAction === "approve"
-                    ? "Approval"
+                  {otpLoading
+                    ? "Processing..."
+                    : otpAction === "approve"
+                    ? "Assign Vehicle"
                     : otpAction === "forward"
                     ? "Forward"
-                    : "Rejection"}
+                    : "Reject"}
                 </Button>
                 <Button
                   variant="outlined"
-                  onClick={() => {
-                    setOtpModalOpen(false);
-                    setOtpValue("");
-                    setOtpSent(false);
-                    setOtpAction(null);
-                    setRejectionReason("");
-                  }}
+                  onClick={handleCloseDetail}
                   disabled={otpLoading}
+                  style={{ borderColor: "#181E4B", color: "#181E4B" }}
                 >
                   Cancel
                 </Button>
@@ -1046,7 +861,33 @@ const TMhighcostrequests = () => {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };
+
 export default TMhighcostrequests;
