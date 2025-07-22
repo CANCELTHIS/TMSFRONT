@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { toast, ToastContainer } from "react-toastify"; // For toast messages
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg"; // Import the logo image
+import Logo from "../assets/Logo.jpg";
 import { IoMdClose } from "react-icons/io";
-import axios from "axios";
 import { IoClose } from "react-icons/io5";
+import { FaSync, FaSearch, FaBus } from "react-icons/fa";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
@@ -13,20 +13,22 @@ import ServerErrorPage from "./ServerErrorPage";
 
 const TransportRequest = () => {
   const [requests, setRequests] = useState([]);
-  const [users, setUsers] = useState([]); // State for employees
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null); // Selected request for modal
-  const [rejectionReason, setRejectionReason] = useState(""); // State for rejection reason
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [selectedDriver, setSelectedDriver] = useState(null); // State for selected driver
-  const [selectedVehicle, setSelectedVehicle] = useState(null); // State for selected vehicle
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Number of items per page
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const itemsPerPage = 5;
+  const [errorType, setErrorType] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "start_day", direction: "desc" });
 
   const accessToken = localStorage.getItem("authToken");
 
@@ -40,7 +42,6 @@ const TransportRequest = () => {
       setErrorType("unauthorized");
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.REQUEST_LIST, {
@@ -49,16 +50,11 @@ const TransportRequest = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch transport requests");
       }
-
       const data = await response.json();
       setRequests(data.results || []);
     } catch (error) {
@@ -73,7 +69,6 @@ const TransportRequest = () => {
       setErrorType("unauthorized");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.USER_LIST, {
         headers: {
@@ -81,18 +76,13 @@ const TransportRequest = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch users");
       }
-
       const data = await response.json();
-      setUsers(data.results || []); // Set users data
+      setUsers(data.results || []);
     } catch (error) {
       console.error("Fetch Users Error:", error);
     }
@@ -100,68 +90,39 @@ const TransportRequest = () => {
 
   const fetchDrivers = async () => {
     try {
-      const response = await axios.get(ENDPOINTS.AVAILABLE_DRIVERS, {
+      const response = await fetch(ENDPOINTS.AVAILABLE_DRIVERS, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      console.log("Drivers data:", response.data);
-      setDrivers(response.data || []); // Set fetched drivers to state
+      const data = await response.json();
+      setDrivers(data || []);
     } catch (error) {
-      console.error(
-        "Error fetching drivers:",
-        error.response?.data || error.message
-      );
-      setDrivers([]); // Reset drivers on error
+      setDrivers([]);
     }
   };
 
   const fetchVehicles = async () => {
-    if (drivers.length === 0) {
-      console.log("Drivers are not loaded yet.");
-      return;
-    }
-
     try {
-      const response = await axios.get(ENDPOINTS.AVAILABLE_VEHICLES, {
+      const response = await fetch(ENDPOINTS.AVAILABLE_VEHICLES, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      const vehiclesData = response.data.results || [];
-      console.log("Vehicles data::::::::::::::::::::::::::::::", vehiclesData);
-      const availableVehicles = vehiclesData.filter(
+      const data = await response.json();
+      const availableVehicles = (data.results || []).filter(
         (vehicle) => vehicle.status !== "in_use"
       );
-      setVehicles(availableVehicles); // Update state with available vehicles and driver names
+      setVehicles(availableVehicles);
     } catch (error) {
-      console.error(
-        "Error fetching vehicles:",
-        error.response?.data || error.message
-      );
-      setVehicles([]); // Reset vehicles on error
+      setVehicles([]);
     }
   };
 
-  // Use Effect to fetch data when approval modal is opened
   useEffect(() => {
-    if (showApproveConfirmation) {
-      fetchDrivers();
-    }
+    if (showApproveConfirmation) fetchDrivers();
   }, [showApproveConfirmation]);
 
-  // Once drivers are fetched, fetch vehicles
   useEffect(() => {
-    if (drivers.length > 0) {
-      fetchVehicles();
-    }
-  }, [drivers]); // Trigger vehicles fetch only after drivers are available
+    if (drivers.length > 0) fetchVehicles();
+  }, [drivers]);
 
-  // Call fetchDrivers and fetchVehicles when the approval modal is opened
-  useEffect(() => {
-    if (showApproveConfirmation) {
-      fetchDrivers();
-      fetchVehicles();
-    }
-  }, [showApproveConfirmation]);
-
-  // Get employee names from IDs
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
       .map((id) => {
@@ -171,30 +132,22 @@ const TransportRequest = () => {
       .join(", ");
   };
 
-  const handleViewDetail = (request) => {
-    setSelectedRequest(request);
-  };
+  const handleViewDetail = (request) => setSelectedRequest(request);
 
   const handleCloseDetail = () => {
     setSelectedRequest(null);
-    setRejectionReason(""); // Clear rejection reason
-    setShowRejectionModal(false); // Close rejection modal
-    setShowConfirmation(false); // Close rejection confirmation dialog
-    setShowApproveConfirmation(false); // Close approve confirmation dialog
+    setRejectionReason("");
+    setShowRejectionModal(false);
+    setShowConfirmation(false);
+    setShowApproveConfirmation(false);
   };
 
-  const handleApproveClick = () => {
-    setShowApproveConfirmation(true);
-  };
+  const handleApproveClick = () => setShowApproveConfirmation(true);
 
   const handleVehicleChange = (e) => {
     const vehicleId = e.target.value;
-    const vehicle = vehicles.find(
-      (vehicle) => vehicle.id.toString() === vehicleId
-    );
-
+    const vehicle = vehicles.find((vehicle) => vehicle.id.toString() === vehicleId);
     if (vehicle) {
-      // Find the driver that is assigned to this vehicle
       const driver = drivers.find((driver) => driver.id === vehicle.driver);
       setSelectedVehicle(vehicle);
       setSelectedDriver(driver || { full_name: "No Driver Assigned" });
@@ -209,155 +162,127 @@ const TransportRequest = () => {
       toast.error("Please select a driver and vehicle before approving.");
       return;
     }
-
     try {
-      // Optimistically update the UI by removing the request
       setRequests((prevRequests) =>
         prevRequests.filter((req) => req.id !== requestId)
       );
-
-      const response = await axios.post(
+      const response = await fetch(
         ENDPOINTS.TM_APPROVE_REJECT(requestId),
         {
-          action: "approve",
-          vehicle_id: selectedVehicle.id,
-          driver_id: selectedDriver.id,
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "approve",
+            vehicle_id: selectedVehicle.id,
+            driver_id: selectedDriver.id,
+          }),
         }
       );
-
-      if (response.status === 200) {
+      if (response.ok) {
         toast.success("Request approved successfully!");
-        handleCloseDetail(); // Close the modal after approval
+        handleCloseDetail();
       }
-    } catch (error) {
-      console.error("Approve Error:", error);
+    } catch {
       toast.error("Failed to approve request.");
-      fetchRequests(); // Refetch requests to restore the correct state
+      fetchRequests();
     }
   };
 
-  // Add a new handler for forwarding requests
   const handleForwardRequest = async (requestId) => {
     try {
-      // Optimistically update the UI by removing the request
       setRequests((prevRequests) =>
         prevRequests.filter((req) => req.id !== requestId)
       );
-
-      const response = await axios.post(
+      const response = await fetch(
         ENDPOINTS.TM_APPROVE_REJECT(requestId),
         {
-          action: "forward",
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "forward" }),
         }
       );
-
-      if (response.status === 200) {
+      if (response.ok) {
         toast.success("Request forwarded successfully!");
-        handleCloseDetail(); // Close the modal after forwarding
+        handleCloseDetail();
       }
-    } catch (error) {
-      console.error("Forward Error:", error);
+    } catch {
       toast.error("Failed to forward request.");
-      fetchRequests(); // Refetch requests to restore the correct state
+      fetchRequests();
     }
   };
 
-  const handleRejectClick = () => {
-    setShowRejectionModal(true); // Show rejection modal
-  };
+  const handleRejectClick = () => setShowRejectionModal(true);
 
-  const handleConfirmReject = async (requestId) => {
+  const handleConfirmReject = async () => {
     if (!rejectionReason) {
       toast.error("Please provide a reason for rejection.");
       return;
     }
-
     try {
-      const response = await axios.post(
-        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
+      const response = await fetch(
+        `${ENDPOINTS.TM_APPROVE_REJECT}${selectedRequest.id}/action/`,
         {
-          action: "reject",
-          rejection_message: rejectionReason,
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "reject", rejection_message: rejectionReason }),
         }
       );
-
-      if (response.status === 200) {
+      if (response.ok) {
         toast.success("Request rejected successfully!");
-        handleCloseDetail(); // Close the modal after rejection
-        fetchRequests(); // Refresh the list of requests
+        handleCloseDetail();
+        fetchRequests();
       }
-    } catch (error) {
-      console.error("Reject Error:", error);
+    } catch {
       toast.error("Failed to reject request.");
     }
   };
 
-  const handleConfirmAction = () => {
-    handleReject(selectedRequest.id); // Call handleReject
-    setShowConfirmation(false); // Close rejection confirmation dialog
+  // Filtering and sorting
+  const filterRequests = () => {
+    let filtered = requests;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (r) =>
+          (r.destination && r.destination.toLowerCase().includes(term)) ||
+          (r.status && r.status.toLowerCase().includes(term)) ||
+          (r.start_day && r.start_day.toLowerCase().includes(term)) ||
+          (r.return_day && r.return_day.toLowerCase().includes(term)) ||
+          (r.id && r.id.toString().includes(term))
+      );
+    }
+    return filtered;
   };
 
-  const handleReject = async (requestId) => {
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
-    if (!rejectionReason) {
-      toast.error("Please provide a reason for rejection."); // Show error toast
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${ENDPOINTS.TM_APPROVE_REJECT}${requestId}/action/`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "reject",
-            rejection_message: rejectionReason, // Use the provided reason
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error("Failed to reject transport request");
-
-      // Update the status locally after rejection
-      setRequests((prevRequests) =>
-        prevRequests.map((req) =>
-          req.id === requestId ? { ...req, status: "rejected" } : req
-        )
-      );
-
-      setSelectedRequest(null); // Close modal
-      setRejectionReason(""); // Clear rejection reason
-      setShowRejectionModal(false); // Close rejection modal
-      toast.success("Request rejected successfully!"); // Show success toast
-
-      // Decrease the notification count
-      decrementUnreadCount();
-    } catch (error) {
-      console.error("Reject Error:", error);
-      toast.error("Failed to reject request."); // Show error toast
-    }
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
+    setSortConfig({ key, direction });
   };
 
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <FaSearch className="text-muted ms-1" />;
+    return sortConfig.direction === "asc" ? (
+      <span className="text-primary ms-1">&#9650;</span>
+    ) : (
+      <span className="text-primary ms-1">&#9660;</span>
+    );
+  };
+
+  const getSortedRequests = (requests) => {
+    if (!sortConfig.key) return requests;
+    return [...requests].sort((a, b) => {
+      const aValue = a[sortConfig.key] || "";
+      const bValue = b[sortConfig.key] || "";
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const filteredRequests = getSortedRequests(filterRequests());
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPageRequests = requests.slice(startIndex, endIndex);
+  const currentPageRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
 
   if (errorType === "unauthorized") {
     return <UnauthorizedPage />;
@@ -367,168 +292,216 @@ const TransportRequest = () => {
   }
 
   return (
-    <div
-      className="container mt-4"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
-    >
-      <ToastContainer /> {/* Toast container for notifications */}
-      {loading ? (
-        <div className="text-center mt-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading data...</p>
+    <div className="container py-4">
+      <ToastContainer />
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="mb-0 d-flex align-items-center">
+            <FaBus className="me-2 text-primary" />
+            Transport Requests
+          </h1>
         </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table">
-              <tr>
-                <th>#</th>
-                <th>Start Day</th>
-                <th>Start Time</th>
-                <th>Return Day</th>
-                <th>Destination</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.length > 0 ? (
-                currentPageRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>{" "}
-                    {/* Correct numbering */}
-                    <td>{request.start_day}</td>
-                    <td>{request.start_time}</td>
-                    <td>{request.return_day}</td>
-                    <td>{request.destination}</td>
-                    <td>{request.status}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => handleViewDetail(request)}
-                      >
-                        View Detail
-                      </button>
+        <div className="d-flex gap-2">
+          <div className="input-group shadow-sm" style={{ maxWidth: "300px" }}>
+            <span className="input-group-text bg-white border-end-0">
+              <FaSearch className="text-muted" />
+            </span>
+            <input
+              type="text"
+              className="form-control border-start-0"
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button
+            className="btn btn-outline-primary d-flex align-items-center"
+            onClick={fetchRequests}
+            disabled={loading}
+          >
+            <FaSync className={loading ? "me-2 spin" : "me-2"} />
+            Refresh
+          </button>
+        </div>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th onClick={() => handleSort("start_day")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Start Day
+                      {getSortIcon("start_day")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("start_time")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Start Time
+                      {getSortIcon("start_time")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("return_day")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Return Day
+                      {getSortIcon("return_day")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("destination")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Destination
+                      {getSortIcon("destination")}
+                    </div>
+                  </th>
+                  <th onClick={() => handleSort("status")} className="cursor-pointer">
+                    <div className="d-flex align-items-center">
+                      Status
+                      {getSortIcon("status")}
+                    </div>
+                  </th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading data...</span>
+                        </div>
+                        <span className="ms-3">Loading transport requests...</span>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center">
-                    No transport requests found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{request.start_day}</td>
+                      <td>{request.start_time}</td>
+                      <td>{request.return_day}</td>
+                      <td>{request.destination}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "pending"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-primary d-flex align-items-center"
+                          onClick={() => handleViewDetail(request)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaBus className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          {searchTerm
+                            ? "No requests match your search"
+                            : "No transport requests found."}
+                        </p>
+                        <small className="text-muted">
+                          {searchTerm
+                            ? "Try adjusting your search term"
+                            : "Check back later"}
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-0">
+          <div className="text-muted small">
+            Showing <span className="fw-medium">{filteredRequests.length}</span> requests
+            <span> of <span className="fw-medium">{requests.length}</span></span>
+          </div>
+          <div className="d-flex gap-2">
+            {searchTerm && (
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setSearchTerm("")}
+              >
+                Clear Search
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+      {filteredRequests.length > itemsPerPage && (
+        <div className="d-flex justify-content-center mt-4">
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredRequests.length / itemsPerPage)}
+            handlePageChange={setCurrentPage}
+          />
         </div>
       )}
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100px" }}
-      >
-        <CustomPagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(requests.length / itemsPerPage)}
-          handlePageChange={(page) => setCurrentPage(page)}
-        />
-      </div>
+      {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "700px" }}>
             <div className="modal-content">
               <div className="modal-header">
-                <img
-                  src={Logo}
-                  alt="Logo"
-                  style={{
-                    width: "100px",
-                    height: "70px",
-                    marginRight: "10px",
-                  }}
-                />
-                <h5 className="modal-title">Transport Request Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={handleCloseDetail}
-                >
+                <div className="d-flex align-items-center">
+                  <img src={Logo} alt="Logo" style={{ width: "80px", height: "50px", marginRight: "10px" }} />
+                  <h5 className="modal-title">Transport Request Details</h5>
+                </div>
+                <button type="button" className="btn-close" onClick={handleCloseDetail}>
                   <IoClose />
                 </button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Start Day:</strong> {selectedRequest.start_day}
-                </p>
-                <p>
-                  <strong>Start Time:</strong> {selectedRequest.start_time}
-                </p>
-                <p>
-                  <strong>Return Day:</strong> {selectedRequest.return_day}
-                </p>
-                <p>
-                  <strong>Employees:</strong>{" "}
-                  {getEmployeeNames(selectedRequest.employees)}
-                </p>
-                <p>
-                  <strong>Destination:</strong> {selectedRequest.destination}
-                </p>
-                <p>
-                  <strong>Reason:</strong> {selectedRequest.reason}
-                </p>
+                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
+                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
+                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
               </div>
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ backgroundColor: "#28a745", color: "white" }}
-                  onClick={handleApproveClick}
-                >
+                <button type="button" className="btn btn-success" onClick={handleApproveClick}>
                   Approve
                 </button>
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ backgroundColor: "#dc3545", color: "white" }}
-                  onClick={handleRejectClick} // Show rejection modal
-                >
+                <button type="button" className="btn btn-danger" onClick={handleRejectClick}>
                   Reject
-                </button>
-                <button
-                  type="button"
-                  className="btn"
-                  style={{ backgroundColor: "#0b455b", color: "white" }}
-                  onClick={() => handleForwardRequest(selectedRequest.id)} // Updated to use the new handler
-                >
-                  Forward
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+      {/* Rejection Modal */}
       {showRejectionModal && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Reject Request</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={handleCloseDetail} // Use handleCloseDetail to close the modal
-                >
+                <button type="button" className="btn-close" onClick={handleCloseDetail}>
                   <IoMdClose size={30} />
                 </button>
               </div>
@@ -548,11 +521,7 @@ const TransportRequest = () => {
                 </div>
               </div>
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleConfirmReject}
-                >
+                <button type="button" className="btn btn-danger" onClick={handleConfirmReject}>
                   Submit Rejection
                 </button>
               </div>
@@ -560,117 +529,46 @@ const TransportRequest = () => {
           </div>
         </div>
       )}
-      {showConfirmation && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Rejection</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowConfirmation(false)}
-                >
-                  <IoMdClose size={30} />
-                </button>
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to reject this request?</p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowConfirmation(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleConfirmAction}
-                >
-                  Confirm Rejection
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Approve Modal */}
       {showApproveConfirmation && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog">
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "600px" }}>
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Assign Driver and Vehicle</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowApproveConfirmation(false)}
-                ></button>
+                <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}></button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Start Day:</strong> {selectedRequest.start_day}
-                </p>
-                <p>
-                  <strong>Start Time:</strong> {selectedRequest.start_time}
-                </p>
-                <p>
-                  <strong>Return Day:</strong> {selectedRequest.return_day}
-                </p>
-                <p>
-                  <strong>Employees:</strong>{" "}
-                  {getEmployeeNames(selectedRequest.employees)}
-                </p>
-                <p>
-                  <strong>Destination:</strong> {selectedRequest.destination}
-                </p>
-                <p>
-                  <strong>Reason:</strong> {selectedRequest.reason}
-                </p>
+                <p><strong>Start Day:</strong> {selectedRequest.start_day}</p>
+                <p><strong>Start Time:</strong> {selectedRequest.start_time}</p>
+                <p><strong>Return Day:</strong> {selectedRequest.return_day}</p>
+                <p><strong>Employees:</strong> {getEmployeeNames(selectedRequest.employees)}</p>
+                <p><strong>Destination:</strong> {selectedRequest.destination}</p>
+                <p><strong>Reason:</strong> {selectedRequest.reason}</p>
                 <div className="mb-3">
                   <label htmlFor="vehicleSelect" className="form-label">
                     Select Vehicle:
                   </label>
                   <select
                     id="vehicleSelect"
-                    className="form-control"
+                    className="form-select"
                     value={selectedVehicle ? selectedVehicle.id : ""}
                     onChange={handleVehicleChange}
                   >
                     <option value="">Select a vehicle</option>
                     {vehicles.map((vehicle) => (
                       <option key={vehicle.id} value={vehicle.id}>
-                        {`Plate Number-${vehicle.license_plate}, Driver-${
-                          vehicle.driver_name || "No Driver Assigned"
-                        }, Capacity-${vehicle.capacity}`}
+                        {`Plate Number-${vehicle.license_plate}, Driver-${vehicle.driver_name || "No Driver Assigned"}, Capacity-${vehicle.capacity}`}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
               <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowApproveConfirmation(false)}
-                >
+                <button type="button" className="btn btn-secondary" onClick={() => setShowApproveConfirmation(false)}>
                   Cancel
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => handleConfirmApprove(selectedRequest.id)}
-                >
+                <button type="button" className="btn btn-primary" onClick={() => handleConfirmApprove(selectedRequest.id)}>
                   Confirm Approval
                 </button>
               </div>
@@ -678,6 +576,27 @@ const TransportRequest = () => {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg);}
+          to { transform: rotate(360deg);}
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

@@ -99,6 +99,7 @@ const AdminPage = () => {
 
       if (response.ok) {
         const result = await response.json();
+        console.log("data",data); // Debugging log
         setData(result);
       } else {
         if (response.status === 401) {

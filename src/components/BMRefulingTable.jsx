@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaGasPump, FaSearch, FaSync } from "react-icons/fa";
 
 const RefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
@@ -30,12 +31,10 @@ const RefuelingTable = () => {
   // Fetches the list of requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       setErrorType("unauthorized");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
@@ -44,16 +43,11 @@ const RefuelingTable = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch refueling requests");
       }
-
       const data = await response.json();
       setRefuelingRequests(data.results || []);
     } catch (error) {
@@ -71,7 +65,6 @@ const RefuelingTable = () => {
       console.error("No access token found.");
       return;
     }
-
     setDetailLoading(true);
     try {
       const response = await fetch(ENDPOINTS.REFUELING_REQUEST_DETAIL(id), {
@@ -81,9 +74,7 @@ const RefuelingTable = () => {
           "Content-Type": "application/json",
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch refueling request detail");
-      }
+      if (!response.ok) throw new Error("Failed to fetch refueling request detail");
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
@@ -107,11 +98,7 @@ const RefuelingTable = () => {
         },
         body: JSON.stringify({}),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to send OTP");
-      }
-
+      if (!response.ok) throw new Error("Failed to send OTP");
       setOtpSent(true);
       toast.success("OTP sent to your phone");
     } catch (err) {
@@ -130,9 +117,7 @@ const RefuelingTable = () => {
         action: action === "approve" ? "approve" : "reject",
         otp_code: otp,
       };
-      if (action === "reject") {
-        payload.rejection_message = rejectionMessage;
-      }
+      if (action === "reject") payload.rejection_message = rejectionMessage;
       const response = await fetch(
         ENDPOINTS.APPREJ_REFUELING_REQUEST(selectedRequest.id),
         {
@@ -179,71 +164,111 @@ const RefuelingTable = () => {
 
   useEffect(() => {
     fetchRefuelingRequests();
-    // eslint-disable-next-line
   }, []);
 
   // Render error pages if needed
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
-    <div className="container mt-5">
+    <div className="container py-4">
       <ToastContainer />
-      <h2 className="text-center mb-4">Refueling Requests</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaGasPump className="me-2 text-success" />
+          Refueling Requests
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          onClick={fetchRefuelingRequests}
+          disabled={loading}
+        >
+          <FaSync className={`me-2${loading ? " spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
       {loading ? (
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-success" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
           <p>Loading refueling requests...</p>
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered table-striped">
-            <thead className="thead-dark">
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Destination</th>
-                <th>Driver</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {refuelingRequests.map((request, index) => (
-                <tr key={request.id}>
-                  <td>{index + 1}</td>
-                  <td>{new Date(request.created_at).toLocaleDateString()}</td>
-                  <td>{request.destination || "N/A"}</td>
-                  <td>{request.requester_name || "N/A"}</td>
-                  <td>{request.status || "N/A"}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => fetchRequestDetail(request.id)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="card shadow-sm border-0 overflow-hidden">
+          <div className="card-body p-0">
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Destination</th>
+                    <th>Driver</th>
+                    <th>Status</th>
+                    <th className="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {refuelingRequests.length > 0 ? (
+                    refuelingRequests.map((request, index) => (
+                      <tr key={request.id}>
+                        <td>{index + 1}</td>
+                        <td>{new Date(request.created_at).toLocaleDateString()}</td>
+                        <td>{request.destination || "N/A"}</td>
+                        <td>{request.requester_name || "N/A"}</td>
+                        <td>
+                          <span className={`badge ${
+                            request.status === "pending"
+                              ? "bg-warning text-dark"
+                              : request.status === "approved"
+                              ? "bg-success"
+                              : request.status === "rejected"
+                              ? "bg-danger"
+                              : "bg-secondary"
+                          } py-2 px-3`}>
+                            {request.status
+                              ? request.status.charAt(0).toUpperCase() +
+                                request.status.slice(1)
+                              : ""}
+                          </span>
+                        </td>
+                        <td className="text-center">
+                          <button
+                            className="btn btn-sm btn-outline-success d-flex align-items-center"
+                            onClick={() => fetchRequestDetail(request.id)}
+                          >
+                            <FaSearch className="me-1" />
+                            View Detail
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center text-muted py-5">
+                        <div className="py-4">
+                          <FaGasPump className="fs-1 text-muted mb-3" />
+                          <p className="mb-1 fw-medium fs-5">
+                            No refueling requests found.
+                          </p>
+                          <small className="text-muted">
+                            Check back later.
+                          </small>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -261,6 +286,7 @@ const RefuelingTable = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
@@ -268,7 +294,7 @@ const RefuelingTable = () => {
               <div className="modal-body">
                 {detailLoading ? (
                   <div className="text-center">
-                    <div className="spinner-border text-primary" role="status">
+                    <div className="spinner-border text-success" role="status">
                       <span className="visually-hidden">Loading...</span>
                     </div>
                     <p>Loading details...</p>
@@ -279,9 +305,7 @@ const RefuelingTable = () => {
                       <div className="col-md-6">
                         <p>
                           <strong>Request Date:</strong>{" "}
-                          {new Date(
-                            selectedRequest.created_at
-                          ).toLocaleString()}
+                          {new Date(selectedRequest.created_at).toLocaleString()}
                         </p>
                         <p>
                           <strong>Driver:</strong>{" "}
@@ -329,21 +353,23 @@ const RefuelingTable = () => {
               <div className="modal-footer">
                 <button
                   className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
+                  style={{ backgroundColor: "#181E4B", color: "white", minWidth: "120px" }}
                   onClick={() => handleActionWithOtp("approve")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Approve "}
+                  {actionLoading ? "Processing..." : "Approve"}
                 </button>
                 <button
                   className="btn btn-danger"
+                  style={{ minWidth: "120px" }}
                   onClick={() => handleActionWithOtp("reject")}
                   disabled={actionLoading}
                 >
-                  {actionLoading ? "Processing..." : "Reject "}
+                  {actionLoading ? "Processing..." : "Reject"}
                 </button>
                 <button
                   className="btn btn-secondary"
+                  style={{ minWidth: "120px" }}
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
@@ -356,16 +382,12 @@ const RefuelingTable = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"}{" "}
-                  request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
                 </h5>
                 <button
                   type="button"
@@ -378,6 +400,7 @@ const RefuelingTable = () => {
                     setRejectionMessage("");
                   }}
                   disabled={otpLoading}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
@@ -406,11 +429,8 @@ const RefuelingTable = () => {
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
-                        // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(
-                            `otp-input-${idx + 1}`
-                          );
+                          const next = document.getElementById(`otp-input-${idx + 1}`);
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
@@ -421,9 +441,7 @@ const RefuelingTable = () => {
                           !otpValue[idx] &&
                           idx > 0
                         ) {
-                          const prev = document.getElementById(
-                            `otp-input-${idx - 1}`
-                          );
+                          const prev = document.getElementById(`otp-input-${idx - 1}`);
                           if (prev) prev.focus();
                         }
                       }}
@@ -446,7 +464,7 @@ const RefuelingTable = () => {
               <div className="modal-footer">
                 <button
                   className="btn btn-link"
-                  onClick={() => sendOtp()}
+                  onClick={sendOtp}
                   disabled={otpLoading}
                 >
                   Resend OTP
@@ -465,9 +483,7 @@ const RefuelingTable = () => {
                   Cancel
                 </button>
                 <button
-                  className={`btn ${
-                    otpAction === "approve" ? "" : "btn-danger"
-                  }`}
+                  className={`btn ${otpAction === "approve" ? "" : "btn-danger"}`}
                   style={
                     otpAction === "approve"
                       ? { backgroundColor: "#181E4B", color: "white" }
@@ -487,47 +503,27 @@ const RefuelingTable = () => {
           </div>
         </div>
       )}
-
-      {/* Rejection Modal (deprecated if using OTP for reject) */}
-
-      {showRejectModal && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Reject Request</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowRejectModal(false)}
-                >
-                  <IoClose />
-                </button>
-              </div>
-              <div className="modal-body">
-                <textarea
-                  className="form-control"
-                  placeholder="Enter rejection reason"
-                  value={rejectionMessage}
-                  onChange={(e) => setRejectionMessage(e.target.value)}
-                />
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-danger"
-                  onClick={handleRejectAction}
-                  disabled={actionLoading}
-                >
-                  {actionLoading ? "Processing..." : "Reject"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

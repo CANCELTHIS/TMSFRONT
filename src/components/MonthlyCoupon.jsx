@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FaSync, FaSearch, FaUser } from "react-icons/fa";
+import { FaTicketAlt } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -21,15 +23,14 @@ const MonthlyCoupon = () => {
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const [userVehicles, setUserVehicles] = useState([]);
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortConfig, setSortConfig] = useState({ key: "month", direction: "asc" });
 
   // Get current month in YYYY-MM format
   const getCurrentMonth = () => {
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
-      2,
-      "0"
-    )}`;
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   };
   const currentMonth = getCurrentMonth();
 
@@ -148,7 +149,7 @@ const MonthlyCoupon = () => {
 
     // Check if coupon for current month already exists
     const alreadyRequested = refuelLogs.some(
-      (log) => log.month === currentMonth
+      (log) => log.month === currentMonth && log.requester === currentUser?.id
     );
     if (alreadyRequested) {
       toast.error("Coupon request already added for this month.");
@@ -181,7 +182,6 @@ const MonthlyCoupon = () => {
       }
 
       if (!response.ok) {
-        // Try to get backend error message
         let errorMsg = "Failed to submit coupon";
         try {
           const errData = await response.json();
@@ -204,33 +204,101 @@ const MonthlyCoupon = () => {
     }
   };
 
-  // Filter logs for current user
-  const userCoupons = currentUser
-    ? refuelLogs.filter((log) => log.requester === currentUser.id)
-    : [];
+  // Search and filter logic
+  const filterCoupons = () => {
+    if (!searchTerm) return refuelLogs;
+    const term = searchTerm.toLowerCase();
+    return refuelLogs.filter(
+      (log) =>
+        formatDisplayMonth(log.month).toLowerCase().includes(term) ||
+        currentUser?.full_name?.toLowerCase().includes(term) ||
+        (userVehicles && userVehicles.toLowerCase().includes(term))
+    );
+  };
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  // Sorting logic
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc")
+      direction = "desc";
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return <span className="text-muted ms-1"><FaSearch /></span>;
+    return sortConfig.direction === "asc" ? (
+      <span className="text-primary ms-1">&#9650;</span>
+    ) : (
+      <span className="text-primary ms-1">&#9660;</span>
+    );
+  };
+
+  const getSortedCoupons = (coupons) => {
+    if (!sortConfig.key) return coupons;
+    return [...coupons].sort((a, b) => {
+      let aValue = a[sortConfig.key] || "";
+      let bValue = b[sortConfig.key] || "";
+      if (sortConfig.key === "month") {
+        aValue = aValue || "";
+        bValue = bValue || "";
+      }
+      if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const filteredCoupons = getSortedCoupons(
+    filterCoupons().filter((log) => log.requester === currentUser?.id)
+  );
+
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
-    <div className="container mt-5">
+    <div className="container py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <ToastContainer position="top-center" autoClose={3000} />
-      <button
-        className="btn mb-4"
-        style={{
-          width: "200px",
-          backgroundColor: "rgba(31, 41, 55, 0.9)",
-          color: "#fff",
-        }}
-        onClick={() => setShowForm(true)}
-      >
-        Add Refueling Coupon
-      </button>
-
+      <div className="mb-4">
+        <h2 className="mb-0 d-flex align-items-center">
+          <FaTicketAlt className="me-2 text-primary" />
+          Refueling Coupons
+        </h2>
+        <div className="d-flex justify-content-between align-items-center mt-3">
+          <button
+            className="btn"
+            style={{
+              width: "200px",
+              backgroundColor: "rgba(31, 41, 55, 0.9)",
+              color: "#fff",
+            }}
+            onClick={() => setShowForm(true)}
+          >
+            Add Refueling Coupon
+          </button>
+          <div className="d-flex gap-2">
+            <div className="input-group shadow-sm" style={{ maxWidth: "300px" }}>
+              <span className="input-group-text bg-white border-end-0">
+                <FaSearch className="text-muted" />
+              </span>
+              <input
+                type="text"
+                className="form-control border-start-0"
+                placeholder="Search by month, name or vehicle..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <button
+              className="btn btn-outline-primary d-flex align-items-center"
+              onClick={fetchRefuelLogs}
+              disabled={loadingLogs}
+            >
+              <FaSync className={loadingLogs ? "me-2 spin" : "me-2"} />
+              Refresh
+            </button>
+          </div>
+        </div>
+      </div>
       {/* Modal Form */}
       {showForm && (
         <div
@@ -292,51 +360,104 @@ const MonthlyCoupon = () => {
           </div>
         </div>
       )}
-
       {/* Card Display */}
-      <div className="row">
-        <div className="col-12">
-          {loadingLogs ? (
-            <div
-              className="d-flex justify-content-center align-items-center"
-              style={{ minHeight: "200px" }}
-            >
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          ) : !currentUser ? (
-            <div className="text-center text-muted">Loading user info...</div>
-          ) : userCoupons.length === 0 ? (
-            <div className="text-center text-muted">
-              No refueling coupons found.
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-bordered table-striped">
-                <thead>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th
+                    onClick={() => handleSort("month")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      Month{getSortIcon("month")}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort("requester")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      Requester{getSortIcon("requester")}
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort("vehicle")}
+                    className="cursor-pointer"
+                  >
+                    <div className="d-flex align-items-center">
+                      Vehicle{getSortIcon("vehicle")}
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingLogs ? (
                   <tr>
-                    <th>#</th>
-                    <th>Month</th>
-                    <th>Requester</th>
-                    <th>Vehicle</th>
+                    <td colSpan="3" className="text-center py-5">
+                      <div
+                        className="d-flex justify-content-center align-items-center"
+                        style={{ minHeight: "200px" }}
+                      >
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {userCoupons.map((log, idx) => (
+                ) : !currentUser ? (
+                  <tr>
+                    <td colSpan="3" className="text-center text-muted py-5">
+                      Loading user info...
+                    </td>
+                  </tr>
+                ) : filteredCoupons.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" className="text-center py-5">
+                      <div className="py-4">
+                        <FaUser className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">No refueling coupons found.</p>
+                        <small className="text-muted">Check back later or adjust your search.</small>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCoupons.map((log, idx) => (
                     <tr key={log.id}>
-                      <td>{idx + 1}</td>
                       <td>{formatDisplayMonth(log.month)}</td>
                       <td>{currentUser.full_name}</td>
                       <td>{userVehicles}</td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

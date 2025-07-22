@@ -3,11 +3,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Logo from "../assets/Logo.jpg";
-import { IoClose, IoCloseSharp } from "react-icons/io5";
+import { IoClose } from "react-icons/io5";
 import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaCar, FaCarCrash, FaSearch, FaSync } from "react-icons/fa";
 
 const CEOhighcost = () => {
   const [requests, setRequests] = useState([]);
@@ -19,7 +20,7 @@ const CEOhighcost = () => {
   const [otpValue, setOtpValue] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null);
 
   const itemsPerPage = 5;
   const accessToken = localStorage.getItem("authToken");
@@ -34,7 +35,6 @@ const CEOhighcost = () => {
       setErrorType("unauthorized");
       return;
     }
-
     setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.HIGH_COST_LIST, {
@@ -43,16 +43,11 @@ const CEOhighcost = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch high-cost requests");
       }
-
       const data = await response.json();
       setRequests(data.results || []);
     } catch (error) {
@@ -75,16 +70,11 @@ const CEOhighcost = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch high-cost request details");
       }
-
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
@@ -110,9 +100,7 @@ const CEOhighcost = () => {
         },
         body: JSON.stringify({}),
       });
-
       if (!response.ok) throw new Error("Failed to send OTP");
-
       toast.success("OTP sent to your phone");
     } catch (err) {
       toast.error(err.message);
@@ -129,9 +117,7 @@ const CEOhighcost = () => {
         action: action === "forward" ? "forward" : "reject",
         otp_code: otp,
       };
-      if (action === "reject") {
-        payload.rejection_message = rejectionReason;
-      }
+      if (action === "reject") payload.rejection_message = rejectionReason;
       const response = await fetch(
         ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
         {
@@ -185,104 +171,126 @@ const CEOhighcost = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
-    <div
-      className="container mt-4"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
-    >
+    <div className="container py-4">
       <ToastContainer />
-      {loading ? (
-        <div className="text-center mt-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading data...</p>
-        </div>
-      ) : (
-        <div
-          className="table-responsive"
-          style={{ width: "100%", overflowX: "auto" }}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaCar className="me-2 text-success" />
+          Field Trip
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          style={{ minWidth: "160px" }}
+          onClick={fetchRequests}
         >
-          <table className="table table-hover align-middle">
-            <thead className="table">
-              <tr>
-                <th>#</th>
-                <th>Start Day</th>
-                <th>Start Time</th>
-                <th>Return Day</th>
-                <th>Destination</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.length > 0 ? (
-                currentPageRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td>{request.start_day}</td>
-                    <td>{request.start_time}</td>
-                    <td>{request.return_day}</td>
-                    <td>{request.destination}</td>
-                    <td>{request.status}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => handleViewDetail(request)}
-                      >
-                        View Detail
-                      </button>
+          <FaSync className="me-2" />
+          Refresh
+        </button>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Start Day</th>
+                  <th>Start Time</th>
+                  <th>Return Day</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="ms-3">Loading requests...</span>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center">
-                    No transport requests found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{request.start_day}</td>
+                      <td>{request.start_time}</td>
+                      <td>{request.return_day}</td>
+                      <td>{request.destination}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "forwarded"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => handleViewDetail(request)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaCarCrash className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          No transport requests found.
+                        </p>
+                        <small className="text-muted">
+                          Check back later.
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
+      </div>
 
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100px" }}
-      >
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
         <CustomPagination
           currentPage={currentPage}
           totalPages={Math.ceil(requests.length / itemsPerPage)}
-          handlePageChange={(page) => setCurrentPage(page)}
+          handlePageChange={setCurrentPage}
         />
       </div>
 
       {selectedRequest && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <img
                   src={Logo}
                   alt="Logo"
-                  style={{
-                    width: "100px",
-                    height: "70px",
-                    marginRight: "10px",
-                  }}
+                  style={{ width: "80px", height: "50px", marginRight: "10px" }}
                 />
                 <h5 className="modal-title">Request Details</h5>
                 <button
@@ -349,7 +357,7 @@ const CEOhighcost = () => {
                   style={{
                     backgroundColor: "#181E4B",
                     color: "white",
-                    width: "120px",
+                    minWidth: "120px",
                   }}
                   onClick={() => handleActionWithOtp("forward")}
                 >
@@ -357,9 +365,17 @@ const CEOhighcost = () => {
                 </button>
                 <button
                   className="btn btn-danger"
+                  style={{ minWidth: "120px" }}
                   onClick={() => handleActionWithOtp("reject")}
                 >
                   Reject
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  style={{ minWidth: "120px" }}
+                  onClick={() => setSelectedRequest(null)}
+                >
+                  Close
                 </button>
               </div>
             </div>
@@ -369,16 +385,12 @@ const CEOhighcost = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"}{" "}
-                  request
+                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
                 </h5>
                 <button
                   type="button"
@@ -417,7 +429,6 @@ const CEOhighcost = () => {
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
-                        // Move to next input if not last
                         if (val && idx < 5) {
                           const next = document.getElementById(
                             `otp-input-${idx + 1}`
@@ -474,9 +485,7 @@ const CEOhighcost = () => {
                   Cancel
                 </button>
                 <button
-                  className={`btn ${
-                    otpAction === "forward" ? "" : "btn-danger"
-                  }`}
+                  className={`btn ${otpAction === "forward" ? "" : "btn-danger"}`}
                   style={
                     otpAction === "forward"
                       ? { backgroundColor: "#181E4B", color: "white" }
@@ -496,6 +505,31 @@ const CEOhighcost = () => {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

@@ -5,15 +5,24 @@ import { MdOutlineClose } from "react-icons/md";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomPagination from "./CustomPagination";
-import UnauthorizedPage from "./UnauthorizedPage";
-import ServerErrorPage from "./ServerErrorPage";
-import { FaGasPump, FaSearch, FaSync, FaCheck, FaTimes } from "react-icons/fa";
+import { FaSearch, FaSync, FaGasPump } from "react-icons/fa";
+import Button from "@mui/material/Button";
+import Stack from "@mui/material/Stack";
+import Logo from "../assets/Logo.jpg";
+import { useLanguage } from "../context/LanguageContext";
 
 const TMRefuelingTable = () => {
   const [refuelingRequests, setRefuelingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
   const [rejectionMessage, setRejectionMessage] = useState("");
+  const [showFuelCostModal, setShowFuelCostModal] = useState(false);
+  const [fuelType, setFuelType] = useState("Petrol");
+  const [fuelCost, setFuelCost] = useState("");
+  const [distance, setDistance] = useState("");
+  const [fuelPrice, setFuelPrice] = useState("");
+  const [totalCost, setTotalCost] = useState(null);
 
   // OTP-related states
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -22,25 +31,26 @@ const TMRefuelingTable = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
 
-  const totalPages = Math.ceil(refuelingRequests.length / itemsPerPage);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const { mylanguage } = useLanguage();
 
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  useEffect(() => {
+    fetchRefuelingRequests();
+  }, []);
 
-  // Fetch refueling requests
   const fetchRefuelingRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      setErrorType("unauthorized");
+      toast.error("No access token found.");
+      setLoading(false);
       return;
     }
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await fetch(ENDPOINTS.REFUELING_REQUEST_LIST, {
         method: "GET",
         headers: {
@@ -49,28 +59,21 @@ const TMRefuelingTable = () => {
         },
       });
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
         throw new Error("Failed to fetch refueling requests");
       }
       const data = await response.json();
       setRefuelingRequests(data.results || []);
     } catch (error) {
-      setErrorType("server");
-      console.error("Error fetching refueling requests:", error);
+      toast.error("Error fetching refueling requests");
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch request detail
   const fetchRequestDetail = async (requestId) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      setErrorType("unauthorized");
+      toast.error("No access token found.");
       return;
     }
     try {
@@ -85,11 +88,6 @@ const TMRefuelingTable = () => {
         }
       );
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
         throw new Error("Failed to fetch refueling request details");
       }
       const requestData = await response.json();
@@ -104,21 +102,49 @@ const TMRefuelingTable = () => {
         }
       );
       if (!vehicleResponse.ok) {
-        if (vehicleResponse.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
         throw new Error("Failed to fetch vehicle details");
       }
       const vehicleData = await vehicleResponse.json();
       requestData.driver_name = vehicleData.driver_name;
       requestData.fuel_efficiency = parseFloat(vehicleData.fuel_efficiency);
       setSelectedRequest(requestData);
+      setDistance("");
+      setFuelPrice("");
+      setTotalCost(null);
     } catch (error) {
-      setErrorType("server");
-      console.error("Error fetching refueling request details:", error);
       toast.error("Failed to fetch request details.");
+    }
+  };
+
+  const handleFuelCostUpdate = async () => {
+    const accessToken = localStorage.getItem("authToken");
+    if (!accessToken) {
+      toast.error("No access token found.");
+      return;
+    }
+    if (!fuelCost) {
+      toast.error("Please enter the fuel cost.");
+      return;
+    }
+    try {
+      const response = await fetch(ENDPOINTS.UPDATE_FUEL_COST, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fuel_type: fuelType,
+          fuel_cost: parseFloat(fuelCost),
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update fuel cost");
+      }
+      toast.success(`${fuelType} cost updated successfully!`);
+      setShowFuelCostModal(false);
+    } catch (error) {
+      toast.error("Failed to update fuel cost. Please try again.");
     }
   };
 
@@ -129,7 +155,7 @@ const TMRefuelingTable = () => {
   ) => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      toast.error("No access token found.");
       return;
     }
     if (!estimatedDistance || !fuelPrice) {
@@ -153,15 +179,12 @@ const TMRefuelingTable = () => {
         }
       );
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error response from backend:", errorData);
         throw new Error("Failed to calculate total cost");
       }
       const data = await response.json();
       setTotalCost(data.total_cost.toFixed(2));
       toast.success(`Total cost calculated: ${data.total_cost.toFixed(2)} ETB`);
     } catch (error) {
-      console.error("Error calculating total cost:", error);
       toast.error("Failed to calculate total cost. Please try again.");
     }
   };
@@ -222,7 +245,9 @@ const TMRefuelingTable = () => {
       );
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || `Failed to ${action} refueling request`);
+        throw new Error(
+          data.detail || `Failed to ${action} refueling request`
+        );
       }
       let successMessage = "";
       if (action === "forward") successMessage = "Request forwarded!";
@@ -243,7 +268,7 @@ const TMRefuelingTable = () => {
     }
   };
 
-  // Search, filter, and sort logic
+  // Filtering and sorting functions
   const filterRequests = () => {
     let filtered = refuelingRequests;
     if (searchTerm) {
@@ -258,20 +283,22 @@ const TMRefuelingTable = () => {
     }
     return filtered;
   };
+
   const handleSort = (key) => {
     let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc")
-      direction = "desc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") direction = "desc";
     setSortConfig({ key, direction });
   };
+
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return <FaSearch className="text-muted ms-1" />;
     return sortConfig.direction === "asc" ? (
-      <FaCheck className="text-primary ms-1" />
+      <span className="text-primary ms-1">&#9650;</span>
     ) : (
-      <FaTimes className="text-primary ms-1" />
+      <span className="text-primary ms-1">&#9660;</span>
     );
   };
+
   const getSortedRequests = (requests) => {
     if (!sortConfig.key) return requests;
     return [...requests].sort((a, b) => {
@@ -287,17 +314,6 @@ const TMRefuelingTable = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
 
-  useEffect(() => {
-    fetchRefuelingRequests();
-  }, []);
-
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
-
   return (
     <div className="container py-4">
       <ToastContainer />
@@ -305,7 +321,7 @@ const TMRefuelingTable = () => {
         <div>
           <h1 className="mb-0 d-flex align-items-center">
             <FaGasPump className="me-2 text-success" />
-            Refueling Requests
+            {mylanguage === "EN" ? "Refueling Requests" : "የነዳጅ ሙሉ ጥያቄዎች"}
           </h1>
         </div>
         <div className="d-flex gap-2">
@@ -316,7 +332,7 @@ const TMRefuelingTable = () => {
             <input
               type="text"
               className="form-control border-start-0"
-              placeholder="Search requests..."
+              placeholder={mylanguage === "EN" ? "Search requests..." : "ጥያቄዎችን ይፈልጉ..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -327,7 +343,7 @@ const TMRefuelingTable = () => {
             disabled={loading}
           >
             <FaSync className={loading ? "me-2 spin" : "me-2"} />
-            Refresh
+            {mylanguage === "EN" ? "Refresh" : "ዳግም ያድሱ"}
           </button>
         </div>
       </div>
@@ -340,25 +356,31 @@ const TMRefuelingTable = () => {
                   <th>#</th>
                   <th onClick={() => handleSort("created_at")} className="cursor-pointer">
                     <div className="d-flex align-items-center">
-                      Date{getSortIcon("created_at")}
+                      {mylanguage === "EN" ? "Date" : "ቀን"}
+                      {getSortIcon("created_at")}
                     </div>
                   </th>
                   <th onClick={() => handleSort("destination")} className="cursor-pointer">
                     <div className="d-flex align-items-center">
-                      Destination{getSortIcon("destination")}
+                      {mylanguage === "EN" ? "Destination" : "መድረሻ"}
+                      {getSortIcon("destination")}
                     </div>
                   </th>
                   <th onClick={() => handleSort("requester_name")} className="cursor-pointer">
                     <div className="d-flex align-items-center">
-                      Driver{getSortIcon("requester_name")}
+                      {mylanguage === "EN" ? "Driver" : "አወቃቀሪ"}
+                      {getSortIcon("requester_name")}
                     </div>
                   </th>
                   <th onClick={() => handleSort("status")} className="cursor-pointer">
                     <div className="d-flex align-items-center">
-                      Status{getSortIcon("status")}
+                      {mylanguage === "EN" ? "Status" : "ሁኔታ"}
+                      {getSortIcon("status")}
                     </div>
                   </th>
-                  <th className="text-center">Action</th>
+                  <th className="text-center">
+                    {mylanguage === "EN" ? "Action" : "ተግባር"}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -367,9 +389,13 @@ const TMRefuelingTable = () => {
                     <td colSpan={6} className="text-center py-5">
                       <div className="d-flex justify-content-center align-items-center">
                         <div className="spinner-border text-success" role="status">
-                          <span className="visually-hidden">Loading...</span>
+                          <span className="visually-hidden">
+                            {mylanguage === "EN" ? "Loading data..." : "በመጫን ላይ..."}
+                          </span>
                         </div>
-                        <span className="ms-3">Loading refueling requests...</span>
+                        <span className="ms-3">
+                          {mylanguage === "EN" ? "Loading refueling requests..." : "የነዳጅ ሙሉ ጥያቄዎች በመጫን ላይ..."}
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -402,7 +428,7 @@ const TMRefuelingTable = () => {
                           onClick={() => fetchRequestDetail(request.id)}
                         >
                           <FaSearch className="me-1" />
-                          View Detail
+                          {mylanguage === "EN" ? "View Detail" : "ዝርዝር ይመልከቱ"}
                         </button>
                       </td>
                     </tr>
@@ -414,13 +440,21 @@ const TMRefuelingTable = () => {
                         <FaGasPump className="fs-1 text-muted mb-3" />
                         <p className="mb-1 fw-medium fs-5">
                           {searchTerm
-                            ? "No requests match your search"
-                            : "No refueling requests found."}
+                            ? (mylanguage === "EN"
+                              ? "No requests match your search"
+                              : "ምንም ጥያቄ የፍለጋዎን ውጤት አልተመለከተም")
+                            : (mylanguage === "EN"
+                              ? "No refueling requests found."
+                              : "ምንም የነዳጅ ሙሉ ጥያቄዎች አልተገኙም።")}
                         </p>
                         <small className="text-muted">
                           {searchTerm
-                            ? "Try adjusting your search term"
-                            : "Check back later"}
+                            ? (mylanguage === "EN"
+                              ? "Try adjusting your search term"
+                              : "የፍለጋዎን ቃል ይቀይሩ")
+                            : (mylanguage === "EN"
+                              ? "Check back later"
+                              : "ተመልከቱ ቅርብ ጊዜ")}
                         </small>
                       </div>
                     </td>
@@ -447,7 +481,7 @@ const TMRefuelingTable = () => {
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => setSearchTerm("")}
               >
-                Clear Search
+                {mylanguage === "EN" ? "Clear Search" : "ፍለጋ ይዝጉ"}
               </button>
             )}
           </div>
@@ -469,10 +503,17 @@ const TMRefuelingTable = () => {
           className="modal fade show d-block"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
-          <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "700px" }}>
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Refueling Request Details</h5>
+                <div className="d-flex align-items-center">
+                  <img src={Logo} alt="Logo" style={{ width: "80px", height: "50px", marginRight: "10px" }} />
+                  <h5 className="modal-title">
+                    {mylanguage === "EN"
+                      ? "Refueling Request Details"
+                      : "የነዳጅ ሙሉ ጥያቄ ዝርዝር"}
+                  </h5>
+                </div>
                 <button
                   type="button"
                   className="btn-close"
@@ -486,18 +527,17 @@ const TMRefuelingTable = () => {
               </div>
               <div className="modal-body">
                 <p>
-                  <strong>Destination:</strong> {selectedRequest.destination}
+                  <strong>{mylanguage === "EN" ? "Destination:" : "መድረሻ:"}</strong> {selectedRequest.destination}
                 </p>
                 <p>
-                  <strong>Fuel Type:</strong> {selectedRequest.fuel_type}
+                  <strong>{mylanguage === "EN" ? "Fuel Type:" : "የነዳጅ አይነት:"}</strong> {selectedRequest.fuel_type}
                 </p>
                 <p>
-                  <strong>Driver:</strong>{" "}
-                  {selectedRequest.driver_name || "N/A"}
+                  <strong>{mylanguage === "EN" ? "Driver:" : "አወቃቀሪ:"}</strong> {selectedRequest.driver_name || "N/A"}
                 </p>
                 <div className="mb-3">
                   <label htmlFor="distanceInput" className="form-label">
-                    Estimated Distance (in km)
+                    {mylanguage === "EN" ? "Estimated Distance (km)" : "ተገመተው ርቀት (ኪ.ሜ)"}
                   </label>
                   <input
                     type="number"
@@ -505,12 +545,12 @@ const TMRefuelingTable = () => {
                     className="form-control"
                     value={distance}
                     onChange={(e) => setDistance(e.target.value)}
-                    placeholder="Enter estimated distance in kilometers"
+                    placeholder={mylanguage === "EN" ? "Enter estimated distance in kilometers" : "ተገመተው ርቀት ያስገቡ"}
                   />
                 </div>
                 <div className="mb-3">
                   <label htmlFor="fuelPriceInput" className="form-label">
-                    Fuel Price (per liter)
+                    {mylanguage === "EN" ? "Fuel Price (per liter)" : "የነዳጅ ዋጋ (በሊትር)"}
                   </label>
                   <input
                     type="number"
@@ -518,68 +558,82 @@ const TMRefuelingTable = () => {
                     className="form-control"
                     value={fuelPrice}
                     onChange={(e) => setFuelPrice(e.target.value)}
-                    placeholder="Enter fuel price per liter"
+                    placeholder={mylanguage === "EN" ? "Enter fuel price per liter" : "የነዳጅ ዋጋ ያስገቡ"}
                   />
                 </div>
                 {totalCost && (
                   <div className="alert alert-info mt-3">
-                    <strong>Total Cost:</strong> {totalCost} ETB
+                    <strong>{mylanguage === "EN" ? "Total Cost:" : "ጠቅላላ ወጪ:"}</strong> {totalCost} ETB
                   </div>
                 )}
               </div>
               <div className="modal-footer">
                 {!totalCost ? (
-                  <button
-                    style={{
-                      backgroundColor: "#181E4B",
-                      color: "white",
-                      width: "150px",
-                    }}
-                    className="btn"
-                    onClick={() =>
-                      calculateTotalCost(
-                        selectedRequest.id,
-                        distance,
-                        fuelPrice
-                      )
-                    }
-                  >
-                    Calculate Total
-                  </button>
+                  <div className="d-flex justify-content-end gap-2 w-100">
+                    <Button
+                      size="small"
+                      style={{
+                        backgroundColor: "#181E4B",
+                        color: "white",
+                        minWidth: "90px",
+                        width: "90px"
+                      }}
+                      onClick={() =>
+                        calculateTotalCost(
+                          selectedRequest.id,
+                          distance,
+                          fuelPrice
+                        )
+                      }
+                    >
+                      {mylanguage === "EN" ? "Calculate Total" : "ጠቅላላውን ይቅዱ"}
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      style={{ color: "#181E4B", borderColor: "#181E4B", minWidth: "90px", width: "90px" }}
+                      onClick={() => {
+                        setSelectedRequest(null);
+                        setTotalCost(null);
+                      }}
+                    >
+                      {mylanguage === "EN" ? "Close" : "ዝጋ"}
+                    </Button>
+                  </div>
                 ) : (
-                  <>
-                    <button
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      className="btn"
+                  <Stack direction="row" spacing={2} className="w-100 justify-content-center">
+                    <Button
+                      style={{ color: "#ffffff", backgroundColor: "#181E4B", minWidth: "150px", width: "150px" }}
                       onClick={async () => {
                         setOtpAction("forward");
                         setOtpModalOpen(true);
                         await sendOtp();
                       }}
                     >
-                      Forward
-                    </button>
-                    <button
-                      className="btn btn-danger"
+                      {mylanguage === "EN" ? "Forward " : "ወደ ፊት ያስቀምጡ (OTP)"}
+                    </Button>
+                    <Button
+                      style={{ color: "#ffffff", backgroundColor: "#d32f2f", minWidth: "150px", width: "150px" }}
                       onClick={async () => {
                         setOtpAction("reject");
                         setOtpModalOpen(true);
                         await sendOtp();
                       }}
                     >
-                      Reject
-                    </button>
-                  </>
+                      {mylanguage === "EN" ? "Reject " : "አትቀበሉ (OTP)"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      style={{ color: "#181E4B", borderColor: "#181E4B", minWidth: "150px", width: "150px" }}
+                      onClick={() => {
+                        setSelectedRequest(null);
+                        setTotalCost(null);
+                      }}
+                    >
+                      {mylanguage === "EN" ? "Close" : "ዝጋ"}
+                    </Button>
+                  </Stack>
                 )}
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setSelectedRequest(null);
-                    setTotalCost(null);
-                  }}
-                >
-                  Close
-                </button>
               </div>
             </div>
           </div>
@@ -595,8 +649,11 @@ const TMRefuelingTable = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"}{" "}
-                  request
+                  {mylanguage === "EN" ? "Enter OTP to " : "OTP ያስገቡ ለ "} 
+                  {otpAction === "forward"
+                    ? (mylanguage === "EN" ? "forward" : "ወደ ፊት ለመላክ") 
+                    : (mylanguage === "EN" ? "reject" : "መሰረዝ")} 
+                  {mylanguage === "EN" ? " request" : " ጥያቄ"}
                 </h5>
                 <button
                   type="button"
@@ -614,7 +671,7 @@ const TMRefuelingTable = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <p>Enter the OTP code sent to your phone number.</p>
+                <p>{mylanguage === "EN" ? "Enter the OTP code sent to your phone number." : "ወደ ስልካችሁ የተላከውን OTP ኮድ ያስገቡ።"}</p>
                 <div className="d-flex justify-content-center gap-2 mb-3">
                   {[...Array(6)].map((_, idx) => (
                     <input
@@ -637,7 +694,6 @@ const TMRefuelingTable = () => {
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
-                        // Move to next input if not last
                         if (val && idx < 5) {
                           const next = document.getElementById(
                             `otp-input-${idx + 1}`
@@ -669,21 +725,33 @@ const TMRefuelingTable = () => {
                     rows={2}
                     value={rejectionMessage}
                     onChange={(e) => setRejectionMessage(e.target.value)}
-                    placeholder="Reason for rejection"
+                    placeholder={mylanguage === "EN" ? "Reason for rejection" : "ምክንያት"}
                     disabled={otpLoading}
                   />
                 )}
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn btn-link"
+                <Button
+                  variant="text"
                   onClick={() => sendOtp()}
                   disabled={otpLoading}
                 >
-                  Resend OTP
-                </button>
-                <button
-                  className="btn btn-secondary"
+                  {mylanguage === "EN" ? "Resend OTP" : "OTP እንደገና ይላኩ"}
+                </Button>
+                <Button
+                  variant="contained"
+                  style={{ backgroundColor: "#181E4B", color: "#fff" }}
+                  disabled={otpLoading || otpValue.length !== 6}
+                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                >
+                  {otpLoading
+                    ? (mylanguage === "EN" ? "Processing..." : "በማከናወን ላይ...")
+                    : otpAction === "forward"
+                    ? (mylanguage === "EN" ? "Forward" : "ወደ ፊት ያስቀምጡ")
+                    : (mylanguage === "EN" ? "Reject" : "አትቀበሉ")}
+                </Button>
+                <Button
+                  variant="outlined"
                   onClick={() => {
                     setOtpModalOpen(false);
                     setOtpValue("");
@@ -692,22 +760,78 @@ const TMRefuelingTable = () => {
                     setRejectionMessage("");
                   }}
                   disabled={otpLoading}
+                  style={{ borderColor: "#181E4B", color: "#181E4B" }}
                 >
-                  Cancel
-                </button>
+                  {mylanguage === "EN" ? "Cancel" : "ሰርዝ"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Fuel Cost Update Modal */}
+      {showFuelCostModal && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h4 className="modal-title">
+                  {mylanguage === "EN" ? "Update Fuel Costs" : "የነዳጅ ዋጋ ያዘምኑ"}
+                </h4>
                 <button
-                  className={`btn ${
-                    otpAction === "forward" ? "btn-primary" : "btn-danger"
-                  }`}
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={() => handleOtpAction(otpValue, otpAction)}
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowFuelCostModal(false)}
                 >
-                  {otpLoading
-                    ? "Processing..."
-                    : otpAction === "forward"
-                    ? "Forward"
-                    : "Reject"}
+                  <MdOutlineClose />
                 </button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="fuelType" className="form-label">
+                    {mylanguage === "EN" ? "Select Fuel Type" : "የነዳጅ አይነት ይምረጡ"}
+                  </label>
+                  <select
+                    id="fuelType"
+                    className="form-select"
+                    value={fuelType}
+                    onChange={(e) => setFuelType(e.target.value)}
+                  >
+                    <option value="Petrol">{mylanguage === "EN" ? "Petrol" : "ፓትሮል"}</option>
+                    <option value="Diesel">{mylanguage === "EN" ? "Diesel" : "ዲዛል"}</option>
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="fuelCost" className="form-label">
+                    {fuelType} {mylanguage === "EN" ? "Cost (per liter)" : "ዋጋ (በሊትር)"}
+                  </label>
+                  <input
+                    type="number"
+                    id="fuelCost"
+                    className="form-control"
+                    value={fuelCost}
+                    onChange={(e) => setFuelCost(e.target.value)}
+                    placeholder={mylanguage === "EN" ? `Enter ${fuelType.toLowerCase()} cost` : `${fuelType} ዋጋ ያስገቡ`}
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <Button
+                  variant="outlined"
+                  onClick={() => setShowFuelCostModal(false)}
+                >
+                  {mylanguage === "EN" ? "Cancel" : "ሰርዝ"}
+                </Button>
+                <Button
+                  variant="contained"
+                  style={{ backgroundColor: "#181E4B", color: "#fff" }}
+                  onClick={handleFuelCostUpdate}
+                >
+                  {mylanguage === "EN" ? "Update Cost" : "ዋጋ ያዘምኑ"}
+                </Button>
               </div>
             </div>
           </div>

@@ -276,6 +276,7 @@ const HighCostDriverSchedule = () => {
     }
   };
 
+  // Only requests that have NOT been notified will show in the table
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
@@ -315,6 +316,7 @@ const HighCostDriverSchedule = () => {
                 <th>Destination</th>
                 <th>Request Type</th> {/* Add Request Type column */}
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -327,6 +329,7 @@ const HighCostDriverSchedule = () => {
                     <td>{request.start_time}</td>
                     <td>{request.return_day}</td>
                     <td>{request.destination}</td>
+                    <td>{request.requestType || ""}</td>
                     <td>{request.status}</td>
                     <td>
                       <button
@@ -341,7 +344,7 @@ const HighCostDriverSchedule = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center">
+                  <td colSpan="8" className="text-center">
                     No transport requests found.
                   </td>
                 </tr>

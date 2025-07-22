@@ -7,6 +7,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaWrench, FaSync, FaSearch } from "react-icons/fa";
 
 const BUmaintenance = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
@@ -22,23 +23,20 @@ const BUmaintenance = () => {
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpLoading, setOtpLoading] = useState(false);
-  const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
+  const [otpAction, setOtpAction] = useState(null);
   const [otpSent, setOtpSent] = useState(false);
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = maintenanceRequests.slice(startIndex, endIndex);
 
-  // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
-
     if (!accessToken) {
       setErrorType("unauthorized");
       return;
     }
-
     try {
       const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         method: "GET",
@@ -47,27 +45,20 @@ const BUmaintenance = () => {
           "Content-Type": "application/json",
         },
       });
-
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch maintenance requests");
       }
-
       const data = await response.json();
       setMaintenanceRequests(data.results || []);
     } catch (error) {
-      console.error("Error fetching maintenance requests:", error);
       toast.error("Failed to fetch maintenance requests.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Send OTP using backend endpoint
   const sendOtp = async () => {
     setOtpLoading(true);
     try {
@@ -80,11 +71,7 @@ const BUmaintenance = () => {
         },
         body: JSON.stringify({}),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to send OTP");
-      }
-
+      if (!response.ok) throw new Error("Failed to send OTP");
       setOtpSent(true);
       toast.success("OTP sent to your phone");
     } catch (err) {
@@ -94,7 +81,6 @@ const BUmaintenance = () => {
     }
   };
 
-  // Handle OTP verification and action (forward or reject)
   const handleOtpAction = async (otp, action) => {
     setOtpLoading(true);
     try {
@@ -108,7 +94,6 @@ const BUmaintenance = () => {
         }
         payload.rejection_message = rejectionMessage;
       }
-
       const response = await fetch(
         ENDPOINTS.MAINTENANCE_REQUEST_ACTION(selectedRequest.id),
         {
@@ -120,16 +105,13 @@ const BUmaintenance = () => {
           body: JSON.stringify(payload),
         }
       );
-
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.detail || `Failed to ${action} request`);
       }
-
       toast.success(
         action === "approve" ? "Request approved!" : "Request rejected!"
       );
-
       setSelectedRequest(null);
       setOtpModalOpen(false);
       setOtpValue("");
@@ -144,22 +126,13 @@ const BUmaintenance = () => {
     }
   };
 
-  // Handle actions (forward, reject)
   const handleAction = async (id, action) => {
     const accessToken = localStorage.getItem("authToken");
-
-    if (!accessToken) {
-      console.error("No access token found.");
-      return;
-    }
-
+    if (!accessToken) return;
     setActionLoading(true);
     try {
       const body = { action };
-      if (action === "reject") {
-        body.rejection_message = rejectionMessage;
-      }
-
+      if (action === "reject") body.rejection_message = rejectionMessage;
       const response = await fetch(ENDPOINTS.MAINTENANCE_REQUEST_ACTION(id), {
         method: "POST",
         headers: {
@@ -168,21 +141,14 @@ const BUmaintenance = () => {
         },
         body: JSON.stringify(body),
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to ${action} the maintenance request`);
-      }
-
-      fetchMaintenanceRequests(); // Refresh the list after action
+      if (!response.ok) throw new Error(`Failed to ${action} the maintenance request`);
+      fetchMaintenanceRequests();
       setSelectedRequest(null);
       toast.success(
-        `Request ${
-          action === "approve" ? "approved" : "rejected"
-        } successfully!`
-      ); // Success toast
+        `Request ${action === "approve" ? "approved" : "rejected"} successfully!`
+      );
     } catch (error) {
-      console.error(`Error performing ${action} action:`, error);
-      toast.error(`Failed to ${action} the request.`); // Error toast
+      toast.error(`Failed to ${action} the request.`);
     } finally {
       setActionLoading(false);
     }
@@ -200,7 +166,7 @@ const BUmaintenance = () => {
       handleAction(selectedRequest.id, "reject");
       setShowRejectModal(false);
     } else {
-      toast.error("Rejection message cannot be empty."); // Error toast
+      toast.error("Rejection message cannot be empty.");
     }
   };
 
@@ -208,74 +174,118 @@ const BUmaintenance = () => {
     fetchMaintenanceRequests();
   }, []);
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
-    <div className="container mt-5">
+    <div className="container py-4">
       <ToastContainer />
-      <h2 className="text-center mb-4">Maintenance Requests</h2>
-
-      {loading ? (
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading maintenance requests...</p>
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered table-striped">
-            <thead className="thead-dark">
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Requester Name</th>
-                <th>Requester's Car</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.map((request, index) => (
-                <tr key={request.id}>
-                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td>{new Date(request.date).toLocaleDateString()}</td>
-                  <td>{request.requester_name || "N/A"}</td>
-                  <td>{request.requesters_car_name || "N/A"}</td>
-                  <td>{request.status || "N/A"}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaWrench className="me-2 text-success" />
+          Maintenance Requests
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          style={{ minWidth: "160px" }}
+          onClick={fetchMaintenanceRequests}
+        >
+          <FaSync className="me-2" />
+          Refresh
+        </button>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Requester Name</th>
+                  <th>Requester's Car</th>
+                  <th>Status</th>
+                  <th className="text-center">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="ms-3">Loading maintenance requests...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{new Date(request.date).toLocaleDateString()}</td>
+                      <td>{request.requester_name || "N/A"}</td>
+                      <td>{request.requesters_car_name || "N/A"}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "pending"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => setSelectedRequest(request)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaWrench className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          No maintenance requests found.
+                        </p>
+                        <small className="text-muted">
+                          Check back later.
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
+      </div>
 
-      <CustomPagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
-        handlePageChange={(page) => setCurrentPage(page)}
-      />
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
+          handlePageChange={setCurrentPage}
+        />
+      </div>
 
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -284,36 +294,32 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
               </div>
               <div className="modal-body">
                 <p>
-                  <strong>Date:</strong>{" "}
-                  {new Date(selectedRequest.date).toLocaleDateString()}
+                  <strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}
                 </p>
                 <p>
                   <strong>Reason:</strong> {selectedRequest.reason}
                 </p>
                 <p>
-                  <strong>Requester Name:</strong>{" "}
-                  {selectedRequest.requester_name}
+                  <strong>Requester Name:</strong> {selectedRequest.requester_name}
                 </p>
                 <p>
-                  <strong>Requester's Car:</strong>{" "}
-                  {selectedRequest.requesters_car_name}
+                  <strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}
                 </p>
                 <p>
                   <strong>Status:</strong> {selectedRequest.status}
                 </p>
                 <p>
-                  <strong>Current Approver Role:</strong>{" "}
-                  {selectedRequest.current_approver_role}
+                  <strong>Current Approver Role:</strong> {selectedRequest.current_approver_role}
                 </p>
                 <p>
-                  <strong>Maintenance Total Cost:</strong>{" "}
-                  {selectedRequest.maintenance_total_cost} ETB
+                  <strong>Maintenance Total Cost:</strong> {selectedRequest.maintenance_total_cost} ETB
                 </p>
                 <p>
                   <strong>Maintenance Letter:</strong>{" "}
@@ -344,8 +350,9 @@ const BUmaintenance = () => {
                 <button
                   className="btn"
                   style={{
-                    backgroundColor: "rgba(31, 41, 55, 0.9)",
+                    backgroundColor: "#181E4B",
                     color: "white",
+                    minWidth: "120px",
                   }}
                   onClick={async () => {
                     setOtpAction("approve");
@@ -358,6 +365,7 @@ const BUmaintenance = () => {
                 </button>
                 <button
                   className="btn btn-danger"
+                  style={{ minWidth: "120px" }}
                   onClick={async () => {
                     setOtpAction("reject");
                     setOtpModalOpen(true);
@@ -369,6 +377,7 @@ const BUmaintenance = () => {
                 </button>
                 <button
                   className="btn btn-secondary"
+                  style={{ minWidth: "120px" }}
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
@@ -381,16 +390,12 @@ const BUmaintenance = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP and confirm{" "}
-                  {otpAction === "approve" ? "approval" : "rejection"}
+                  Enter OTP and confirm {otpAction === "approve" ? "approval" : "rejection"}
                 </h5>
                 <button
                   type="button"
@@ -403,6 +408,7 @@ const BUmaintenance = () => {
                     setRejectionMessage("");
                   }}
                   disabled={otpLoading}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
@@ -431,11 +437,8 @@ const BUmaintenance = () => {
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
-                        // Move to next input if not last
                         if (val && idx < 5) {
-                          const next = document.getElementById(
-                            `otp-input-${idx + 1}`
-                          );
+                          const next = document.getElementById(`otp-input-${idx + 1}`);
                           if (next) next.focus();
                         }
                         setOtpValue(newOtp.join("").slice(0, 6));
@@ -446,9 +449,7 @@ const BUmaintenance = () => {
                           !otpValue[idx] &&
                           idx > 0
                         ) {
-                          const prev = document.getElementById(
-                            `otp-input-${idx - 1}`
-                          );
+                          const prev = document.getElementById(`otp-input-${idx - 1}`);
                           if (prev) prev.focus();
                         }
                       }}
@@ -471,7 +472,7 @@ const BUmaintenance = () => {
               <div className="modal-footer">
                 <button
                   className="btn btn-link"
-                  onClick={() => sendOtp()}
+                  onClick={sendOtp}
                   disabled={otpLoading}
                 >
                   Resend OTP
@@ -504,10 +505,7 @@ const BUmaintenance = () => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -516,6 +514,7 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowConfirmModal(false)}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
@@ -544,10 +543,7 @@ const BUmaintenance = () => {
 
       {/* Rejection Modal */}
       {showRejectModal && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -556,6 +552,7 @@ const BUmaintenance = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setShowRejectModal(false)}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
@@ -583,6 +580,27 @@ const BUmaintenance = () => {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

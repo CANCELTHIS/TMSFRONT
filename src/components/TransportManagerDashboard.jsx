@@ -43,7 +43,7 @@ const REQUEST_TYPES = [
   },
   {
     key: "high_cost",
-    label: "High Cost Requests",
+    label: "Field Trip Requests",
     color: "#c4430c",
     icon: <Wallet size={30} />,
   },
@@ -180,18 +180,22 @@ const Dashboard = () => {
           },
         });
 
-        const [overviewRes, recentRes, trendsRes, distributionRes] =
-          await Promise.all([
-            api.get(ENDPOINTS.DASHBOARD_OVERVIEW),
-            api.get(ENDPOINTS.DASHBOARD_RECENT_VEHICLES),
-            api.get(ENDPOINTS.DASHBOARD_MONTHLY_TRENDS),
-            api.get(ENDPOINTS.DASHBOARD_TYPE_DISTRIBUTION),
-          ]);
-
+        // Fetch each endpoint separately and log the result
+        const overviewRes = await api.get(ENDPOINTS.DASHBOARD_OVERVIEW);
+        console.log("Dashboard Overview Response:", overviewRes.data);
         setOverviewData(overviewRes.data);
+
+        const recentRes = await api.get(ENDPOINTS.DASHBOARD_RECENT_VEHICLES);
+        console.log("Dashboard Recent Vehicles Response:", recentRes.data);
         setRecentVehicles(recentRes.data.results || []);
+
+        const trendsRes = await api.get(ENDPOINTS.DASHBOARD_MONTHLY_TRENDS);
+        console.log("Dashboard Monthly Trends Response:", trendsRes.data);
         const transformedTrends = transformMonthlyTrends(trendsRes.data);
         setMonthlyTrends(transformedTrends);
+
+        const distributionRes = await api.get(ENDPOINTS.DASHBOARD_TYPE_DISTRIBUTION);
+        console.log("Dashboard Type Distribution Response:", distributionRes.data);
         setTypeDistribution(distributionRes.data);
 
         setLoading(false);

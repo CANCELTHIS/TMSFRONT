@@ -60,6 +60,7 @@ import ServerErrorPage from "./components/ServerErrorPage";
 import { Import } from "lucide-react";
 import UnderMaintanaceVechile from "./components/UnderMaintanaceVechile";
 import CEODashboard from "./components/CEODashboard";
+import BMRefulingTable from "./components/BMRefulingTable";
 const App = () => {
   const [modalType, setModalType] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -581,7 +582,7 @@ const App = () => {
                             <Route path="high_cost" element={<BUHighCost />} />
                             <Route
                               path="refueling"
-                              element={<RefuelingTable />}
+                              element={<BMRefulingTable/>}
                             />
                             <Route path="report" element={<ReportPage />} />
                             <Route
@@ -617,7 +618,7 @@ const App = () => {
                               path="maintenance-request"
                               element={<MaintenanceRequest />}
                             />
-                            <Route path="hight-cost" element={<HightCost />} />
+                            <Route path="hight-cost" element={<TMhighcostrequests />} />
                              <Route
                               path="monthly-coupon"
                               element={<MonthlyCoupon />}
@@ -643,7 +644,10 @@ const App = () => {
                         <Sidebar role="general-service" />
                         <div className="container">
                           <Routes>
-                          
+                          <Route
+                              path="dashboard"
+                              element={<TransportManagerDashboard />}
+                            />
                             <Route path="high_cost" element={<CEOhighcost />} />
 
                             <Route
@@ -669,6 +673,10 @@ const App = () => {
                               element={<VehicleServices />}
                             />
                             <Route path="hight-cost-request" element={<HightCost />} />
+                             <Route
+                              path="maintenance-request"
+                              element={<MaintenanceRequest />}
+                            />
                           </Routes>
                         </div>
                       </div>

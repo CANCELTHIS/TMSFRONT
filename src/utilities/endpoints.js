@@ -1,4 +1,4 @@
-const BASE_URL =  "http://tms.gdop.gov.et/api/"; // Replace with your actual base URL
+const BASE_URL =  "https://tms.gdop.gov.et/api/"; // Replace with your actual base URL
 
 export const ENDPOINTS = {
   // Department endpoints
@@ -94,10 +94,11 @@ export const ENDPOINTS = {
   MY_MAINTENANCE_REQUESTS: `${BASE_URL}maintenance-requests/my/`,
   // List current user's maintenance requests
 
+  
   MAINTAINED_VEHICLES: `${BASE_URL}vehicles/under-maintenance/list/`, // GET method, empty json
 
   // Add this endpoint for maintained vehicles under maintenance-requests
-  MAINTENANCE_REQUESTS_MAINTAINED_VEHICLES: `${BASE_URL}maintenance-requests/maintained-vehicles/`, // GET method, empty json
+  MAINTENANCE_REQUESTS_MAINTAINED_VEHICLES: `${BASE_URL}maintenance-requests/maintained-vehicles/ `, // GET method, empty json
 
   MARK_AS_MAINTENANCE: (vehicle_id) => `${BASE_URL}vehicles/${vehicle_id}/mark-as-maintenance/`,
   MARK_MAINTENANCE_VEHICLE_AVAILABLE: (vehicle_id) => `${BASE_URL}maintenance-requests/${vehicle_id}/mark-available/`, 

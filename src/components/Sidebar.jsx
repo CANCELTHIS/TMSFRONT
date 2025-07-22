@@ -80,13 +80,23 @@ const Sidebar = ({ role }) => {
       ],
     },
     {
-      title: t("Requests", "ጥያቄዎች"),
+      title: t("Operations", "ኦፕሬሽኖች"),
       items: [
         {
           path: "/transport-manager/vehicle-request",
           icon: <MdOutlineRequestPage size={18} />,
           label: t("Vehicle Request", "የተሽከርካሪ ጥያቄ"),
         },
+         {
+          path: "/transport-manager/high_cost",
+          icon: <FaRoute />,
+          label: t("Field Trip Request", "የተሽከርካሪ ጥያቄ"),
+        },
+      ],
+    },
+    {
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
         {
           path: "/transport-manager/maintenance-request",
           icon: <FaTools size={18} />,
@@ -95,7 +105,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/transport-manager/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/transport-manager/hight-cost-request",
@@ -198,7 +208,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/driver/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/driver/monthly-coupon",
@@ -211,13 +221,18 @@ const Sidebar = ({ role }) => {
 
   const departmentManagerMenus = [
     {
-      title: t("Requests", "ጥያቄዎች"),
+      title: t("Operations", "ኦፕሬሽኖች"),
       items: [
         {
           path: "/department-manager/vehicle-request",
           icon: <MdOutlineRequestPage />,
           label: "Vehicle Request",
         },
+      ],
+    },
+    {
+      title: t("Requests", "ጥያቄዎች"),
+      items: [
         {
           path: "/department-manager/refueling-request",
           icon: <FaGasPump />,
@@ -231,7 +246,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/department-manager/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/department-manager/hight-cost-request",
@@ -274,7 +289,7 @@ const Sidebar = ({ role }) => {
       ],
     },
     {
-      title: t("Maintenance", "ጥገና"),
+      title: t("Maintenance & Service", "ጥገና"),
       items: [
         {
           path: "/finance-manager/financemaintenance-table",
@@ -294,7 +309,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/finance-manager/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/finance-manager/maintenance-request",
@@ -357,7 +372,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/ceo/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/ceo/maintenance-request",
@@ -420,7 +435,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/budget-manager/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/budget-manager/maintenance-request",
@@ -453,6 +468,16 @@ const Sidebar = ({ role }) => {
 
   const GeneralSystemExcuterMenus = [
     {
+      title: t("Overview", "አጠቃላይ እይታ"),
+      items: [
+        {
+          path: "/general-service/dashboard",
+          icon: <MdOutlineDashboard size={18} />,
+          label: t("Dashboard", "ዳሽቦርድ"),
+        },
+      ],
+    },
+    {
       title: t("Operations", "ኦፕሬሽኖች"),
       items: [
         {
@@ -483,7 +508,7 @@ const Sidebar = ({ role }) => {
         {
           path: "/general-service/vehicle-services",
           icon: <Settings />,
-          label: "Create Service Request",
+          label: "Monthly Kilometer",
         },
         {
           path: "/general-service/maintenance-request",
@@ -553,7 +578,7 @@ const Sidebar = ({ role }) => {
       <div
         className={`d-flex flex-column px-3 py-4 position-fixed top-0 bottom-0 ${
           isOpen ? "show-sidebar" : "hide-sidebar"
-        }`}
+        } sidebar-scrollbar`}
         style={{
           width: "300px",
           height: "100vh",
@@ -566,14 +591,19 @@ const Sidebar = ({ role }) => {
           backgroundColor: "rgba(219, 219, 219, 0.9)",
           backdropFilter: "blur(10px)",
           overflowY: "auto",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
+          scrollbarWidth: "thin",
+          msOverflowStyle: "auto",
         }}
       >
         <style>
           {`
-            .sidebar-hide-scrollbar::-webkit-scrollbar {
-              display: none;
+            .sidebar-scrollbar::-webkit-scrollbar {
+              width: 8px;
+              background: #e0e0e0;
+            }
+            .sidebar-scrollbar::-webkit-scrollbar-thumb {
+              background: #bdbdbd;
+              border-radius: 4px;
             }
             .sidebar-section-title {
               font-size: 0.75rem;
@@ -596,6 +626,15 @@ const Sidebar = ({ role }) => {
                 style={{ maxWidth: "80px", marginLeft: "90px" }}
               />
             </div>
+            {/* X Button for closing sidebar */}
+            <button
+              className="btn btn-light ms-2"
+              style={{ fontSize: "18px", color: "#222", border: "none", background: "none", boxShadow: "none", padding: "0 4px", position: "absolute", top: "10px", right: "10px" }}
+              onClick={toggleSidebar}
+              aria-label="Close sidebar"
+            >
+              &#10005;
+            </button>
           </div>
 
           <ul className="nav flex-column">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Logo from "../assets/Logo.jpg"; // Import the logo image
 import { ENDPOINTS } from "../utilities/endpoints";
@@ -34,6 +34,8 @@ const HightCost = () => {
   const [currentPage, setCurrentPage] = useState(1); // State for current page
   const itemsPerPage = 5; // Number of items per page
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [employeeFile, setEmployeeFile] = useState(null);
+  const fileInputRef = useRef();
 
   const accessToken = localStorage.getItem("authToken");
 
@@ -168,6 +170,16 @@ const HightCost = () => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    setEmployeeFile(e.target.files[0]);
+    // Disable manual employee selection if a file is chosen
+    setFormData((prev) => ({
+      ...prev,
+      employees: [],
+      employeeName: "",
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -176,50 +188,70 @@ const HightCost = () => {
       return;
     }
 
-    const payload = {
-      start_day: formData.startDay,
-      return_day: formData.returnDay,
-      start_time: `${formData.startTime}:00`, // Ensure time is formatted correctly
-      destination: formData.destination,
-      reason: formData.reason,
-      employees: formData.employees, // Submit all selected employee IDs
-    };
-
     setSubmitting(true);
+
     try {
+      // Always use FormData so you can send both employees and employee_list_file
+      const formDataToSend = new FormData();
+      formDataToSend.append("start_day", formData.startDay);
+      formDataToSend.append("return_day", formData.returnDay);
+      formDataToSend.append("start_time", `${formData.startTime}:00`);
+      formDataToSend.append("destination", formData.destination);
+      formDataToSend.append("reason", formData.reason);
+
+      // Add employees (can be multiple)
+      formData.employees.forEach((id) => {
+        formDataToSend.append("employees", id);
+      });
+
+      // Add file if present
+      if (employeeFile) {
+        formDataToSend.append("employee_list_file", employeeFile);
+      }
+
       const response = await fetch(ENDPOINTS.CREATE_HIGH_COST_REQEST, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          // Do NOT set Content-Type, browser will set it for FormData
         },
-        body: JSON.stringify(payload),
+        body: formDataToSend,
       });
 
-      if (!response.ok) throw new Error("Failed to create transport request");
+      if (!response.ok) {
+        // Try to extract backend error message
+        let errorMsg = "Failed to create transport request";
+        try {
+          const errData = await response.json();
+          errorMsg = errData?.detail || JSON.stringify(errData);
+        } catch {
+          // fallback to status text
+          errorMsg = response.statusText;
+        }
+        throw new Error(errorMsg);
+      }
 
       const responseData = await response.json();
       setRequests((prevRequests) => [responseData, ...prevRequests]);
-
-      toast.success("Request submitted! Department manager notified."); // Success toast
-
-      fetchNotifications(); // Fetch updated notifications to reflect the new request
+      toast.success("Request submitted! Department manager notified.");
+      fetchNotifications();
 
       // Clear the form after submission
       setFormData({
         startDay: "",
         returnDay: "",
         startTime: "",
-        employees: [], // Clear employees field
+        employees: [],
         employeeName: "",
         destination: "",
         reason: "",
       });
-
+      setEmployeeFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       setShowForm(false);
     } catch (error) {
       console.error("Submit Error:", error);
-      toast.error("Failed to submit request."); // Error toast
+      toast.error(error.message || "Failed to submit request.");
     } finally {
       setSubmitting(false);
     }
@@ -380,6 +412,7 @@ const HightCost = () => {
                   <form
                     onSubmit={handleSubmit}
                     style={{ marginBottom: "-40px", marginTop: "-15px" }}
+                    encType="multipart/form-data"
                   >
                     <div className="row">
                       <div className="col-md-6 mb-3">
@@ -439,6 +472,7 @@ const HightCost = () => {
                           value={formData.employeeName}
                           onChange={handleInputChange}
                           className="form-control"
+                          disabled={!!employeeFile}
                         >
                           <option value="">Select an employee</option>
                           {users.map((user) => (
@@ -452,6 +486,7 @@ const HightCost = () => {
                           className="btn mt-2"
                           onClick={handleAddEmployee}
                           style={{ backgroundColor: "#181E4B", color: "#fff" }}
+                          disabled={!!employeeFile}
                         >
                           Add
                         </button>
@@ -462,6 +497,7 @@ const HightCost = () => {
                             setFormData((prev) => ({ ...prev, employees: [] }))
                           }
                           style={{ backgroundColor: "#dc3545", color: "#fff" }}
+                          disabled={!!employeeFile}
                         >
                           Clear
                         </button>
@@ -490,6 +526,23 @@ const HightCost = () => {
                             );
                           })}
                         </div>
+                        <div className="mt-3">
+                          <label className="form-label">
+                            Or upload employee list file:
+                          </label>
+                          <input
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            className="form-control"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                          />
+                        </div>
+                        {employeeFile && (
+                          <div className="mt-2 text-success">
+                            Selected file: {employeeFile.name}
+                          </div>
+                        )}
                       </div>
                       <div className="col-md-6 mb-3">
                         <label className="form-label">Reason:</label>

@@ -3,11 +3,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { IoClose } from "react-icons/io5";
 import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
-import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaCarSide, FaSearch, FaSync } from "react-icons/fa";
 
 const VehicleServices = () => {
   const [showForm, setShowForm] = useState(false);
@@ -21,7 +21,7 @@ const VehicleServices = () => {
   const [vehicles, setVehicles] = useState([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [kilometerLogs, setKilometerLogs] = useState([]);
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null);
 
   // Fetch kilometer logs
   const fetchKilometerLogs = async () => {
@@ -156,17 +156,32 @@ const VehicleServices = () => {
   }
 
   return (
-    <div className="container mt-5">
+    <div className="container py-4">
       <ToastContainer position="top-right" autoClose={3000} />
-      <h2 className="text-center mb-4">Vehicle Kilometer Logs</h2>
-
-      {loading && <div className="alert alert-info">Loading data...</div>}
-      {error && <div className="alert alert-danger">{error}</div>}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 className="mb-0 d-flex align-items-center">
+            <FaCarSide className="me-2 text-success" />
+            Vehicle Kilometer Logs
+          </h1>
+        </div>
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-success d-flex align-items-center"
+            style={{ minWidth: "200px" }}
+            onClick={fetchKilometerLogs}
+            disabled={loading}
+          >
+            <FaSync className={loading ? "me-2 spin" : "me-2"} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
+      </div>
 
       <div className="d-flex mb-4">
         <button
           className="btn"
-          style={{ width: "300px", backgroundColor: "#181E4B", color: "white" }}
+          style={{ minWidth: "250px", backgroundColor: "#181E4B", color: "white" }}
           onClick={() => setShowForm(true)}
           disabled={loading}
         >
@@ -176,10 +191,7 @@ const VehicleServices = () => {
 
       {/* Form Modal */}
       {showForm && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
@@ -256,44 +268,81 @@ const VehicleServices = () => {
         </div>
       )}
 
-      <div className="table-responsive">
-        <table className="table table-bordered table-striped">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Month</th>
-              <th>Kilometers Driven</th>
-              <th>Vehicle</th>
-              <th>Recorded By</th>
-              <th>Created At</th>
-            </tr>
-          </thead>
-          <tbody>
-            {kilometerLogs.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="text-center">
-                  No kilometer logs found.
-                </td>
-              </tr>
-            ) : (
-              kilometerLogs.map((log, idx) => (
-                <tr key={log.id}>
-                  <td>{idx + 1}</td>
-                  <td>{log.month}</td>
-                  <td>{log.kilometers_driven}</td>
-                  <td>{log.vehicle || "Loading..."}</td>
-                  <td>{log.recorded_by || "Loading..."}</td>
-                  <td>
-                    {log.created_at
-                      ? new Date(log.created_at).toLocaleString()
-                      : "Loading..."}
-                  </td>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Month</th>
+                  <th>Kilometers Driven</th>
+                  <th>Vehicle</th>
+                  <th>Recorded By</th>
+                  <th>Created At</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {kilometerLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaCarSide className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          No kilometer logs found.
+                        </p>
+                        <small className="text-muted">
+                          Add a new log or check back later.
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  kilometerLogs.map((log, idx) => (
+                    <tr key={log.id}>
+                      <td>{idx + 1}</td>
+                      <td>{log.month}</td>
+                      <td>{log.kilometers_driven}</td>
+                      <td>{log.vehicle || "Loading..."}</td>
+                      <td>{log.recorded_by || "Loading..."}</td>
+                      <td>
+                        {log.created_at
+                          ? new Date(log.created_at).toLocaleString()
+                          : "Loading..."}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

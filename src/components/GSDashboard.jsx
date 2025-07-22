@@ -137,7 +137,7 @@ const renderCustomizedLabel = ({
   );
 };
 
-const Dashboard = () => {
+const GSDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [pieFilter, setPieFilter] = useState("Annual");
   const [pieMonth, setPieMonth] = useState("Jan");
@@ -546,4 +546,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default GSDashboard;

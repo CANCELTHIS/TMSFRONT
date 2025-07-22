@@ -39,19 +39,7 @@ const HistoryPage = () => {
 
         // Log the API response
         console.log("API Response:", response.data);
-
-        // Check if results exist and is an array
-        if (Array.isArray(response.data.results)) {
-          // Add department info to the history data
-          const uniqueHistory = Array.from(
-            new Map(
-              response.data.results.map((item) => [item.user_email, item])
-            ).values()
-          );
-          setHistory(uniqueHistory);
-        } else {
-          setError("Invalid API response structure");
-        }
+          setHistory(response.data);
 
         setLoading(false);
       } catch (err) {

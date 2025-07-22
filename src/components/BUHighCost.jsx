@@ -8,6 +8,7 @@ import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaCarCrash, FaSync, FaSearch } from "react-icons/fa";
 
 const BUHighCost = () => {
   const [requests, setRequests] = useState([]);
@@ -25,11 +26,10 @@ const BUHighCost = () => {
 
   const itemsPerPage = 5;
   const accessToken = localStorage.getItem("authToken");
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null);
 
   useEffect(() => {
     fetchRequests();
-    // eslint-disable-next-line
   }, []);
 
   const fetchRequests = async () => {
@@ -46,18 +46,14 @@ const BUHighCost = () => {
         },
       });
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch high-cost requests");
       }
       const data = await response.json();
       setRequests(data.results || []);
     } catch (error) {
-      console.error("Fetch Requests Error:", error);
-      toast.error("Failed to fetch high-cost requests.");
+      toast.error("Unable to retrieve high-cost requests.");
     } finally {
       setLoading(false);
     }
@@ -76,18 +72,14 @@ const BUHighCost = () => {
         },
       });
       if (!response.ok) {
-        if (response.status === 401) {
-          setErrorType("unauthorized");
-        } else {
-          setErrorType("server");
-        }
+        if (response.status === 401) setErrorType("unauthorized");
+        else setErrorType("server");
         throw new Error("Failed to fetch high-cost request details");
       }
       const data = await response.json();
       setSelectedRequest(data);
     } catch (error) {
-      console.error("Fetch High-Cost Details Error:", error);
-      toast.error("Failed to fetch high-cost request details.");
+      toast.error("Unable to fetch high-cost request details.");
     }
   };
 
@@ -112,9 +104,9 @@ const BUHighCost = () => {
         body: JSON.stringify({}),
       });
       if (!response.ok) throw new Error("Failed to send OTP");
-      toast.success("OTP sent to your phone");
+      toast.success("OTP has been sent to your phone.");
     } catch (err) {
-      toast.error(err.message);
+      toast.error("Failed to send OTP. " + err.message);
       setOtpModalOpen(false);
     } finally {
       setOtpLoading(false);
@@ -126,7 +118,6 @@ const BUHighCost = () => {
     setOtpLoading(true);
     try {
       if (otpAction === "approve") {
-        // Approve (with OTP)
         const response = await fetch(
           ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
           {
@@ -150,14 +141,13 @@ const BUHighCost = () => {
           )
         );
         setSelectedRequest(null);
-        toast.success("Request forwarded successfully!");
+        toast.success("Request has been approved and forwarded.");
       } else if (otpAction === "reject") {
         if (!rejectionReason) {
           toast.error("Please provide a reason for rejection.");
           setOtpLoading(false);
           return;
         }
-        // Reject (with OTP)
         const response = await fetch(
           ENDPOINTS.APPREJ_HIGHCOST_REQUEST(selectedRequest.id),
           {
@@ -181,14 +171,14 @@ const BUHighCost = () => {
         );
         setSelectedRequest(null);
         setRejectionReason("");
-        toast.success("Request rejected successfully!");
+        toast.success("Request has been rejected.");
       }
       setOtpModalOpen(false);
       setOtpValue("");
       setOtpAction(null);
       setShowRejectionModal(false);
     } catch (error) {
-      toast.error(error.message || "Failed to process request.");
+      toast.error(error.message || "Failed to process the request.");
     } finally {
       setOtpLoading(false);
     }
@@ -198,94 +188,118 @@ const BUHighCost = () => {
   const endIndex = startIndex + itemsPerPage;
   const currentPageRequests = requests.slice(startIndex, endIndex);
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
-    <div
-      className="container mt-4"
-      style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
-    >
+    <div className="container py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <ToastContainer />
-      {loading ? (
-        <div className="text-center mt-4">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading data...</p>
-        </div>
-      ) : (
-        <div
-          className="table-responsive"
-          style={{ width: "100%", overflowX: "auto" }}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaCarCrash className="me-2 text-success" />
+          Field Trip
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          style={{ minWidth: "160px" }}
+          onClick={fetchRequests}
         >
-          <table className="table table-hover align-middle">
-            <thead className="table">
-              <tr>
-                <th>#</th>
-                <th>Start Day</th>
-                <th>Start Time</th>
-                <th>Return Day</th>
-                <th>Destination</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.length > 0 ? (
-                currentPageRequests.map((request, index) => (
-                  <tr key={request.id}>
-                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                    <td>{request.start_day}</td>
-                    <td>{request.start_time}</td>
-                    <td>{request.return_day}</td>
-                    <td>{request.destination}</td>
-                    <td>{request.status}</td>
-                    <td>
-                      <button
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#181E4B", color: "white" }}
-                        onClick={() => handleViewDetail(request)}
-                      >
-                        View Detail
-                      </button>
+          <FaSync className="me-2" />
+          Refresh
+        </button>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Start Day</th>
+                  <th>Start Time</th>
+                  <th>Return Day</th>
+                  <th>Destination</th>
+                  <th>Status</th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="ms-3">Loading requests...</span>
+                      </div>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center">
-                    No transport requests found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>{request.start_day}</td>
+                      <td>{request.start_time}</td>
+                      <td>{request.return_day}</td>
+                      <td>{request.destination}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "forwarded"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => handleViewDetail(request)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaCarCrash className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          No transport requests found.
+                        </p>
+                        <small className="text-muted">
+                          Check back later.
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
-
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100px" }}
-      >
+      </div>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
         <CustomPagination
           currentPage={currentPage}
           totalPages={Math.ceil(requests.length / itemsPerPage)}
-          handlePageChange={(page) => setCurrentPage(page)}
+          handlePageChange={setCurrentPage}
         />
       </div>
-
       {/* Modal for Viewing Details */}
       {selectedRequest && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
@@ -293,8 +307,8 @@ const BUHighCost = () => {
                   src={Logo}
                   alt="Logo"
                   style={{
-                    width: "100px",
-                    height: "70px",
+                    width: "80px",
+                    height: "50px",
                     marginRight: "10px",
                   }}
                 />
@@ -373,13 +387,14 @@ const BUHighCost = () => {
               <div className="modal-footer">
                 <button
                   className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
+                  style={{ backgroundColor: "#181E4B", color: "white", minWidth: "120px" }}
                   onClick={() => sendOtp("approve")}
                 >
                   Approve
                 </button>
                 <button
                   className="btn btn-danger"
+                  style={{ minWidth: "120px" }}
                   onClick={() => setShowRejectionModal(true)}
                 >
                   Reject
@@ -387,6 +402,7 @@ const BUHighCost = () => {
                 <button
                   type="button"
                   className="btn btn-secondary"
+                  style={{ minWidth: "120px" }}
                   onClick={() => setSelectedRequest(null)}
                 >
                   Close
@@ -396,20 +412,14 @@ const BUHighCost = () => {
           </div>
         </div>
       )}
-
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div
-          className="modal fade show d-block"
-          tabIndex="-1"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
+        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"}{" "}
-                  request
+                  Enter OTP to {otpAction === "approve" ? "approve" : "reject"} request
                 </h5>
                 <button
                   type="button"
@@ -456,7 +466,6 @@ const BUHighCost = () => {
                         if (!val) return;
                         let newOtp = otpValue.split("");
                         newOtp[idx] = val;
-                        // Move to next input if not last
                         if (val && idx < 5) {
                           const next = document.getElementById(
                             `otp-input-${idx + 1}`
@@ -531,6 +540,27 @@ const BUHighCost = () => {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+      `}</style>
     </div>
   );
 };

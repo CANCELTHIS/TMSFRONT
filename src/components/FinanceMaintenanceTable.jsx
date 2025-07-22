@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { ENDPOINTS } from "../utilities/endpoints";
-import { IoClose } from "react-icons/io5";
+import { IoCloseSharp } from "react-icons/io5";
 import CustomPagination from "./CustomPagination";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Logo from "../assets/Logo.jpg"; // Import your logo here
+import Logo from "../assets/Logo.jpg";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaSync, FaSearch, FaCarCrash } from "react-icons/fa";
 
 const FinanceMaintenanceTable = () => {
   const [maintenanceRequests, setMaintenanceRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
@@ -32,6 +33,7 @@ const FinanceMaintenanceTable = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const response = await fetch(ENDPOINTS.LIST_MAINTENANCE_REQUESTS, {
         method: "GET",
@@ -51,10 +53,8 @@ const FinanceMaintenanceTable = () => {
       }
 
       const data = await response.json();
-      console.log("main",data);
       setMaintenanceRequests(data.results || []);
     } catch (error) {
-      console.error("Error fetching maintenance requests:", error);
       toast.error("Failed to fetch maintenance requests.");
     } finally {
       setLoading(false);
@@ -77,169 +77,247 @@ const FinanceMaintenanceTable = () => {
   }
 
   return (
-    <div className="container mt-5">
+    <div className="container py-4" style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}>
       <ToastContainer />
-      <h2 className="text-center mb-4">Maintenance Requests</h2>
-
-      {loading ? (
-        <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p>Loading maintenance requests...</p>
-        </div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-bordered table-striped">
-            <thead className="thead-dark">
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Requester Name</th>
-                <th>Requester's Car</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentPageRequests.map((request, index) => (
-                <tr key={request.id}>
-                  <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                  <td>{new Date(request.date).toLocaleDateString()}</td>
-                  <td>{request.requester_name || "N/A"}</td>
-                  <td>{request.requesters_car_name || "N/A"}</td>
-                  <td>{request.status || "N/A"}</td>
-                  <td>
-                    <button
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => setSelectedRequest(request)}
-                    >
-                      View Detail
-                    </button>
-                  </td>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaCarCrash className="me-2 text-success" />
+          Maintenance Requests
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          style={{ minWidth: "160px" }}
+          onClick={fetchMaintenanceRequests}
+          disabled={loading}
+        >
+          <FaSync className={`me-2${loading ? " spin" : ""}`} />
+          Refresh
+        </button>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Requester Name</th>
+                  <th>Requester's Car</th>
+                  <th>Status</th>
+                  <th className="text-center">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="ms-3">Loading maintenance requests...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : currentPageRequests.length > 0 ? (
+                  currentPageRequests.map((request, index) => (
+                    <tr key={request.id}>
+                      <td>{startIndex + index + 1}</td>
+                      <td>
+                        {request.date
+                          ? new Date(request.date).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td>{request.requester_name || "N/A"}</td>
+                      <td>{request.requesters_car_name || "N/A"}</td>
+                      <td>
+                        <span className={`badge ${
+                          request.status === "forwarded"
+                            ? "bg-warning text-dark"
+                            : request.status === "approved"
+                            ? "bg-success"
+                            : request.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {request.status
+                            ? request.status.charAt(0).toUpperCase() +
+                              request.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => setSelectedRequest(request)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaCarCrash className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          No maintenance requests found.
+                        </p>
+                        <small className="text-muted">
+                          Check back later.
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      )}
-
-      <CustomPagination
-        currentPage={currentPage}
-        totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
-        handlePageChange={(page) => setCurrentPage(page)}
-      />
-
+      </div>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100px" }}>
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={Math.ceil(maintenanceRequests.length / itemsPerPage)}
+          handlePageChange={(page) => setCurrentPage(page)}
+        />
+      </div>
       {/* Modal for Viewing Details */}
       {selectedRequest && (
         <div
-          className="modal d-block"
+          className="modal fade show d-block"
+          tabIndex="-1"
           style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
         >
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
               {/* Modal Header */}
               <div className="modal-header d-print-none">
-                <div className="d-flex ">
-                  <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{
-                      width: "100px",
-                      height: "70px",
-                      marginRight: "10px",
-                    }}
-                  />
-                  <h5 className="modal-title">Maintenance Request</h5>
-                </div>
+                <img
+                  src={Logo}
+                  alt="Logo"
+                  style={{
+                    width: "80px",
+                    height: "50px",
+                    marginRight: "10px",
+                  }}
+                />
+                <h5 className="modal-title">Maintenance Request Details</h5>
                 <button
                   type="button"
-                  className="btn-close"
+                  className="btn"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    fontSize: "1.5rem",
+                    color: "#000",
+                    marginLeft: "auto",
+                  }}
                   onClick={() => setSelectedRequest(null)}
+                  aria-label="Close"
                 >
-                  <IoClose />
+                  <IoCloseSharp />
                 </button>
               </div>
               {/* Modal Body */}
               <div className="modal-body" ref={printDetailRef}>
                 {/* Print-only Amharic content */}
                 <div className="d-none d-print-block" style={{ textAlign: "center" }}>
-                  <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{ width: "150px", height: "100px", display: "block", margin: "0 auto 0px auto" }}
-                  />
-                  
-                  <div style={{ display: "flex", justifyContent: "start" }}>
-                    <div style={{ textAlign: "left", minWidth: "350px" }}>
+                  <div style={{ width: "100%", textAlign: "center", marginBottom: "0px", marginTop: "-400px" }}>
+                    <img
+                      src={Logo}
+                      alt="Logo"
+                      style={{ width: "150px", height: "100px", display: "block", margin: "0 auto 0px auto" }}
+                    />
+                  </div>
+                  <div style={{ textAlign: "left", marginLeft: "50px", marginRight: "auto", minWidth: "350px", maxWidth: "500px", marginTop: "50px" }}>
+                    <div>
                       <p>
-                        <strong>ቀን:</strong> {new Date(selectedRequest.date).toLocaleDateString()}
+                        <strong>ቀን:</strong> {selectedRequest.date ? new Date(selectedRequest.date).toLocaleDateString() : "N/A"}
                       </p>
                       <p>
-                        <strong>ምክንያት:</strong> {selectedRequest.reason}
+                        <strong>ምክንያት:</strong> {selectedRequest.reason || "N/A"}
                       </p>
                       <p>
-                        <strong>የጠያቂው ስም:</strong> {selectedRequest.requester_name}
+                        <strong>የጠያቂው ስም:</strong> {selectedRequest.requester_name || "N/A"}
                       </p>
                       <p>
-                        <strong>የጠያቂው መኪና:</strong> {selectedRequest.requesters_car_name}
+                        <strong>የጠያቂው መኪና:</strong> {selectedRequest.requesters_car_name || "N/A"}
                       </p>
                       <p>
-                        <strong>የጥገና ጠቅላላ ወጪ:</strong> {selectedRequest.maintenance_total_cost} ብር
+                        <strong>የጥገና ጠቅላላ ወጪ:</strong> {selectedRequest.maintenance_total_cost || "N/A"} ብር
                       </p>
                     </div>
-                  </div>
-                  {/* Signature section for print only */}
-                  <div className="mt-5" style={{ width: "100%", textAlign: "center" }}>
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} style={{ marginBottom: "30px", display: "flex", justifyContent: "center", alignItems: "center", gap: "40px" }}>
-                        <div style={{ fontWeight: "bold", minWidth: "220px", textAlign: "left" ,marginLeft: "50px"}}>
-                          {i === 1 && "የጠያቂው ክፍል ሰራተኛ"}
-                          {i === 2 && "የደገፈው ሃላፊ "}
-                          {i === 3 && "ያፀደቀው ኃላፊ "}
-                        </div>
-                        <div>
-                          <span>ስም:</span>
+                    {/* Signature section for print only */}
+                    <div className="mt-5" style={{ width: "100%" }}>
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          style={{
+                            marginBottom: "30px",
+                            display: "flex",
+                            justifyContent: "flex-start",
+                            alignItems: "center",
+                            gap: "40px",
+                            width: "100%",
+                          }}
+                        >
                           <div
                             style={{
-                              borderBottom: "1px solid #000",
-                              width: "120px",
-                              height: "24px",
-                              margin: "0 0 0 10px",
-                              display: "inline-block",
-                              verticalAlign: "middle",
+                              fontWeight: "bold",
+                              width: "220px", // fixed width for label
+                              textAlign: "left",
                             }}
-                          ></div>
+                          >
+                            {i === 1 && "የጠያቂው ክፍል ሰራተኛ"}
+                            {i === 2 && "የደገፈው ሃላፊ "}
+                            {i === 3 && "ያፀደቀው ኃላፊ "}
+                          </div>
+                          <div>
+                            <span>ስም:</span>
+                            <div
+                              style={{
+                                borderBottom: "1px solid #000",
+                                width: "120px",
+                                height: "24px",
+                                margin: "0 0 0 10px",
+                                display: "inline-block",
+                                verticalAlign: "middle",
+                              }}
+                            ></div>
+                          </div>
+                          <div>
+                            <span>ፊርማ:</span>
+                            <div
+                              style={{
+                                borderBottom: "1px solid #000",
+                                width: "120px",
+                                height: "24px",
+                                margin: "0 0 0 10px",
+                                display: "inline-block",
+                                verticalAlign: "middle",
+                              }}
+                            ></div>
+                          </div>
+                          <div>
+                            <span>ቀን:</span>
+                            <div
+                              style={{
+                                borderBottom: "1px solid #000",
+                                width: "80px",
+                                height: "24px",
+                                margin: "0 0 0 10px",
+                                display: "inline-block",
+                                verticalAlign: "middle",
+                              }}
+                            ></div>
+                          </div>
                         </div>
-                        <div>
-                          <span>ፊርማ:</span>
-                          <div
-                            style={{
-                              borderBottom: "1px solid #000",
-                              width: "120px",
-                              height: "24px",
-                              margin: "0 0 0 10px",
-                              display: "inline-block",
-                              verticalAlign: "middle",
-                            }}
-                          ></div>
-                        </div>
-                        <div>
-                          <span>ቀን:</span>
-                          <div
-                            style={{
-                              borderBottom: "1px solid #000",
-                              width: "80px",
-                              height: "24px",
-                              margin: "0 0 0 10px",
-                              display: "inline-block",
-                              verticalAlign: "middle",
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
                 {/* Normal view detail content (English, not print) */}
@@ -249,45 +327,51 @@ const FinanceMaintenanceTable = () => {
                       <div className="col-md-6">
                         <p>
                           <strong>Date:</strong>{" "}
-                          {new Date(selectedRequest.date).toLocaleDateString()}
+                          {selectedRequest.date
+                            ? new Date(selectedRequest.date).toLocaleDateString()
+                            : "N/A"}
                         </p>
                         <p>
-                          <strong>Reason:</strong> {selectedRequest.reason}
+                          <strong>Reason:</strong> {selectedRequest.reason || "N/A"}
                         </p>
                         <p>
                           <strong>Requester Name:</strong>{" "}
-                          {selectedRequest.requester_name}
+                          {selectedRequest.requester_name || "N/A"}
                         </p>
                         <p>
                           <strong>Requester's Car:</strong>{" "}
-                          {selectedRequest.requesters_car_name}
+                          {selectedRequest.requesters_car_name || "N/A"}
                         </p>
                       </div>
                       <div className="col-md-6">
                         <p>
                           <strong>Maintenance Total Cost:</strong>{" "}
-                          {selectedRequest.maintenance_total_cost} ETB
+                          {selectedRequest.maintenance_total_cost || "N/A"} ETB
                         </p>
-                        <p>
-                          <strong>Maintenance Letter:</strong>{" "}
-                          <a
-                            href={selectedRequest.maintenance_letter}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View Maintenance Letter
-                          </a>
-                        </p>
-                        <p>
-                          <strong>Receipt File:</strong>{" "}
-                          <a
-                            href={selectedRequest.receipt_file}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View Receipt
-                          </a>
-                        </p>
+                        {selectedRequest.maintenance_letter && (
+                          <p>
+                            <strong>Maintenance Letter:</strong>{" "}
+                            <a
+                              href={selectedRequest.maintenance_letter}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              View Maintenance Letter
+                            </a>
+                          </p>
+                        )}
+                        {selectedRequest.receipt_file && (
+                          <p>
+                            <strong>Receipt File:</strong>{" "}
+                            <a
+                              href={selectedRequest.receipt_file}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              View Receipt
+                            </a>
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -308,9 +392,27 @@ const FinanceMaintenanceTable = () => {
           </div>
         </div>
       )}
-
       {/* Print styles for detail modal */}
-      <style>{`
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
         @media print {
           body * {
             visibility: hidden !important;

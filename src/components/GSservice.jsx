@@ -4,6 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { FaSync, FaSearch, FaFilePdf, FaWindowClose, FaForward, FaTimes } from "react-icons/fa";
 
 const ListServiceRequestsTable = () => {
   const [serviceRequests, setServiceRequests] = useState([]);
@@ -86,18 +87,12 @@ const ListServiceRequestsTable = () => {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
-          // No Content-Type for FormData
         },
         body: formData,
       });
       if (!response.ok) throw new Error("Failed to submit files.");
       toast.success("Files submitted successfully!");
       fetchRequests();
-      // Do NOT close the modal or reset fields here
-      // setSelectedRequest(null);
-      // setMaintenanceLetter(null);
-      // setReceiptFile(null);
-      // setMaintenanceTotalCost("");
     } catch (error) {
       toast.error(error.message || "Failed to submit files.");
     } finally {
@@ -212,71 +207,123 @@ const ListServiceRequestsTable = () => {
   }
 
   return (
-    <div className="container mt-4">
+    <div className="container py-4">
       <ToastContainer />
-      <h2>Service Requests</h2>
-      <div className="table-responsive">
-        <table className="table table-bordered table-striped">
-          <thead className="thead-dark">
-            <tr>
-              <th>#</th>
-              <th>Date</th>
-              <th>Vehicle</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {serviceRequests.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="text-center">
-                  No service requests found.
-                </td>
-              </tr>
-            ) : (
-              serviceRequests.map((req, idx) => (
-                <tr key={req.id}>
-                  <td>{idx + 1}</td>
-                  <td>
-                    {req.created_at
-                      ? new Date(req.created_at).toLocaleDateString()
-                      : "N/A"}
-                  </td>
-                  <td>{req.vehicle || "N/A"}</td>
-                  <td>{req.status || "N/A"}</td>
-                  <td>
-                    <button
-                      className=""
-                      style={{ backgroundColor: "#181E4B", color: "white" }}
-                      onClick={() => setSelectedRequest(req)}
-                    >
-                      View Details
-                    </button>
-                  </td>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaFilePdf className="me-2 text-success" />
+          Service Requests
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          style={{ minWidth: "160px" }}
+          onClick={fetchRequests}
+        >
+          <FaSync className="me-2" />
+          Refresh
+        </button>
+      </div>
+      <div className="card shadow-sm border-0 overflow-hidden">
+        <div className="card-body p-0">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Vehicle</th>
+                  <th>Status</th>
+                  <th className="text-center">Action</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-success" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <span className="ms-3">Loading service requests...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : serviceRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center text-muted py-5">
+                      <div className="py-4">
+                        <FaFilePdf className="fs-1 text-muted mb-3" />
+                        <p className="mb-1 fw-medium fs-5">
+                          No service requests found.
+                        </p>
+                        <small className="text-muted">
+                          Create a new request or check back later.
+                        </small>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  serviceRequests.map((req, idx) => (
+                    <tr key={req.id}>
+                      <td>{idx + 1}</td>
+                      <td>
+                        {req.created_at
+                          ? new Date(req.created_at).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td>{req.vehicle || "N/A"}</td>
+                      <td>
+                        <span className={`badge ${
+                          req.status === "pending"
+                            ? "bg-warning text-dark"
+                            : req.status === "approved"
+                            ? "bg-success"
+                            : req.status === "rejected"
+                            ? "bg-danger"
+                            : "bg-secondary"
+                        } py-2 px-3`}>
+                          {req.status
+                            ? req.status.charAt(0).toUpperCase() +
+                              req.status.slice(1)
+                            : ""}
+                        </span>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          className="btn btn-sm btn-outline-success d-flex align-items-center"
+                          onClick={() => setSelectedRequest(req)}
+                        >
+                          <FaSearch className="me-1" />
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       {/* Modal for request details */}
       {selectedRequest && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Maintenance Request Details</h5>
-                <button
-                  type="button"
-                  className="btn-close"
+                <FaWindowClose
+                  style={{
+                    cursor: "pointer",
+                    position: "absolute",
+                    top: "16px",
+                    right: "16px",
+                    fontSize: "1.5rem",
+                    color: "#888"
+                  }}
                   onClick={() => setSelectedRequest(null)}
-                >
-                  ✖
-                </button>
+                />
               </div>
               <div className="modal-body">
                 <p>
@@ -307,7 +354,7 @@ const ListServiceRequestsTable = () => {
                   />
                   {maintenanceLetter && (
                     <button
-                      className="btn"
+                      className="btn btn-outline-secondary mt-2"
                       onClick={() =>
                         window.open(
                           URL.createObjectURL(maintenanceLetter),
@@ -315,7 +362,7 @@ const ListServiceRequestsTable = () => {
                         )
                       }
                     >
-                      View
+                      <FaFilePdf className="me-1" /> View
                     </button>
                   )}
                 </div>
@@ -332,12 +379,12 @@ const ListServiceRequestsTable = () => {
                   />
                   {receiptFile && (
                     <button
-                      className="btn"
+                      className="btn btn-outline-secondary mt-2"
                       onClick={() =>
                         window.open(URL.createObjectURL(receiptFile), "_blank")
                       }
                     >
-                      View
+                      <FaFilePdf className="me-1" /> View
                     </button>
                   )}
                 </div>
@@ -356,34 +403,36 @@ const ListServiceRequestsTable = () => {
                 </div>
                 <div className="mb-3 d-flex gap-2">
                   <button
-                    className="btn btn-success btn-sm px-3"
-                    style={{ minWidth: 90 }}
+                    className="btn btn-success"
+                    style={{ minWidth: 120 }}
                     onClick={() => handleSubmitFiles(selectedRequest.id)}
                     disabled={actionLoading}
                   >
-                    {actionLoading ? "Submitting..." : "Submit"}
+                    {actionLoading ? "Submitting..." : "Submit Files"}
                   </button>
                 </div>
                 <div className="d-flex justify-content-end gap-2 mt-3">
                   <button
-                    className="btn btn-primary btn-sm px-3"
+                    className="btn"
                     style={{
                       backgroundColor: "#181E4B",
                       color: "white",
-                      minWidth: 90,
+                      minWidth: 120,
                       border: "none",
                     }}
                     onClick={() => setShowConfirmModal(true)}
                     disabled={actionLoading}
                   >
+                    <FaForward className="me-1" />
                     {actionLoading ? "Processing..." : "Forward"}
                   </button>
                   <button
-                    className="btn btn-danger btn-sm px-3"
-                    style={{ minWidth: 90 }}
+                    className="btn btn-danger"
+                    style={{ minWidth: 120 }}
                     onClick={() => sendOtp("reject")}
                     disabled={actionLoading}
                   >
+                    <FaTimes className="me-1" />
                     Reject
                   </button>
                 </div>
@@ -395,20 +444,22 @@ const ListServiceRequestsTable = () => {
 
       {/* Confirm Forward Modal */}
       {showConfirmModal && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Confirm Forward</h5>
-                <button
-                  className="btn-close"
+                <FaWindowClose
+                  style={{
+                    cursor: "pointer",
+                    position: "absolute",
+                    top: "16px",
+                    right: "16px",
+                    fontSize: "1.5rem",
+                    color: "#888"
+                  }}
                   onClick={() => setShowConfirmModal(false)}
-                >
-                  ✖
-                </button>
+                />
               </div>
               <div className="modal-body">
                 <p>Are you sure you want to forward this request?</p>
@@ -439,27 +490,29 @@ const ListServiceRequestsTable = () => {
 
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div
-          className="modal d-block"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-        >
+        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"}{" "}
-                  request
+                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close"
+                <FaWindowClose
+                  style={{
+                    cursor: "pointer",
+                    position: "absolute",
+                    top: "16px",
+                    right: "16px",
+                    fontSize: "1.5rem",
+                    color: "#888"
+                  }}
                   onClick={() => {
                     setOtpModalOpen(false);
                     setOtpValue("");
                     setOtpAction(null);
                   }}
                   disabled={otpLoading}
-                ></button>
+                />
               </div>
               <div className="modal-body">
                 <input
@@ -477,6 +530,7 @@ const ListServiceRequestsTable = () => {
               <div className="modal-footer">
                 <button
                   className="btn btn-link"
+                  style={{ color: "#181E4B" }}
                   onClick={() => sendOtp(otpAction)}
                   disabled={otpLoading}
                 >
@@ -510,6 +564,34 @@ const ListServiceRequestsTable = () => {
           </div>
         </div>
       )}
+      <style jsx>{`
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        .card {
+          border-radius: 1rem;
+          overflow: hidden;
+        }
+        .table th {
+          background-color: #f8fafc;
+          border-top: 1px solid #e9ecef;
+          border-bottom: 2px solid #e9ecef;
+        }
+        .modal-header {
+          position: relative;
+        }
+      `}</style>
     </div>
   );
 };
