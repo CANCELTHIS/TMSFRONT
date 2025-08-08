@@ -15,6 +15,7 @@ const VehicleManagement = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState(""); // new state for search
   const [newVehicle, setNewVehicle] = useState({
     license_plate: "",
     model: "",
@@ -43,7 +44,26 @@ const VehicleManagement = () => {
   const token = localStorage.getItem("authToken");
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentPageVehicles = vehicles.slice(startIndex, endIndex);
+
+  // Filtering logic: status and search
+  const filteredVehicles = vehicles
+    .filter(
+      (vehicle) => statusFilter === "all" || vehicle.status === statusFilter
+    )
+    .filter((vehicle) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        (vehicle.license_plate && vehicle.license_plate.toLowerCase().includes(query)) ||
+        (vehicle.model && vehicle.model.toLowerCase().includes(query)) ||
+        (vehicle.driver_name && vehicle.driver_name.toLowerCase().includes(query)) ||
+        (vehicle.rental_company && vehicle.rental_company.toLowerCase().includes(query)) ||
+        (vehicle.status && vehicle.status.toLowerCase().includes(query)) ||
+        (vehicle.source && (vehicle.source === "organization" ? "owned" : vehicle.source).toLowerCase().includes(query))
+      );
+    });
+
+  const currentPageVehicles = filteredVehicles.slice(startIndex, endIndex);
 
   const fetchUsers = async () => {
     try {
@@ -101,7 +121,7 @@ const VehicleManagement = () => {
       const response = await axios.get(ENDPOINTS.VEHICLE_LIST, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const vehiclesData = (response.data.results || []).map((vehicle) => ({
+      const vehiclesData = (response.data || []).map((vehicle) => ({
         ...vehicle,
         total_km: vehicle.total_kilometers,
       }));
@@ -122,7 +142,7 @@ const VehicleManagement = () => {
       const response = await axios.get(ENDPOINTS.DEPARTMENT_LIST, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setDepartments(response.data.results || response.data || []);
+      setDepartments(response.data || response.data || []);
     } catch {
       setDepartments([]);
     }
@@ -156,7 +176,6 @@ const VehicleManagement = () => {
       if (!libre_number) errorFields.push("Libre Number");
       if (!fuel_efficiency) errorFields.push("Fuel Efficiency");
       if (!assignDepartmentId) errorFields.push("Department");
-      if (!driver) errorFields.push("Driver");
     } else if (source === "rented") {
       if (!license_plate) errorFields.push("License Plate");
       if (!model) errorFields.push("Model");
@@ -178,7 +197,7 @@ const VehicleManagement = () => {
       capacity: Number(capacity),
       source: source === "owned" ? "organization" : source,
       rental_company: source === "owned" ? null : rental_company,
-      driver,
+      ...(driver && { driver }),
       status,
       fuel_type: source === "owned" ? fuel_type : undefined,
       fuel_efficiency: source === "owned" ? Number(fuel_efficiency) : undefined,
@@ -254,7 +273,6 @@ const VehicleManagement = () => {
   };
 
   const handleEdit = (vehicle) => {
-    // Determine default source for editing
     let editSource = vehicle.source;
     if (!editSource || (editSource !== "owned" && editSource !== "organization" && editSource !== "rented")) {
       editSource = "owned";
@@ -337,7 +355,8 @@ const VehicleManagement = () => {
         + Add Vehicle
       </button>
       <div className="table-responsive">
-        <div className="d-flex justify-content-end mb-3 p-2">
+        {/* Filter and Search next to each other */}
+        <div className="d-flex justify-content-end align-items-center mb-3 p-2" style={{ gap: "1rem" }}>
           <select
             className="form-select"
             style={{ width: 220, maxWidth: "100%", fontWeight: "500" }}
@@ -350,6 +369,17 @@ const VehicleManagement = () => {
             <option value="service">Service</option>
             <option value="maintenance">Maintenance</option>
           </select>
+          <input
+            type="text"
+            className="form-control"
+            style={{ width: 290, maxWidth: "100%" }}
+            placeholder="Search by License Plate, Model, Driver, etc."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
         </div>
         <table className="table table-hover align-middle">
           <thead>
@@ -366,66 +396,60 @@ const VehicleManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {vehicles
-              .filter(
-                (vehicle) =>
-                  statusFilter === "all" || vehicle.status === statusFilter
-              )
-              .slice(startIndex, endIndex)
-              .map((vehicle, index) => (
-                <tr key={vehicle.id}>
-                  <td>{startIndex + index + 1}</td>
-                  <td>{vehicle.driver_name}</td>
-                  <td>{vehicle.license_plate}</td>
-                  <td>{vehicle.model}</td>
-                  <td>{vehicle.capacity}</td>
-                  <td>
-                    <span
-                      style={{
-                        color:
-                          Number(vehicle.total_km) >= 5000
-                            ? "red"
-                            : Number(vehicle.total_km) >= 2500
-                            ? "#b8860b"
-                            : "green",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {vehicle.total_km || "0"}
-                    </span>
-                  </td>
-                  <td>{vehicle.status}</td>
-                  <td>
-                    {vehicle.source === "organization"
-                     ? "Owned"
-                      : vehicle.source === "rented"
-                      ? "Rented"
-                      : "-"}
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-sm me-2"
-                      onClick={() => handleEdit(vehicle)}
-                      style={{ backgroundColor: "#0b455b", color: "#fff" }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-danger btn-sm me-2"
-                      onClick={() => handleDeactivate(vehicle.id)}
-                    >
-                      Deactivate
-                    </button>
-                    <button
-                      className="btn btn-info btn-sm"
-                      onClick={() => handleViewDetail(vehicle.id)}
-                      style={{ color: "#fff", backgroundColor: "#17a2b8" }}
-                    >
-                      View Detail
-                    </button>
-                  </td>
-                </tr>
-              ))}
+            {currentPageVehicles.map((vehicle, index) => (
+              <tr key={vehicle.id}>
+                <td>{startIndex + index + 1}</td>
+                <td>{vehicle.driver_name}</td>
+                <td>{vehicle.license_plate}</td>
+                <td>{vehicle.model}</td>
+                <td>{vehicle.capacity}</td>
+                <td>
+                  <span
+                    style={{
+                      color:
+                        Number(vehicle.total_km) >= 5000
+                          ? "red"
+                          : Number(vehicle.total_km) >= 2500
+                          ? "#b8860b"
+                          : "green",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {vehicle.total_km || "0"}
+                  </span>
+                </td>
+                <td>{vehicle.status}</td>
+                <td>
+                  {vehicle.source === "organization"
+                   ? "Owned"
+                    : vehicle.source === "rented"
+                    ? "Rented"
+                    : "-"}
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm me-2"
+                    onClick={() => handleEdit(vehicle)}
+                    style={{ backgroundColor: "#0b455b", color: "#fff" }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm me-2"
+                    onClick={() => handleDeactivate(vehicle.id)}
+                  >
+                    Deactivate
+                  </button>
+                  <button
+                    className="btn btn-info btn-sm"
+                    onClick={() => handleViewDetail(vehicle.id)}
+                    style={{ color: "#fff", backgroundColor: "#17a2b8" }}
+                  >
+                    View Detail
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
         <div
@@ -434,7 +458,7 @@ const VehicleManagement = () => {
         >
           <CustomPagination
             currentPage={currentPage}
-            totalPages={Math.ceil(vehicles.length / itemsPerPage)}
+            totalPages={Math.ceil(filteredVehicles.length / itemsPerPage)}
             handlePageChange={(page) => setCurrentPage(page)}
           />
         </div>
@@ -656,7 +680,7 @@ const VehicleManagement = () => {
                         </div>
                         <div className="col-md-6 mb-3">
                           <label className="form-label fw-semibold text-secondary">
-                            Driver
+                            Driver (Optional)
                           </label>
                           <select
                             className="form-control"
@@ -668,7 +692,7 @@ const VehicleManagement = () => {
                               })
                             }
                           >
-                            <option value="">Select Driver</option>
+                            <option value="">Select Driver (Optional)</option>
                             {drivers.map((driver) => (
                               <option key={driver.id} value={driver.id}>
                                 {driver.full_name}
@@ -761,7 +785,7 @@ const VehicleManagement = () => {
                         </div>
                         <div className="col-md-6 mb-3">
                           <label className="form-label fw-semibold text-secondary">
-                            Driver
+                            Driver (Required)
                           </label>
                           <select
                             className="form-control"
@@ -772,6 +796,7 @@ const VehicleManagement = () => {
                                 driver: e.target.value,
                               })
                             }
+                            required
                           >
                             <option value="">Select Driver</option>
                             {drivers.map((driver) => (

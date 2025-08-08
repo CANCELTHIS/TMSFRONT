@@ -27,51 +27,7 @@ import axios from "axios";
 import { ENDPOINTS } from "../utilities/endpoints";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
-
-const REQUEST_TYPES = [
-  {
-    key: "refueling",
-    label: "Refueling Requests",
-    color: "#072a36",
-    icon: <Fuel size={30} />,
-  },
-  {
-    key: "maintenance",
-    label: "Maintenance Requests",
-    color: "#670e80",
-    icon: <Wrench size={30} />,
-  },
-  {
-    key: "high_cost",
-    label: "Field Trip Requests",
-    color: "#c4430c",
-    icon: <Wallet size={30} />,
-  },
-  {
-    key: "service",
-    label: "Service Requests",
-    color: "#4BC0C0",
-    icon: <Blocks size={30} />,
-  },
-];
-
-const monthsList = [
-  "All",
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-const COLORS = REQUEST_TYPES.map((rt) => rt.color);
+import { useLanguage } from "../context/LanguageContext"; // Assuming you have this context
 
 const ProgressBar = ({ value, color = "#007bff" }) => {
   const props = useSpring({
@@ -137,10 +93,58 @@ const renderCustomizedLabel = ({
   );
 };
 
-const GSDashboard = () => {
-  const [selectedMonth, setSelectedMonth] = useState("All");
+const Dashboard = () => {
+  const { mylanguage } = useLanguage();
+  const t = (en, am) => (mylanguage === "EN" ? en : am); // Localization helper
+
+  const REQUEST_TYPES = [
+    {
+      key: "refueling",
+      label: t("Refueling Requests", "የነዳጅ ጥያቄዎች"),
+      color: "#072a36",
+      icon: <Fuel size={30} />,
+    },
+    {
+      key: "maintenance",
+      label: t("Maintenance Requests", "የጥገና ጥያቄዎች"),
+      color: "#670e80",
+      icon: <Wrench size={30} />,
+    },
+    {
+      key: "high_cost",
+      label: t("Field Trip Requests", "የመስክ ጉዞ ጥያቄዎች"),
+      color: "#c4430c",
+      icon: <Wallet size={30} />,
+    },
+    {
+      key: "service",
+      label: t("Service Requests", "የአገልግሎት ጥያቄዎች"),
+      color: "#4BC0C0",
+      icon: <Blocks size={30} />,
+    },
+  ];
+
+  const monthsList = [
+    t("All", "ሁሉም"),
+    t("Jan", "ጥር"),
+    t("Feb", "የካቲት"),
+    t("Mar", "መጋቢት"),
+    t("Apr", "ሚያዝያ"),
+    t("May", "ግንቦት"),
+    t("Jun", "ሰኔ"),
+    t("Jul", "ሐምሌ"),
+    t("Aug", "ነሐሴ"),
+    t("Sep", "መስከረም"),
+    t("Oct", "ጥቅምት"),
+    t("Nov", "ህዳር"),
+    t("Dec", "ታህሳስ"),
+  ];
+
+  const COLORS = REQUEST_TYPES.map((rt) => rt.color);
+
+  const [selectedMonth, setSelectedMonth] = useState(monthsList[0]); // Initialize with translated 'All'
   const [pieFilter, setPieFilter] = useState("Annual");
-  const [pieMonth, setPieMonth] = useState("Jan");
+  const [pieMonth, setPieMonth] = useState(monthsList[1]); // Initialize with translated 'Jan'
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
@@ -194,7 +198,9 @@ const GSDashboard = () => {
         const transformedTrends = transformMonthlyTrends(trendsRes.data);
         setMonthlyTrends(transformedTrends);
 
-        const distributionRes = await api.get(ENDPOINTS.DASHBOARD_TYPE_DISTRIBUTION);
+        const distributionRes = await api.get(
+          ENDPOINTS.DASHBOARD_TYPE_DISTRIBUTION
+        );
         console.log("Dashboard Type Distribution Response:", distributionRes.data);
         setTypeDistribution(distributionRes.data);
 
@@ -206,7 +212,7 @@ const GSDashboard = () => {
           if (err.response.status === 401) {
             setErrorType("unauthorized");
           } else if (err.response.status === 403) {
-            setError("You do not have permission to view this data.");
+            setError(t("You do not have permission to view this data.", "ይህን ዳታ ለማየት ፍቃድ የለዎትም።"));
           } else {
             setErrorType("server");
           }
@@ -242,7 +248,7 @@ const GSDashboard = () => {
 
     // Initialize empty data structure
     const result = months.map((month) => ({
-      month,
+      month: t(month, getAmharicMonth(month)), // Translate month names
       refueling: 0,
       maintenance: 0,
       high_cost: 0,
@@ -256,7 +262,7 @@ const GSDashboard = () => {
         const monthIndex = date.getMonth();
         const monthName = months[monthIndex];
 
-        const foundMonth = result.find((m) => m.month === monthName);
+        const foundMonth = result.find((m) => m.month === t(monthName, getAmharicMonth(monthName)));
         if (foundMonth) {
           foundMonth[type] = item.count;
         }
@@ -264,6 +270,25 @@ const GSDashboard = () => {
     });
 
     return result;
+  };
+
+  // Helper to get Amharic month name
+  const getAmharicMonth = (englishMonth) => {
+    switch (englishMonth) {
+      case "Jan": return "ጥር";
+      case "Feb": return "የካቲት";
+      case "Mar": return "መጋቢት";
+      case "Apr": return "ሚያዝያ";
+      case "May": return "ግንቦት";
+      case "Jun": return "ሰኔ";
+      case "Jul": return "ሐምሌ";
+      case "Aug": return "ነሐሴ";
+      case "Sep": return "መስከረም";
+      case "Oct": return "ጥቅምት";
+      case "Nov": return "ህዳር";
+      case "Dec": return "ታህሳስ";
+      default: return englishMonth;
+    }
   };
 
   // Get pie chart data based on filter
@@ -286,7 +311,7 @@ const GSDashboard = () => {
 
   // Filter bar data based on month selection
   const filteredBarData =
-    selectedMonth === "All"
+    selectedMonth === t("All", "ሁሉም")
       ? monthlyTrends
       : monthlyTrends.filter((item) => item.month === selectedMonth);
 
@@ -294,9 +319,9 @@ const GSDashboard = () => {
     return (
       <div className="container mt-5 text-center">
         <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">{t("Loading...", "በመጫን ላይ...")}</span>
         </div>
-        <p>Loading dashboard data...</p>
+        <p>{t("Loading dashboard data...", "የዳሽቦርድ መረጃ እየተጫነ ነው።")}</p>
       </div>
     );
   }
@@ -310,7 +335,7 @@ const GSDashboard = () => {
 
   return (
     <div className="container mt-5">
-      <h2 className="text-center mb-4">Dashboard Overview</h2>
+      <h2 className="text-center mb-4">{t("Dashboard Overview", "የዳሽቦርድ አጠቃላይ እይታ")}</h2>
 
       {/* Vehicle Status Summary Cards */}
       <div className="row text-center mb-4">
@@ -320,7 +345,7 @@ const GSDashboard = () => {
               <span style={{ fontSize: 30 }}>
                 <Car size={30} />
               </span>
-              <h5 className="card-title mt-2">Active Vehicles</h5>
+              <h5 className="card-title mt-2">{t("Active Vehicles", "ንቁ ተሽከርካሪዎች")}</h5>
               <h3 style={{ fontWeight: "bold", color: "#36A2EB" }}>
                 {overviewData.active_vehicles}
               </h3>
@@ -333,7 +358,7 @@ const GSDashboard = () => {
               <span style={{ fontSize: 30 }}>
                 <Wrench size={30} />
               </span>
-              <h5 className="card-title mt-2">Under Maintenance</h5>
+              <h5 className="card-title mt-2">{t("Under Maintenance", "በጥገና ላይ ያሉ")}</h5>
               <h3 style={{ fontWeight: "bold", color: "#FF6384" }}>
                 {overviewData.under_maintenance}
               </h3>
@@ -346,7 +371,7 @@ const GSDashboard = () => {
               <span style={{ fontSize: 30 }}>
                 <Blocks size={30} />
               </span>
-              <h5 className="card-title mt-2">Under Service</h5>
+              <h5 className="card-title mt-2">{t("Under Service", "በአገልግሎት ላይ ያሉ")}</h5>
               <h3 style={{ fontWeight: "bold", color: "#4BC0C0" }}>
                 {overviewData.under_service}
               </h3>
@@ -359,7 +384,7 @@ const GSDashboard = () => {
               <span style={{ fontSize: 30 }}>
                 <Bus size={30} />
               </span>
-              <h5 className="card-title mt-2">Total Rental Vehicles</h5>
+              <h5 className="card-title mt-2">{t("Total Rental Vehicles", "ጠቅላላ የኪራይ ተሽከርካሪዎች")}</h5>
               <h3 style={{ fontWeight: "bold", color: "#FFCE56" }}>
                 {overviewData.total_rental_vehicles}
               </h3>
@@ -391,7 +416,7 @@ const GSDashboard = () => {
           <div className="card shadow-sm border-0">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <h5 className="card-title mb-0">Monthly Request Trends</h5>
+                <h5 className="card-title mb-0">{t("Monthly Request Trends", "ወርሃዊ የጥያቄ አዝማሚያዎች")}</h5>
                 {/* Month filter dropdown */}
                 <select
                   className="form-select form-select-sm"
@@ -429,7 +454,7 @@ const GSDashboard = () => {
           <div className="card shadow-sm border-0">
             <div className="card-body">
               <div className="d-flex justify-content-between align-items-center mb-2">
-                <h5 className="card-title mb-0">Request Type Distribution</h5>
+                <h5 className="card-title mb-0">{t("Request Type Distribution", "የጥያቄ አይነት ስርጭት")}</h5>
                 <div className="d-flex align-items-center gap-2">
                   <select
                     className="form-select form-select-sm me-2"
@@ -437,8 +462,8 @@ const GSDashboard = () => {
                     value={pieFilter}
                     onChange={(e) => setPieFilter(e.target.value)}
                   >
-                    <option value="Annual">Annual</option>
-                    <option value="Monthly">Monthly</option>
+                    <option value="Annual">{t("Annual", "ዓመታዊ")}</option>
+                    <option value="Monthly">{t("Monthly", "ወርሃዊ")}</option>
                   </select>
                   {pieFilter === "Monthly" && (
                     <select
@@ -485,16 +510,16 @@ const GSDashboard = () => {
       <div className="card shadow-sm border-0 mt-4">
         <div className="card-body">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <h5 className="card-title mb-0">Recent Vehicles</h5>
+            <h5 className="card-title mb-0">{t("Recent Vehicles", "የቅርብ ጊዜ ተሽከርካሪዎች")}</h5>
           </div>
           <div className="table-responsive">
             <table className="table table-striped">
               <thead>
                 <tr>
-                  <th>Vehicle</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Date</th>
+                  <th>{t("Vehicle", "ተሽከርካሪ")}</th>
+                  <th>{t("Type", "አይነት")}</th>
+                  <th>{t("Status", "ሁኔታ")}</th>
+                  <th>{t("Date", "ቀን")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -531,7 +556,10 @@ const GSDashboard = () => {
                             : "bg-info"
                         }`}
                       >
-                        {vehicle.status}
+                        {t(vehicle.status, 
+                           vehicle.status === "Completed" ? "ተጠናቋል" :
+                           vehicle.status === "Pending" ? "በሂደት ላይ" : "መረጃ"
+                        )}
                       </span>
                     </td>
                     <td>{vehicle.date}</td>
@@ -546,4 +574,4 @@ const GSDashboard = () => {
   );
 };
 
-export default GSDashboard;
+export default Dashboard;

@@ -1,11 +1,10 @@
 "use client";
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MdAttachEmail, MdMenu, MdSchedule } from "react-icons/md";
-import { IoClose } from "react-icons/io5";
 import Logo from "../assets/Logo.jpg";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { FaUsersCog } from "react-icons/fa";
 import "../index.css";
 import {
   MdOutlineDashboard,
@@ -42,27 +41,32 @@ const Sidebar = ({ role }) => {
         {
           path: "/admin/admin",
           icon: <MdOutlineDashboard size={18} />,
-          label: "Dashboard",
+          label: t("Dashboard", "ዳሽቦርድ"),
         },
         {
           path: "/admin/admin-department",
           icon: <IoBusiness size={18} />,
-          label: "Departments",
+          label: t("Departments", "ቅርንጫፎች"),
         },
         {
           path: "/admin/account-page",
           icon: <FaUserCog size={18} />,
-          label: "Accounts",
+          label: t("Accounts", "መለያዎች"),
         },
+        {
+  path: "/admin/actor-access",
+  icon: <FaUsersCog size={18} />, // Correct icon: FaUsersCog for "ActorAccess"
+  label: "ActorAccess",
+},
       ],
     },
     {
-      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      title: t("Records", "መዝገቦች"),
       items: [
         {
           path: "/admin/history",
           icon: <MdOutlineHistory size={18} />,
-          label: "History",
+          label: t("History", "ታሪክ"),
         },
       ],
     },
@@ -87,16 +91,21 @@ const Sidebar = ({ role }) => {
           icon: <MdOutlineRequestPage size={18} />,
           label: t("Vehicle Request", "የተሽከርካሪ ጥያቄ"),
         },
-         {
+        {
           path: "/transport-manager/high_cost",
           icon: <FaRoute />,
-          label: t("Field Trip Request", "የተሽከርካሪ ጥያቄ"),
+          label: t("Field Trip", "የመስክ ጉዞ"),
         },
       ],
     },
     {
       title: t("Requests", "ጥያቄዎች"),
       items: [
+        {
+          path: "/transport-manager/refueling-request",
+          icon: <FaGasPump />,
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
+        },
         {
           path: "/transport-manager/maintenance-request",
           icon: <FaTools size={18} />,
@@ -105,12 +114,12 @@ const Sidebar = ({ role }) => {
         {
           path: "/transport-manager/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/transport-manager/hight-cost-request",
           icon: <FaRoute />,
-          label: "Field Trip Request",
+          label: t("Field Trip Request", "የመስክ ጉዞ ጥያቄ"),
         },
       ],
     },
@@ -125,7 +134,12 @@ const Sidebar = ({ role }) => {
         {
           path: "/transport-manager/under-maintanace-vechile",
           icon: <FaTools size={18} />,
-          label: t("Under Maintenance", "በጥገና ላይ ያሉ መኪናዎች"),
+          label: t("Under Maintenance", "በጥገና ላይ ያሉ"),
+        },
+        {
+          path: "/transport-manager/available-vehicles",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Available Vehicles", "የሚገኙ ተሽከርካሪዎች"),
         },
       ],
     },
@@ -150,12 +164,12 @@ const Sidebar = ({ role }) => {
         {
           path: "/transport-manager/refueling",
           icon: <FaGasPump size={18} />,
-          label: t("Refueling", "እንደገና ማሙላት"),
+          label: t("Refueling", "ነዳጅ መሙላት"),
         },
         {
           path: "/transport-manager/monthly-coupons",
           icon: <MdAttachEmail size={18} />,
-          label: "Transport Coupons",
+          label: t("Transport Coupons", "የትራንስፖርት ኩፖኖች"),
         },
       ],
     },
@@ -178,17 +192,17 @@ const Sidebar = ({ role }) => {
 
   const driverMenus = [
     {
-      title: t("Schedules", "ስክድዩሎች"),
+      title: t("Schedules", "መርሃግብሮች"),
       items: [
         {
           path: "/driver/driver-schedule",
           icon: <MdSchedule />,
-          label: "Driver Schedules",
+          label: t("Driver Schedules", "የአሽከርካሪ መርሃግብሮች"),
         },
         {
           path: "/driver/high-cost-schedule",
           icon: <FaGaugeHigh />,
-          label: "High Cost Schedule",
+          label: t("High Cost Schedule", "ከፍተኛ ወጪ መርሃግብር"),
         },
       ],
     },
@@ -198,22 +212,22 @@ const Sidebar = ({ role }) => {
         {
           path: "/driver/maintenance-request",
           icon: <FaTools />,
-          label: "Create Maintenance Request",
+          label: t("Create Maintenance Request", "የጥገና ጥያቄ ፍጠር"),
         },
         {
           path: "/driver/refueling-request",
           icon: <FaGasPump />,
-          label: "Refueling Request",
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
         },
         {
           path: "/driver/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/driver/monthly-coupon",
           icon: <LetterTextIcon />,
-          label: "Request Coupon",
+          label: t("Request Coupon", "ኩፖን ይጠይቁ"),
         },
       ],
     },
@@ -226,7 +240,17 @@ const Sidebar = ({ role }) => {
         {
           path: "/department-manager/vehicle-request",
           icon: <MdOutlineRequestPage />,
-          label: "Vehicle Request",
+          label: t("Vehicle Request", "የተሽከርካሪ ጥያቄ"),
+        },
+      ],
+    },
+    {
+      title: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+      items: [
+        {
+          path: "/department-manager/available-vehicles",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Available Vehicles", "የሚገኙ ተሽከርካሪዎች"),
         },
       ],
     },
@@ -236,37 +260,37 @@ const Sidebar = ({ role }) => {
         {
           path: "/department-manager/refueling-request",
           icon: <FaGasPump />,
-          label: "Refueling",
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
         },
         {
           path: "/department-manager/maintenance-request",
           icon: <FaTools />,
-          label: "Maintenance Request",
+          label: t("Maintenance Request", "የጥገና ጥያቄ"),
         },
         {
           path: "/department-manager/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/department-manager/hight-cost-request",
           icon: <FaRoute />,
-          label: "Field Trip Request",
+          label: t("Field Trip Request", "የመስክ ጉዞ ጥያቄ"),
         },
         {
           path: "/department-manager/monthly-coupon",
           icon: <LetterTextIcon />,
-          label: "Request Coupon",
+          label: t("Request Coupon", "ኩፖን ይጠይቁ"),
         },
       ],
     },
     {
-      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      title: t("Records", "መዝገቦች"),
       items: [
         {
           path: "/department-manager/history",
           icon: <MdOutlineHistory />,
-          label: "History",
+          label: t("History", "ታሪክ"),
         },
       ],
     },
@@ -279,27 +303,37 @@ const Sidebar = ({ role }) => {
         {
           path: "/finance-manager/hight-cost",
           icon: <FaGaugeHigh />,
-          label: "Field Trip",
+          label: t("Field Trip", "የመስክ ጉዞ"),
         },
         {
           path: "/finance-manager/refueling",
           icon: <FaGasPump />,
-          label: "Refueling",
+          label: t("Refueling", "ነዳጅ መሙላት"),
         },
       ],
     },
     {
-      title: t("Maintenance & Service", "ጥገና"),
+      title: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+      items: [
+        {
+          path: "/finance-manager/available-vehicles",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Available Vehicles", "የሚገኙ ተሽከርካሪዎች"),
+        },
+      ],
+    },
+    {
+      title: t("Maintenance & Service", "ጥገና እና አገልግሎት"),
       items: [
         {
           path: "/finance-manager/financemaintenance-table",
           icon: <FaTools />,
-          label: "Maintenance Request",
+          label: t("Maintenance Request", "የጥገና ጥያቄ"),
         },
         {
           path: "/finance-manager/service",
           icon: <Wrench />,
-          label: "Vehicle Service",
+          label: t("Vehicle Service", "የተሽከርካሪ አገልግሎት"),
         },
       ],
     },
@@ -307,24 +341,39 @@ const Sidebar = ({ role }) => {
       title: t("Requests", "ጥያቄዎች"),
       items: [
         {
+          path: "/finance-manager/refueling-request",
+          icon: <FaGasPump />,
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
+        },
+        {
           path: "/finance-manager/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/finance-manager/maintenance-request",
           icon: <FaTools />,
-          label: "Create Maintenance Request",
+          label: t("Create Maintenance Request", "የጥገና ጥያቄ ፍጠር"),
         },
         {
           path: "/finance-manager/monthly-coupon",
           icon: <LetterTextIcon />,
-          label: "Request Coupon",
+          label: t("Request Coupon", "ኩፖን ይጠይቁ"),
         },
         {
           path: "/finance-manager/hight-cost-request",
           icon: <FaRoute />,
-          label: "Field Trip request",
+          label: t("Field Trip request", "የመስክ ጉዞ ጥያቄ"),
+        },
+      ],
+    },
+    {
+      title: t("Records", "መዝገቦች"),
+      items: [
+        {
+          path: "/finance-manager/history",
+          icon: <MdOutlineHistory />,
+          label: t("History", "ታሪክ"),
         },
       ],
     },
@@ -347,22 +396,32 @@ const Sidebar = ({ role }) => {
         {
           path: "/ceo/high_cost",
           icon: <FaRoute />,
-          label: "Field Trip",
+          label: t("Field Trip", "የመስክ ጉዞ"),
         },
         {
           path: "/ceo/refueling",
           icon: <FaGasPump />,
-          label: "Refueling",
+          label: t("Refueling", "ነዳጅ መሙላት"),
         },
         {
           path: "/ceo/ceomaintenance-table",
           icon: <FaTools />,
-          label: "Maintenance",
+          label: t("Maintenance", "ጥገና"),
         },
         {
           path: "/ceo/service",
           icon: <Wrench />,
-          label: "Vehicle Service",
+          label: t("Vehicle Service", "የተሽከርካሪ አገልግሎት"),
+        },
+      ],
+    },
+    {
+      title: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+      items: [
+        {
+          path: "/ceo/available-vehicles",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Available Vehicles", "የሚገኙ ተሽከርካሪዎች"),
         },
       ],
     },
@@ -370,34 +429,39 @@ const Sidebar = ({ role }) => {
       title: t("Requests", "ጥያቄዎች"),
       items: [
         {
+          path: "/ceo/refueling-request",
+          icon: <FaGasPump />,
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
+        },
+        {
           path: "/ceo/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/ceo/maintenance-request",
           icon: <FaTools />,
-          label: "Create Maintenance Request",
+          label: t("Create Maintenance Request", "የጥገና ጥያቄ ፍጠር"),
         },
         {
           path: "/ceo/monthly-coupon",
           icon: <LetterTextIcon />,
-          label: "Request Coupon",
+          label: t("Request Coupon", "ኩፖን ይጠይቁ"),
         },
         {
           path: "/ceo/hight-cost-request",
           icon: <FaRoute />,
-          label: "Field Trip Request",
+          label: t("Field Trip Request", "የመስክ ጉዞ ጥያቄ"),
         },
       ],
     },
     {
-      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      title: t("Records", "መዝገቦች"),
       items: [
         {
           path: "/ceo/history",
           icon: <MdOutlineHistory />,
-          label: "History",
+          label: t("History", "ታሪክ"),
         },
       ],
     },
@@ -410,22 +474,32 @@ const Sidebar = ({ role }) => {
         {
           path: "/budget-manager/refueling",
           icon: <FaGasPump />,
-          label: "Refueling",
+          label: t("Refueling", "ነዳጅ መሙላት"),
         },
         {
           path: "/budget-manager/high_cost",
           icon: <FaRoute />,
-          label: "Field Trip",
+          label: t("Field Trip", "የመስክ ጉዞ"),
         },
         {
           path: "/budget-manager/maintenance",
           icon: <FaTools />,
-          label: "Maintenance",
+          label: t("Maintenance", "ጥገና"),
         },
         {
           path: "/budget-manager/service",
           icon: <Wrench />,
-          label: "Vehicle Service",
+          label: t("Vehicle Service", "የተሽከርካሪ አገልግሎት"),
+        },
+      ],
+    },
+    {
+      title: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+      items: [
+        {
+          path: "/budget-manager/available-vehicles",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Available Vehicles", "የሚገኙ ተሽከርካሪዎች"),
         },
       ],
     },
@@ -433,45 +507,50 @@ const Sidebar = ({ role }) => {
       title: t("Requests", "ጥያቄዎች"),
       items: [
         {
+          path: "/budget-manager/refueling-request",
+          icon: <FaGasPump />,
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
+        },
+        {
           path: "/budget-manager/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/budget-manager/maintenance-request",
           icon: <FaTools />,
-          label: "Create Maintenance Request",
+          label: t("Create Maintenance Request", "የጥገና ጥያቄ ፍጠር"),
         },
         {
           path: "/budget-manager/monthly-coupon",
           icon: <LetterTextIcon />,
-          label: "Request Coupon",
+          label: t("Request Coupon", "ኩፖን ይጠይቁ"),
         },
         {
           path: "/budget-manager/hight-cost-request",
           icon: <FaRoute />,
-          label: "Field Trip Request",
+          label: t("Field Trip Request", "የመስክ ጉዞ ጥያቄ"),
         },
       ],
     },
     {
-      title: t("Records", "ቀዳሚ �ማስታወሻዎች"),
+      title: t("Records", "መዝገቦች"),
       items: [
         {
           path: "/budget-manager/history",
           icon: <MdOutlineHistory />,
-          label: "History",
+          label: t("History", "ታሪክ"),
         },
       ],
     },
   ];
 
   const GeneralSystemExcuterMenus = [
-    {
+      {
       title: t("Overview", "አጠቃላይ እይታ"),
       items: [
         {
-          path: "/general-service/dashboard",
+          path: "/general-service/dashbord",
           icon: <MdOutlineDashboard size={18} />,
           label: t("Dashboard", "ዳሽቦርድ"),
         },
@@ -483,22 +562,32 @@ const Sidebar = ({ role }) => {
         {
           path: "/general-service/refueling",
           icon: <FaGasPump />,
-          label: "Refueling",
+          label: t("Refueling", "ነዳጅ መሙላት"),
         },
         {
           path: "/general-service/high_cost",
           icon: <FaRoute />,
-          label: "Field Trip",
+          label: t("Field Trip", "የመስክ ጉዞ"),
         },
         {
           path: "/general-service/maintenance",
           icon: <Wrench />,
-          label: "Maintenance",
+          label: t("Maintenance", "ጥገና"),
         },
         {
           path: "/general-service/service",
           icon: <Wrench />,
-          label: "Vehicle Service",
+          label: t("Vehicle Service", "የተሽከርካሪ አገልግሎት"),
+        },
+      ],
+    },
+    {
+      title: t("Vehicle Management", "የተሽከርካሪ አስተዳደር"),
+      items: [
+        {
+          path: "/general-service/available-vehicles",
+          icon: <AiOutlineCar size={18} />,
+          label: t("Available Vehicles", "የሚገኙ ተሽከርካሪዎች"),
         },
       ],
     },
@@ -506,34 +595,39 @@ const Sidebar = ({ role }) => {
       title: t("Requests", "ጥያቄዎች"),
       items: [
         {
+          path: "/general-service/refueling-request",
+          icon: <FaGasPump />,
+          label: t("Refueling Request", "የነዳጅ ጥያቄ"),
+        },
+        {
           path: "/general-service/vehicle-services",
           icon: <Settings />,
-          label: "Monthly Kilometer",
+          label: t("Monthly Kilometer", "ወርሃዊ ኪሎሜትር"),
         },
         {
           path: "/general-service/maintenance-request",
           icon: <FaTools />,
-          label: "Create Maintenance Request",
+          label: t("Create Maintenance Request", "የጥገና ጥያቄ ፍጠር"),
         },
         {
           path: "/general-service/monthly-coupon",
           icon: <LetterTextIcon />,
-          label: "Request Coupon",
+          label: t("Request Coupon", "ኩፖን ይጠይቁ"),
         },
         {
           path: "/general-service/hight-cost-request",
           icon: <FaRoute />,
-          label: "Field Trip Request",
+          label: t("Field Trip Request", "የመስክ ጉዞ ጥያቄ"),
         },
       ],
     },
     {
-      title: t("Records", "ቀዳሚ ማስታወሻዎች"),
+      title: t("Records", "መዝገቦች"),
       items: [
         {
           path: "/general-service/history",
           icon: <MdOutlineHistory />,
-          label: "History",
+          label: t("History", "ታሪክ"),
         },
       ],
     },
@@ -621,7 +715,7 @@ const Sidebar = ({ role }) => {
             <div className="text-center">
               <img
                 src={Logo || "/placeholder.svg"}
-                alt="Logo"
+                alt={t("Logo", "አርማ")}
                 className="img-fluid"
                 style={{ maxWidth: "80px", marginLeft: "90px" }}
               />
@@ -629,9 +723,19 @@ const Sidebar = ({ role }) => {
             {/* X Button for closing sidebar */}
             <button
               className="btn btn-light ms-2"
-              style={{ fontSize: "18px", color: "#222", border: "none", background: "none", boxShadow: "none", padding: "0 4px", position: "absolute", top: "10px", right: "10px" }}
+              style={{
+                fontSize: "18px",
+                color: "#222",
+                border: "none",
+                background: "none",
+                boxShadow: "none",
+                padding: "0 4px",
+                position: "absolute",
+                top: "10px",
+                right: "10px",
+              }}
               onClick={toggleSidebar}
-              aria-label="Close sidebar"
+              aria-label={t("Close sidebar", "የጎን አሞሌን ዝጋ")}
             >
               &#10005;
             </button>
@@ -680,5 +784,4 @@ const Sidebar = ({ role }) => {
     </>
   );
 };
-
 export default Sidebar;

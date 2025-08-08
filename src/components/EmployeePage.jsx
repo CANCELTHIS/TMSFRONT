@@ -9,6 +9,7 @@ import Header from "./Header"; // Import the Header component
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
+import { useLanguage } from "../context/LanguageContext"; // Import useLanguage
 
 const EmployeePage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -35,6 +36,10 @@ const EmployeePage = () => {
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
   const accessToken = localStorage.getItem("authToken");
+  const { mylanguage } = useLanguage();
+
+  // Helper function to translate labels
+  const t = (en, am) => (mylanguage === "EN" ? en : am);
 
   useEffect(() => {
     fetchRequests();
@@ -63,7 +68,7 @@ const EmployeePage = () => {
         } else {
           setErrorType("server");
         }
-        throw new Error("Failed to fetch transport requests");
+        throw new Error(t("Failed to fetch transport requests", "የመጓጓዣ ጥያቄዎችን ለማምጣት አልተሳካም።"));
       }
 
       const data = await response.json();
@@ -95,7 +100,7 @@ const EmployeePage = () => {
         } else {
           setErrorType("server");
         }
-        throw new Error("Failed to fetch current user");
+        throw new Error(t("Failed to fetch current user", "የአሁኑን ተጠቃሚ ለማምጣት አልተሳካም።"));
       }
 
       const data = await response.json();
@@ -126,7 +131,7 @@ const EmployeePage = () => {
         } else {
           setErrorType("server");
         }
-        throw new Error("Failed to fetch users");
+        throw new Error(t("Failed to fetch users", "ተጠቃሚዎችን ለማምጣት አልተሳካም።"));
       }
 
       const data = await response.json();
@@ -193,12 +198,12 @@ const EmployeePage = () => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to create transport request");
+      if (!response.ok) throw new Error(t("Failed to create transport request", "የመጓጓዣ ጥያቄ ለመፍጠር አልተሳካም።"));
 
       const responseData = await response.json();
       setRequests((prevRequests) => [responseData, ...prevRequests]);
 
-      toast.success("Request submitted! Department manager notified."); // Success toast
+      toast.success(t("Request submitted! Department manager notified.", "ጥያቄ ቀርቧል! የዲፓርትመንት ስራ አስኪያጅ ተነግሯቸዋል።")); // Success toast
 
       fetchNotifications(); // Fetch updated notifications to reflect the new request
 
@@ -216,7 +221,7 @@ const EmployeePage = () => {
       setShowForm(false);
     } catch (error) {
       console.error("Submit Error:", error);
-      toast.error("Failed to submit request."); // Error toast
+      toast.error(t("Failed to submit request.", "ጥያቄ ለማቅረብ አልተሳካም።")); // Error toast
     } finally {
       setSubmitting(false);
     }
@@ -228,7 +233,7 @@ const EmployeePage = () => {
       const response = await fetch(ENDPOINTS.REQUEST_NOTIFICATIONS, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (!response.ok) throw new Error("Failed to fetch notifications");
+      if (!response.ok) throw new Error(t("Failed to fetch notifications", "ማሳወቂያዎችን ለማምጣት አልተሳካም።"));
 
       const data = await response.json();
       console.log("Updated notifications:", data.results);
@@ -244,7 +249,7 @@ const EmployeePage = () => {
     return employeeIds
       .map((id) => {
         const employee = users.find((user) => user.id === id);
-        return employee ? employee.full_name : "Unknown";
+        return employee ? employee.full_name : t("Unknown", "የማይታወቅ");
       })
       .join(", ");
   };
@@ -349,7 +354,7 @@ const EmployeePage = () => {
           className="btn btn mb-3 request"
           style={{ backgroundColor: "#181E4B", color: "#fff" }}
         >
-          Request
+          {t("Request", "ጥያቄ")}
         </button>
         {showForm && (
           <div
@@ -370,7 +375,7 @@ const EmployeePage = () => {
                     }}
                     onClick={() => setShowForm(false)}
                   />
-                  <h5 className="modal-title d-flex">Transport Request Form</h5>
+                  <h5 className="modal-title d-flex">{t("Transport Request Form", "የመጓጓዣ ጥያቄ ቅጽ")}</h5>
                 </div>
                 <div className="modal-body">
                   <form
@@ -379,7 +384,7 @@ const EmployeePage = () => {
                   >
                     <div className="row">
                       <div className="col-md-6 mb-3">
-                        <label className="form-label">Start Day:</label>
+                        <label className="form-label">{t("Start Day:", "የመነሻ ቀን:")}</label>
                         <input
                           type="date"
                           name="startDay"
@@ -391,7 +396,7 @@ const EmployeePage = () => {
                         />
                       </div>
                       <div className="col-md-6 mb-3">
-                        <label className="form-label">Start Time:</label>
+                        <label className="form-label">{t("Start Time:", "የመነሻ ሰዓት:")}</label>
                         <input
                           type="time"
                           name="startTime"
@@ -401,42 +406,42 @@ const EmployeePage = () => {
                           required
                         />
                       </div>
-                    </div>
-                    <div className="row">
                       <div className="col-md-6 mb-3">
-                        <label className="form-label">Return Day:</label>
+                        <label className="form-label">{t("Return Day:", "የመመለሻ ቀን:")}</label>
                         <input
                           type="date"
                           name="returnDay"
                           value={formData.returnDay}
                           onChange={handleInputChange}
                           className="form-control"
-                          min={today}
+                          min={formData.startDay || today}
                           required
                         />
                       </div>
                       <div className="col-md-6 mb-3">
-                        <label className="form-label">Destination:</label>
+                        <label className="form-label">{t("Destination:", "መድረሻ:")}</label>
                         <input
                           type="text"
                           name="destination"
                           value={formData.destination}
                           onChange={handleInputChange}
                           className="form-control"
+                          placeholder={t("Enter destination", "መድረሻ ያስገቡ")}
                           required
                         />
                       </div>
                     </div>
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">List of Employees:</label>
+
+                    <div className="mb-3">
+                      <label className="form-label">{t("Add Employees (Optional):", "ሰራተኞችን ያክሉ (አማራጭ):")}</label>
+                      <div className="input-group">
                         <select
                           name="employeeName"
                           value={formData.employeeName}
                           onChange={handleInputChange}
-                          className="form-control"
+                          className="form-select"
                         >
-                          <option value="">Select an employee</option>
+                          <option value="">{t("Select an employee", "ሰራተኛ ይምረጡ")}</option>
                           {users.map((user) => (
                             <option key={user.id} value={user.id}>
                               {user.full_name}
@@ -445,74 +450,61 @@ const EmployeePage = () => {
                         </select>
                         <button
                           type="button"
-                          className="btn mt-2"
+                          className="btn btn-outline-secondary"
                           onClick={handleAddEmployee}
-                          style={{ backgroundColor: "#181E4B", color: "#fff" }}
+                          disabled={!formData.employeeName}
                         >
-                          Add
+                          {t("Add", "አክል")}
                         </button>
-                        <button
-                          type="button"
-                          className="btn mt-2 ms-2"
-                          onClick={() =>
-                            setFormData((prev) => ({ ...prev, employees: [] }))
-                          }
-                          style={{ backgroundColor: "#dc3545", color: "#fff" }}
-                        >
-                          Clear
-                        </button>
-                        <div className="mt-2 d-flex flex-wrap gap-2">
-                          {formData.employees.map((employeeId) => {
-                            const employee = users.find(
-                              (user) => user.id === employeeId
-                            );
-                            return (
-                              <div
-                                key={employeeId}
-                                className="badge bg-primary d-flex align-items-center"
-                              >
-                                <span>
-                                  {employee ? employee.full_name : "Unknown"}
-                                </span>
-                                <button
-                                  type="button"
-                                  className="btn-close btn-close-white ms-2"
-                                  aria-label="Close"
-                                  onClick={() =>
-                                    handleRemoveEmployee(employeeId)
-                                  }
-                                ></button>
-                              </div>
-                            );
-                          })}
-                        </div>
                       </div>
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Reason:</label>
-                        <textarea
-                          name="reason"
-                          value={formData.reason}
-                          onChange={handleInputChange}
-                          className="form-control"
-                          required
-                        />
+                      <div className="mt-2">
+                        {formData.employees.length > 0 && (
+                          <div className="border p-2 rounded bg-light">
+                            <strong>{t("Selected Employees:", "የተመረጡ ሰራተኞች:")}</strong>
+                            <ul className="list-unstyled mb-0">
+                              {formData.employees.map((id) => (
+                                <li
+                                  key={id}
+                                  className="d-flex justify-content-between align-items-center"
+                                >
+                                  {
+                                    users.find((user) => user.id === id)
+                                      ?.full_name
+                                  }
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-danger ms-2"
+                                    onClick={() => handleRemoveEmployee(id)}
+                                  >
+                                    X
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="modal-footer">
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => setShowForm(false)}
-                      >
-                        Cancel
-                      </button>
+
+                    <div className="mb-3">
+                      <label className="form-label">{t("Reason:", "ምክንያት:")}</label>
+                      <textarea
+                        name="reason"
+                        value={formData.reason}
+                        onChange={handleInputChange}
+                        className="form-control"
+                        placeholder={t("Reason for transport", "ለመጓጓዣ ምክንያት")}
+                        rows="3"
+                        required
+                      ></textarea>
+                    </div>
+                    <div className="d-flex justify-content-end">
                       <button
                         type="submit"
-                        className="btn"
-                        style={{ backgroundColor: "#181E4B", color: "#fff" }}
+                        className="btn btn-dark"
                         disabled={submitting}
                       >
-                        {submitting ? "Submitting..." : "Submit"}
+                        {submitting ? t("Submitting...", "እየቀረበ ነው...") : t("Submit Request", "ጥያቄ አስገባ")}
                       </button>
                     </div>
                   </form>
@@ -521,112 +513,104 @@ const EmployeePage = () => {
             </div>
           </div>
         )}
-        {loading ? (
-          <div className="text-center mt-4">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
+        <div className="d-flex justify-content-between mb-3">
+          <h4>{t("Transport Requests", "የመጓጓዣ ጥያቄዎች")}</h4>
+          <div className="d-flex">
+            <div className="me-3">
+              <label htmlFor="filterStatus" className="form-label visually-hidden">
+                {t("Filter by Status", "በሁኔታ አጣራ")}
+              </label>
+              <select
+                id="filterStatus"
+                className="form-select"
+                value={filterStatus}
+                onChange={handleFilterChange}
+              >
+                <option value="">{t("All Statuses", "ሁሉም ሁኔታዎች")}</option>
+                <option value="Approved">{t("Approved", "ፀድቋል")}</option>
+                <option value="Rejected">{t("Rejected", "ውድቅ ተደርጓል")}</option>
+                <option value="Forward">{t("Forward", "የላከው")}</option>
+              </select>
             </div>
-            <p>Loading data...</p>
+            <div>
+              <label htmlFor="sortField" className="form-label visually-hidden">
+                {t("Sort By", "በዚህ አጣራ")}
+              </label>
+              <select
+                id="sortField"
+                className="form-select"
+                value={sortField}
+                onChange={(e) => handleSort(e.target.value)}
+              >
+                <option value="">{t("Sort By", "በዚህ አጣራ")}</option>
+                <option value="start_day">{t("Start Day", "የመነሻ ቀን")}</option>
+                <option value="destination">{t("Destination", "መድረሻ")}</option>
+                <option value="status">{t("Status", "ሁኔታ")}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">{t("Loading...", "በመጫን ላይ...")}</span>
+            </div>
           </div>
         ) : (
-          <>
-            <div className="d-flex justify-content-between align-items-center mt-4">
-              <div>
-                <label htmlFor="statusFilter" className="me-2">
-                  Filter by Status:
-                </label>
-                <select
-                  id="statusFilter"
-                  value={filterStatus}
-                  onChange={handleFilterChange}
-                  className="form-select d-inline-block w-auto"
-                >
-                  <option value="">All</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Forward">Forward</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="table-responsive">
-              <table className="table table-bordered mt-4">
-                <thead className="table">
+          <div className="table-responsive">
+            <table className="table table-striped table-hover shadow-sm">
+              <thead className="bg-primary text-white">
+                <tr>
+                  <th scope="col">{t("Start Day", "የመነሻ ቀን")}</th>
+                  <th scope="col">{t("Return Day", "የመመለሻ ቀን")}</th>
+                  <th scope="col">{t("Start Time", "የመነሻ ሰዓት")}</th>
+                  <th scope="col">{t("Destination", "መድረሻ")}</th>
+                  <th scope="col">{t("Employees", "ሰራተኞች")}</th>
+                  <th scope="col">{t("Reason", "ምክንያት")}</th>
+                  <th scope="col">{t("Status", "ሁኔታ")}</th>
+                  <th scope="col">{t("Actions", "ድርጊቶች")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentRequests.length === 0 ? (
                   <tr>
-                    <th
-                      onClick={() => handleSort("start_day")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      Start Day{" "}
-                      {sortField === "start_day" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th
-                      onClick={() => handleSort("start_time")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      Start Time{" "}
-                      {sortField === "start_time" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th
-                      onClick={() => handleSort("return_day")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      Return Day{" "}
-                      {sortField === "return_day" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th
-                      onClick={() => handleSort("destination")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      Destination{" "}
-                      {sortField === "destination" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th
-                      onClick={() => handleSort("status")}
-                      style={{ cursor: "pointer" }}
-                    >
-                      Status{" "}
-                      {sortField === "status" &&
-                        (sortOrder === "asc" ? "↑" : "↓")}
-                    </th>
-                    <th>Action</th>
+                    <td colSpan="8" className="text-center">
+                      {t("No transport requests found.", "ምንም የመጓጓዣ ጥያቄዎች አልተገኙም።")}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {currentRequests.map((request) => (
+                ) : (
+                  currentRequests.map((request) => (
                     <tr key={request.id}>
                       <td>{request.start_day}</td>
-                      <td>{request.start_time}</td>
                       <td>{request.return_day}</td>
+                      <td>{request.start_time}</td>
                       <td>{request.destination}</td>
+                      <td>{getEmployeeNames(request.employees)}</td>
+                      <td>{request.reason}</td>
                       <td>{request.status}</td>
                       <td>
                         <button
-                          className="btn btn-sm"
-                          style={{ backgroundColor: "#181E4B", color: "white" }}
+                          className="btn btn-info btn-sm me-2"
                           onClick={() => handleViewDetail(request)}
                         >
-                          View Detail
+                          {t("View Detail", "ዝርዝር ይመልከቱ")}
                         </button>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination Controls */}
-            <CustomPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              handlePageChange={handlePageChange}
-            />
-          </>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
+
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+
         {selectedRequest && (
           <div
             className="modal fade show d-block"
@@ -636,51 +620,35 @@ const EmployeePage = () => {
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
-                  <img
-                    src={Logo}
-                    alt="Logo"
-                    style={{
-                      width: "100px",
-                      height: "70px",
-                      marginRight: "10px",
-                    }}
-                  />
-                  <h5 className="modal-title">Transport Request Details</h5>
-                  <FaWindowClose
-                    style={{
-                      cursor: "pointer",
-                      position: "absolute",
-                      top: "10px",
-                      right: "10px",
-                      fontSize: "1.rem",
-                    }}
+                  <h5 className="modal-title">{t("Request Details", "የጥያቄ ዝርዝሮች")}</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    aria-label="Close"
                     onClick={handleCloseDetail}
-                  />
+                  ></button>
                 </div>
                 <div className="modal-body">
-                  <p>
-                    <strong>Requester:</strong> {currentUser?.full_name}
-                  </p>{" "}
-                  {/* Moved requester to the top */}
-                  <p>
-                    <strong>Start Day:</strong> {selectedRequest.start_day}
-                  </p>
-                  <p>
-                    <strong>Start Time:</strong> {selectedRequest.start_time}
-                  </p>
-                  <p>
-                    <strong>Return Day:</strong> {selectedRequest.return_day}
-                  </p>
-                  <p>
-                    <strong>Employees:</strong>{" "}
-                    {getEmployeeNames(selectedRequest.employees)}
-                  </p>
-                  <p>
-                    <strong>Destination:</strong> {selectedRequest.destination}
-                  </p>
-                  <p>
-                    <strong>Reason:</strong> {selectedRequest.reason}
-                  </p>
+                  <p><strong>{t("Request ID:", "የጥያቄ መታወቂያ:")}</strong> {selectedRequest.id}</p>
+                  <p><strong>{t("Start Day:", "የመነሻ ቀን:")}</strong> {selectedRequest.start_day}</p>
+                  <p><strong>{t("Return Day:", "የመመለሻ ቀን:")}</strong> {selectedRequest.return_day}</p>
+                  <p><strong>{t("Start Time:", "የመነሻ ሰዓት:")}</strong> {selectedRequest.start_time}</p>
+                  <p><strong>{t("Destination:", "መድረሻ:")}</strong> {selectedRequest.destination}</p>
+                  <p><strong>{t("Employees:", "ሰራተኞች:")}</strong> {getEmployeeNames(selectedRequest.employees)}</p>
+                  <p><strong>{t("Reason:", "ምክንያት:")}</strong> {selectedRequest.reason}</p>
+                  <p><strong>{t("Status:", "ሁኔታ:")}</strong> {selectedRequest.status}</p>
+                  {selectedRequest.transport_manager_comment && (
+                    <p>
+                      <strong>{t("Transport Manager Comment:", "የትራንስፖርት ሥራ አስኪያጅ አስተያየት:")}</strong>{" "}
+                      {selectedRequest.transport_manager_comment}
+                    </p>
+                  )}
+                  {selectedRequest.finance_manager_comment && (
+                    <p>
+                      <strong>{t("Finance Manager Comment:", "የፋይናንስ ሥራ አስኪያጅ አስተያየት:")}</strong>{" "}
+                      {selectedRequest.finance_manager_comment}
+                    </p>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button
@@ -688,17 +656,27 @@ const EmployeePage = () => {
                     className="btn btn-secondary"
                     onClick={handleCloseDetail}
                   >
-                    Close
+                    {t("Close", "ዝጋ")}
                   </button>
+                  {selectedRequest.status === "Rejected" && (
+                    <button
+                      type="button"
+                      className="btn btn-warning"
+                      onClick={() => {
+                        handleResubmit(selectedRequest.id);
+                        handleCloseDetail();
+                      }}
+                    >
+                      {t("Resubmit", "እንደገና አስገባ")}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         )}
-        <ToastContainer />{" "}
-        {/* Add ToastContainer for displaying notifications */}{" "}
-        {/* Add ToastContainer for displaying notifications */}
       </div>
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </>
   );
 };

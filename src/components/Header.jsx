@@ -110,9 +110,16 @@ const Header = ({ setRole, onResubmit }) => {
   // Validation
   const validate = () => {
     const newErrors = {};
-    if (!formData.full_name.trim())
+    // Only validate fields that are changed (not empty)
+    if (
+      formData.full_name !== initialUserData?.full_name &&
+      !formData.full_name.trim()
+    )
       newErrors.full_name = "Full name is required";
-    if (!formData.phone_number.trim())
+    if (
+      formData.phone_number !== initialUserData?.phone_number &&
+      !formData.phone_number.trim()
+    )
       newErrors.phone_number = "Phone number is required";
     if (
       formData.old_password ||
@@ -153,8 +160,10 @@ const Header = ({ setRole, onResubmit }) => {
 
     try {
       const formDataToSend = new FormData();
-      formDataToSend.append("full_name", formData.full_name);
-      formDataToSend.append("phone_number", formData.phone_number);
+      if (formData.full_name !== initialUserData?.full_name)
+        formDataToSend.append("full_name", formData.full_name);
+      if (formData.phone_number !== initialUserData?.phone_number)
+        formDataToSend.append("phone_number", formData.phone_number);
 
       // Only send password fields if all are filled
       if (
@@ -817,4 +826,4 @@ const Header = ({ setRole, onResubmit }) => {
 
 export default Header;
 
-//
+//clear

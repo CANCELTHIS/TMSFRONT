@@ -13,18 +13,26 @@ const MaintenanceRequest = () => {
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({ date: "", reason: "" });
-  const [currentUser, setCurrentUser] = useState(null);
+  const [formData, setFormData] = useState({ 
+    date: "", 
+    reason: "", 
+    requesters_car: "" 
+  });
+  const [vehicles, setVehicles] = useState([]);
   const [errorType, setErrorType] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch maintenance requests
   const fetchMaintenanceRequests = async () => {
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
       setErrorType("unauthorized");
+      setIsLoading(false);
       return;
     }
     try {
+      setIsLoading(true);
       const response = await fetch(ENDPOINTS.MY_MAINTENANCE_REQUESTS, {
         method: "GET",
         headers: {
@@ -41,33 +49,30 @@ const MaintenanceRequest = () => {
       setRequests(data.results || []);
     } catch (error) {
       console.error("Error fetching maintenance requests:", error);
+      toast.error("Failed to fetch maintenance requests");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Fetch current user
-  const fetchCurrentUser = async () => {
+  const fetchUserVehicles = async () => {
     const accessToken = localStorage.getItem("authToken");
-    if (!accessToken) {
-      setErrorType("unauthorized");
-      return;
-    }
+    if (!accessToken) return;
+
     try {
-      const response = await fetch(ENDPOINTS.CURRENT_USER, {
+      const response = await fetch(ENDPOINTS.CURRENT_USER_VEHICLES, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       });
-      if (!response.ok) {
-        if (response.status === 401) setErrorType("unauthorized");
-        else setErrorType("server");
-        throw new Error("Failed to fetch current user data");
-      }
-      const userData = await response.json();
-      setCurrentUser(userData);
+      if (!response.ok) throw new Error("Failed to fetch vehicles");
+      const data = await response.json();
+      setVehicles(data.results || data || []);
     } catch (error) {
-      console.error("Error fetching current user data:", error);
+      console.error("Error fetching vehicles:", error);
+      toast.error("Failed to load vehicles");
     }
   };
 
@@ -78,9 +83,11 @@ const MaintenanceRequest = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const accessToken = localStorage.getItem("authToken");
     if (!accessToken) {
-      console.error("No access token found.");
+      toast.error("You are not authorized. Please log in again.");
+      setIsSubmitting(false);
       return;
     }
     try {
@@ -91,53 +98,118 @@ const MaintenanceRequest = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          date: formData.date,
-          reason: formData.reason,
+          ...formData,
+          requesters_car: parseInt(formData.requesters_car)
         }),
       });
-      if (!response.ok) throw new Error("Failed to create maintenance request");
-      const newRequest = await response.json();
-      if (currentUser && newRequest.requester_name === currentUser.full_name) {
-        setRequests((prev) => [newRequest, ...prev]);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create request");
       }
-      setFormData({ date: "", reason: "" });
+      
+      const newRequest = await response.json();
+      const vehicle = vehicles.find(v => v.id === parseInt(formData.requesters_car));
+      setRequests((prev) => [{
+        ...newRequest,
+        requesters_car: vehicle || formData.requesters_car
+      }, ...prev]);
+      
+      setFormData({ date: "", reason: "", requesters_car: "" });
       setShowForm(false);
-      toast.success("Your maintenance request has been created successfully!");
+      toast.success("Maintenance request created successfully!");
     } catch (error) {
-      console.error("Error creating maintenance request:", error);
-      toast.error("Failed to create the maintenance request. Please try again.");
+      console.error("Error creating request:", error);
+      toast.error(error.message || "Failed to create request");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const handleShowDetails = (request) => {
+    setSelectedRequest(request);
+  };
+
+  const filterRequests = () => {
+    return requests.filter(request => 
+      request.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (request.requesters_car?.license_plate || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.id?.toString().includes(searchTerm) ||
+      (request.requester_name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
   useEffect(() => {
+    fetchUserVehicles();
     fetchMaintenanceRequests();
-    fetchCurrentUser();
   }, []);
 
   if (errorType === "unauthorized") return <UnauthorizedPage />;
   if (errorType === "server") return <ServerErrorPage />;
 
+  const filteredRequests = filterRequests();
+  
+  const getVehicleDisplay = (request) => {
+    if (request.requesters_car_name) {
+      return request.requesters_car_name;
+    }
+    
+    const vehicleId = request.requesters_car;
+    
+    if (typeof request.requesters_car === 'object') {
+      return `${request.requesters_car.make} (${request.requesters_car.license_plate})`;
+    }
+    
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (vehicle) {
+      return `${vehicle.make} (${vehicle.license_plate})`;
+    }
+    
+    return `Vehicle #${vehicleId}`;
+  };
+
   return (
     <div className="container py-4">
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={5000} />
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="mb-0 d-flex align-items-center">
-            <FaWrench className="me-2 text-success" />
-            Maintenance Requests
-          </h1>
-        </div>
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaWrench className="me-2 text-success" />
+          Maintenance Requests
+        </h1>
         <div className="d-flex gap-2">
+          <div className="input-group shadow-sm" style={{ maxWidth: "300px" }}>
+            <span className="input-group-text bg-white border-end-0">
+              <FaSearch className="text-muted" />
+            </span>
+            <input
+              type="text"
+              className="form-control border-start-0"
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <button
             className="btn btn-outline-success d-flex align-items-center"
-            style={{ minWidth: "200px" }}
             onClick={fetchMaintenanceRequests}
+            disabled={isLoading}
           >
-            <FaSync className="me-2" />
-            Refresh
+            {isLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                Loading...
+              </>
+            ) : (
+              <>
+                <FaSync className="me-2" />
+                Refresh
+              </>
+            )}
           </button>
         </div>
       </div>
+      
       <div className="d-flex mb-4">
         <button
           className="btn"
@@ -147,14 +219,24 @@ const MaintenanceRequest = () => {
           New Maintenance Request
         </button>
       </div>
+
       {/* New Maintenance Request Modal */}
       {showForm && (
-        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div 
+          className="modal fade show d-block" 
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1050 }}
+          onClick={(e) => e.target.className.includes("modal fade show d-block") && setShowForm(false)}
+        >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <h5 className="modal-title">New Maintenance Request</h5>
-                <button type="button" className="btn-close" onClick={() => setShowForm(false)}>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => setShowForm(false)}
+                  aria-label="Close"
+                >
                   <IoClose />
                 </button>
               </div>
@@ -173,6 +255,30 @@ const MaintenanceRequest = () => {
                     />
                   </div>
                   <div className="mb-3">
+                    <label htmlFor="requesters_car" className="form-label">Select Vehicle</label>
+                    <select
+                      className="form-select"
+                      id="requesters_car"
+                      name="requesters_car"
+                      value={formData.requesters_car}
+                      onChange={handleInputChange}
+                      required
+                      disabled={vehicles.length === 0}
+                    >
+                      <option value="">-- Select a vehicle --</option>
+                      {vehicles.map((vehicle) => (
+                        <option key={vehicle.id} value={vehicle.id}>
+                          {vehicle.make} ({vehicle.license_plate})
+                        </option>
+                      ))}
+                    </select>
+                    {vehicles.length === 0 && (
+                      <div className="text-danger small mt-1">
+                        No vehicles available. Please add a vehicle first.
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-3">
                     <label htmlFor="reason" className="form-label">Reason</label>
                     <textarea
                       className="form-control"
@@ -182,26 +288,37 @@ const MaintenanceRequest = () => {
                       onChange={handleInputChange}
                       placeholder="Enter the reason for maintenance"
                       required
-                      style={{ minHeight: "80px" }}
+                      style={{ minHeight: "100px" }}
                     />
                   </div>
-                  <button
-                    type="submit"
-                    className="btn"
-                    style={{
-                      width: "100%",
-                      backgroundColor: "#181E4B",
-                      color: "white",
-                    }}
-                  >
-                    Submit
-                  </button>
+                  <div className="d-flex gap-2">
+                    <button
+                      type="button"
+                      className="btn btn-secondary flex-grow-1"
+                      onClick={() => setShowForm(false)}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn flex-grow-1"
+                      style={{ backgroundColor: "#181E4B", color: "white" }}
+                      disabled={isSubmitting || vehicles.length === 0}
+                    >
+                      {isSubmitting ? (
+                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                      ) : null}
+                      {isSubmitting ? "Submitting..." : "Submit Request"}
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>
           </div>
         </div>
       )}
+
       {/* Requests Table */}
       <div className="card shadow-sm border-0 overflow-hidden">
         <div className="card-body p-0">
@@ -211,18 +328,29 @@ const MaintenanceRequest = () => {
                 <tr>
                   <th>#</th>
                   <th>Date</th>
-                  <th>Requester's Car</th>
+                  <th>Vehicle</th>
+                  <th>Requested By</th>
                   <th>Status</th>
                   <th className="text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {requests.length > 0 ? (
-                  requests.map((request, index) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center py-5">
+                      <div className="d-flex justify-content-center align-items-center">
+                        <div className="spinner-border text-primary me-3" role="status"></div>
+                        <span>Loading maintenance requests...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredRequests.length > 0 ? (
+                  filteredRequests.map((request, index) => (
                     <tr key={request.id}>
                       <td>{index + 1}</td>
-                      <td>{new Date(request.date).toLocaleDateString()}</td>
-                      <td>{request.requesters_car_name || "N/A"}</td>
+                      <td>{request.date ? new Date(request.date).toLocaleDateString() : "N/A"}</td>
+                      <td>{getVehicleDisplay(request)}</td>
+                      <td>{request.requester_name || "N/A"}</td>
                       <td>
                         <span className={`badge ${
                           request.status === "pending"
@@ -233,33 +361,32 @@ const MaintenanceRequest = () => {
                             ? "bg-danger"
                             : "bg-secondary"
                         } py-2 px-3`}>
-                          {request.status
-                            ? request.status.charAt(0).toUpperCase() +
-                              request.status.slice(1)
-                            : ""}
+                          {request.status?.charAt(0).toUpperCase() + request.status?.slice(1)}
                         </span>
                       </td>
                       <td className="text-center">
                         <button
-                          className="btn btn-sm btn-outline-success d-flex align-items-center"
-                          onClick={() => setSelectedRequest(request)}
+                          className="btn btn-sm btn-outline-success d-flex align-items-center mx-auto"
+                          onClick={() => handleShowDetails(request)}
                         >
                           <FaSearch className="me-1" />
-                          View Detail
+                          Details
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center text-muted py-5">
+                    <td colSpan="6" className="text-center text-muted py-5">
                       <div className="py-4">
                         <FaWrench className="fs-1 text-muted mb-3" />
                         <p className="mb-1 fw-medium fs-5">
-                          No maintenance requests found.
+                          {searchTerm ? "No matching requests found" : "No maintenance requests yet"}
                         </p>
                         <small className="text-muted">
-                          Create a new request or check back later.
+                          {searchTerm 
+                            ? "Try a different search term" 
+                            : "Click 'New Maintenance Request' to create one"}
                         </small>
                       </div>
                     </td>
@@ -269,18 +396,38 @@ const MaintenanceRequest = () => {
             </table>
           </div>
         </div>
+        <div className="card-footer bg-white d-flex justify-content-between align-items-center py-3 border-0">
+          <div className="text-muted small">
+            Showing <span className="fw-medium">{filteredRequests.length}</span> of{" "}
+            <span className="fw-medium">{requests.length}</span> requests
+          </div>
+          {searchTerm && (
+            <button 
+              className="btn btn-sm btn-outline-secondary" 
+              onClick={() => setSearchTerm("")}
+            >
+              Clear Search
+            </button>
+          )}
+        </div>
       </div>
+
       {/* Details Modal */}
       {selectedRequest && (
-        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div 
+          className="modal fade show d-block" 
+          style={{ backgroundColor: "rgba(0,0,0,0.5)", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 1050 }}
+          onClick={() => setSelectedRequest(null)}
+        >
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <div className="d-flex align-items-center">
                   <img
                     src={Logo}
                     alt="Logo"
                     style={{ width: "80px", height: "50px", marginRight: "10px" }}
+                    className="img-fluid"
                   />
                   <h5 className="modal-title">Maintenance Request Details</h5>
                 </div>
@@ -288,26 +435,44 @@ const MaintenanceRequest = () => {
                   type="button"
                   className="btn-close"
                   onClick={() => setSelectedRequest(null)}
+                  aria-label="Close"
                 >
                   <IoClose />
                 </button>
               </div>
               <div className="modal-body">
-                <p>
-                  <strong>Date:</strong> {new Date(selectedRequest.date).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Reason:</strong> {selectedRequest.reason}
-                </p>
-                <p>
-                  <strong>Requester Name:</strong> {selectedRequest.requester_name}
-                </p>
-                <p>
-                  <strong>Requester's Car:</strong> {selectedRequest.requesters_car_name}
-                </p>
-                <p>
-                  <strong>Status:</strong> {selectedRequest.status}
-                </p>
+                <div className="mb-3">
+                  <h6>Date</h6>
+                  <p>{selectedRequest.date || "N/A"}</p>
+                </div>
+                <div className="mb-3">
+                  <h6>Requested By</h6>
+                  <p>{selectedRequest.requester_name || "N/A"}</p>
+                </div>
+                <div className="mb-3">
+                  <h6>Vehicle</h6>
+                  <p>{getVehicleDisplay(selectedRequest)}</p>
+                </div>
+                <div className="mb-3">
+                  <h6>Status</h6>
+                  <p>
+                    <span className={`badge ${
+                      selectedRequest.status === "pending"
+                        ? "bg-warning text-dark"
+                        : selectedRequest.status === "approved"
+                        ? "bg-success"
+                        : selectedRequest.status === "rejected"
+                        ? "bg-danger"
+                        : "bg-secondary"
+                    } py-2 px-3`}>
+                      {selectedRequest.status?.charAt(0).toUpperCase() + selectedRequest.status?.slice(1)}
+                    </span>
+                  </p>
+                </div>
+                <div className="mb-3">
+                  <h6>Reason</h6>
+                  <p className="bg-light p-3 rounded">{selectedRequest.reason}</p>
+                </div>
               </div>
               <div className="modal-footer">
                 <button
@@ -321,29 +486,48 @@ const MaintenanceRequest = () => {
           </div>
         </div>
       )}
+
       <style jsx>{`
-        .cursor-pointer {
-          cursor: pointer;
-        }
-        .spin {
-          animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
         .card {
-          border-radius: 1rem;
+          border-radius: 0.75rem;
           overflow: hidden;
+          border: 1px solid #e9ecef;
         }
         .table th {
           background-color: #f8fafc;
           border-top: 1px solid #e9ecef;
           border-bottom: 2px solid #e9ecef;
+          font-weight: 600;
+          color: #495057;
+        }
+        .table td {
+          vertical-align: middle;
+        }
+        .text-truncate {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .badge {
+          font-weight: 500;
+          letter-spacing: 0.5px;
+        }
+        .modal-content {
+          border-radius: 0.75rem;
+          border: none;
+          box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.2);
+        }
+        .modal-header {
+          border-bottom: 1px solid #e9ecef;
+          padding: 1rem 1.5rem;
+        }
+        .modal-footer {
+          border-top: 1px solid #e9ecef;
+          padding: 1rem 1.5rem;
+        }
+        .btn-outline-success:hover {
+          background-color: #198754;
+          color: white;
         }
       `}</style>
     </div>

@@ -7,21 +7,23 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
-import { FaCarSide, FaSearch, FaSync } from "react-icons/fa";
+import { FaCarSide, FaSync } from "react-icons/fa";
 
 const VehicleServices = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    month: "",
+    vehicle: "",
     kilometers_driven: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [inlineError, setInlineError] = useState("");
-  const [vehicles, setVehicles] = useState([]);
-  const [selectedVehicleId, setSelectedVehicleId] = useState("");
-  const [kilometerLogs, setKilometerLogs] = useState([]);
   const [errorType, setErrorType] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [kilometerLogs, setKilometerLogs] = useState([]);
+
+  // Helper function to format vehicle display
+  const getVehicleDisplay = (vehicle) => {
+    return `${vehicle.model} - ${vehicle.license_plate}`;
+  };
 
   // Fetch kilometer logs
   const fetchKilometerLogs = async () => {
@@ -62,11 +64,23 @@ const VehicleServices = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      const vehiclesData = Array.isArray(response.data)
-        ? response.data
-        : [response.data];
+      
+      // Ensure we always have an array of vehicles
+      const vehiclesData = Array.isArray(response.data) 
+        ? response.data 
+        : response.data.results 
+          ? response.data.results 
+          : [response.data];
+      
       setVehicles(vehiclesData);
-      if (vehiclesData.length > 0) setSelectedVehicleId(vehiclesData[0].id);
+      
+      // Set default vehicle if available
+      if (vehiclesData.length > 0) {
+        setFormData(prev => ({ 
+          ...prev, 
+          vehicle: vehiclesData[0].id.toString() 
+        }));
+      }
     } catch (error) {
       if (error.response?.status === 401) {
         setErrorType("unauthorized");
@@ -86,36 +100,17 @@ const VehicleServices = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Convert "2025-05" to "May 2025"
-    const [year, monthNum] = formData.month.split("-");
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    const formattedMonth = `${monthNames[parseInt(monthNum, 10) - 1]} ${year}`;
-
-    // Check for duplicate month
-    if (kilometerLogs.some((log) => log.month === formattedMonth)) {
-      setInlineError("You have already added a log for this month");
+    if (!formData.vehicle) {
+      toast.error("Please select a vehicle.");
       return;
     }
 
     try {
       setLoading(true);
-      await axios.post(
-        ENDPOINTS.ADD_MONTHLY_KILOMETERS(selectedVehicleId),
+      const response = await axios.post(
+        ENDPOINTS.ADD_MONTHLY_KILOMETERS,
         {
-          month: formattedMonth,
+          vehicle: parseInt(formData.vehicle, 10), // Ensure vehicle ID is a number
           kilometers_driven: parseInt(formData.kilometers_driven, 10),
         },
         {
@@ -125,19 +120,36 @@ const VehicleServices = () => {
         }
       );
 
-      // Refetch the updated logs to get complete data
       await fetchKilometerLogs();
 
       setShowForm(false);
-      setFormData({ month: "", kilometers_driven: "" });
-      setInlineError("");
+      setFormData({ 
+        vehicle: vehicles.length > 0 ? vehicles[0].id.toString() : "", 
+        kilometers_driven: "" 
+      });
       toast.success("Kilometer log added successfully!");
     } catch (error) {
-      console.error("Error adding service:", error);
-      toast.error("Failed to add kilometer log");
-      if (error.response?.status === 403) {
-        toast.error("You don't have permission to add logs");
+      console.error("Error adding kilometer log:", error);
+
+      let errorMessage = "Failed to add kilometer log.";
+
+      if (error.response) {
+        if (error.response.status === 403) {
+          errorMessage = "You don't have permission to add logs.";
+        } else if (error.response.data && error.response.data.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.response.data && typeof error.response.data === "string") {
+          errorMessage = error.response.data;
+        } else if (error.response.statusText) {
+          errorMessage = `Error: ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your network connection.";
+      } else {
+        errorMessage = `Error setting up request: ${error.message}`;
       }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -148,37 +160,29 @@ const VehicleServices = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
     <div className="container py-4">
       <ToastContainer position="top-right" autoClose={3000} />
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="mb-0 d-flex align-items-center">
-            <FaCarSide className="me-2 text-success" />
-            Vehicle Kilometer Logs
-          </h1>
-        </div>
-        <div className="d-flex gap-2">
-          <button
-            className="btn btn-outline-success d-flex align-items-center"
-            style={{ minWidth: "200px" }}
-            onClick={fetchKilometerLogs}
-            disabled={loading}
-          >
-            <FaSync className={loading ? "me-2 spin" : "me-2"} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
-        </div>
+        <h1 className="mb-0 d-flex align-items-center">
+          <FaCarSide className="me-2 text-success" />
+          Vehicle Kilometer Logs
+        </h1>
+        <button
+          className="btn btn-outline-success d-flex align-items-center"
+          style={{ minWidth: "200px" }}
+          onClick={fetchKilometerLogs}
+          disabled={loading}
+        >
+          <FaSync className={loading ? "me-2 spin" : "me-2"} />
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
       </div>
 
-      <div className="d-flex mb-4">
+      <div className="mb-4">
         <button
           className="btn"
           style={{ minWidth: "250px", backgroundColor: "#181E4B", color: "white" }}
@@ -189,7 +193,6 @@ const VehicleServices = () => {
         </button>
       </div>
 
-      {/* Form Modal */}
       {showForm && (
         <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -198,10 +201,7 @@ const VehicleServices = () => {
                 <h5 className="modal-title">Add Monthly Kilometers</h5>
                 <button
                   className="btn-close"
-                  onClick={() => {
-                    setShowForm(false);
-                    setInlineError("");
-                  }}
+                  onClick={() => setShowForm(false)}
                   disabled={loading}
                 >
                   <IoClose />
@@ -209,22 +209,36 @@ const VehicleServices = () => {
               </div>
               <div className="modal-body">
                 <form onSubmit={handleSubmit}>
+                  {/* Vehicle Select */}
                   <div className="mb-3">
-                    <label htmlFor="month" className="form-label">
-                      Month
+                    <label htmlFor="vehicle" className="form-label">
+                      Vehicle
                     </label>
-                    <input
-                      type="month"
-                      className="form-control"
-                      id="month"
-                      name="month"
-                      value={formData.month}
+                    <select
+                      id="vehicle"
+                      name="vehicle"
+                      className="form-select"
+                      value={formData.vehicle}
                       onChange={handleInputChange}
                       required
-                      disabled={loading}
-                    />
+                      disabled={loading || vehicles.length === 0}
+                    >
+                      {vehicles.length === 0 ? (
+                        <option value="">No vehicles available</option>
+                      ) : (
+                        <>
+                          <option value="">-- Select a vehicle --</option>
+                          {vehicles.map((vehicle) => (
+                            <option key={vehicle.id} value={vehicle.id.toString()}>
+                              {getVehicleDisplay(vehicle)}
+                            </option>
+                          ))}
+                        </>
+                      )}
+                    </select>
                   </div>
 
+                  {/* Kilometers Driven Input */}
                   <div className="mb-3">
                     <label htmlFor="kilometers_driven" className="form-label">
                       Kilometers Driven
@@ -243,21 +257,11 @@ const VehicleServices = () => {
                     />
                   </div>
 
-                  {inlineError && (
-                    <div className="alert alert-warning py-2">
-                      {inlineError}
-                    </div>
-                  )}
-
                   <button
                     type="submit"
                     className="btn"
-                    style={{
-                      width: "100%",
-                      backgroundColor: "#181E4B",
-                      color: "white",
-                    }}
-                    disabled={loading}
+                    style={{ width: "100%", backgroundColor: "#181E4B", color: "white" }}
+                    disabled={loading || vehicles.length === 0}
                   >
                     {loading ? "Submitting..." : "Submit"}
                   </button>
@@ -288,12 +292,8 @@ const VehicleServices = () => {
                     <td colSpan="6" className="text-center text-muted py-5">
                       <div className="py-4">
                         <FaCarSide className="fs-1 text-muted mb-3" />
-                        <p className="mb-1 fw-medium fs-5">
-                          No kilometer logs found.
-                        </p>
-                        <small className="text-muted">
-                          Add a new log or check back later.
-                        </small>
+                        <p className="mb-1 fw-medium fs-5">No kilometer logs found.</p>
+                        <small className="text-muted">Add a new log or check back later.</small>
                       </div>
                     </td>
                   </tr>
@@ -303,13 +303,16 @@ const VehicleServices = () => {
                       <td>{idx + 1}</td>
                       <td>{log.month}</td>
                       <td>{log.kilometers_driven}</td>
-                      <td>{log.vehicle || "Loading..."}</td>
-                      <td>{log.recorded_by || "Loading..."}</td>
                       <td>
-                        {log.created_at
-                          ? new Date(log.created_at).toLocaleString()
-                          : "Loading..."}
+                        {(() => {
+                          const vehicle = vehicles.find(v => v.id === log.vehicle);
+                          return vehicle 
+                            ? getVehicleDisplay(vehicle)
+                            : `Vehicle ${log.vehicle}`;
+                        })()}
                       </td>
+                      <td>{log.recorded_by || "Loading..."}</td>
+                      <td>{log.created_at ? new Date(log.created_at).toLocaleString() : "Loading..."}</td>
                     </tr>
                   ))
                 )}
@@ -318,10 +321,8 @@ const VehicleServices = () => {
           </div>
         </div>
       </div>
+
       <style jsx>{`
-        .cursor-pointer {
-          cursor: pointer;
-        }
         .spin {
           animation: spin 1s linear infinite;
         }

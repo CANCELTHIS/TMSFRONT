@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Import useRef
 import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,6 +13,7 @@ import {
   FaSortDown,
   FaUser,
 } from "react-icons/fa";
+import { MdOutlineClose } from "react-icons/md"; // Import the close icon from Material Design Icons
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
 
@@ -20,14 +21,56 @@ import ServerErrorPage from "./ServerErrorPage";
 const OTPModal = ({
   open,
   loading,
-  value,
-  onChange,
+  value, // This will be the full OTP string
+  onChange, // This will update the full OTP string
   onClose,
   onResend,
   onSubmit,
   actionLabel,
-}) =>
-  open ? (
+}) => {
+  const inputRefs = useRef([]); // Ref to hold references to each input element
+
+  useEffect(() => {
+    // Focus on the first input when modal opens
+    if (open && inputRefs.current[0]) {
+      inputRefs.current[0].focus();
+    }
+  }, [open]);
+
+  const handleOtpChange = (e, index) => {
+    const val = e.target.value.replace(/\D/g, ""); // Allow only digits
+
+    if (val) {
+      // If a digit is entered, update the specific digit and move focus
+      const newOtpArray = value.split("");
+      newOtpArray[index] = val;
+      const newOtp = newOtpArray.join("");
+      onChange(newOtp);
+
+      if (index < 5) {
+        inputRefs.current[index + 1].focus();
+      }
+    } else {
+      // If backspace/clear, clear the specific digit and move focus back
+      const newOtpArray = value.split("");
+      newOtpArray[index] = ""; // Clear the current digit
+      const newOtp = newOtpArray.join("");
+      onChange(newOtp);
+
+      if (index > 0) {
+        inputRefs.current[index - 1].focus();
+      }
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    // If backspace is pressed on an empty input, move to previous
+    if (e.key === "Backspace" && !value[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+
+  return open ? (
     <div
       className="modal fade show d-block"
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
@@ -41,18 +84,36 @@ const OTPModal = ({
               className="btn-close"
               onClick={onClose}
               disabled={loading}
-            />
+            >
+              <MdOutlineClose /> {/* Using MdOutlineClose for the close button */}
+            </button>
           </div>
           <div className="modal-body">
-            <input
-              type="text"
-              className="form-control"
-              maxLength={6}
-              value={value}
-              onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
-              disabled={loading}
-              placeholder="Enter OTP"
-            />
+            <p>Enter the OTP code sent to your phone number.</p>
+            <div className="d-flex justify-content-center gap-2 mb-3">
+              {[...Array(6)].map((_, idx) => (
+                <input
+                  key={idx}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  className="form-control text-center"
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    fontSize: "1.5rem",
+                    borderRadius: "6px",
+                    border: "1px solid #ccc",
+                    boxShadow: "none",
+                  }}
+                  value={value[idx] || ""}
+                  onChange={(e) => handleOtpChange(e, idx)}
+                  onKeyDown={(e) => handleKeyDown(e, idx)}
+                  ref={(el) => (inputRefs.current[idx] = el)} // Assign ref to each input
+                  disabled={loading}
+                />
+              ))}
+            </div>
           </div>
           <div className="modal-footer">
             <button
@@ -81,6 +142,7 @@ const OTPModal = ({
       </div>
     </div>
   ) : null;
+};
 
 function VehicleServiceManager() {
   const [allVehicles, setAllVehicles] = useState([]);
@@ -512,9 +574,7 @@ function VehicleServiceManager() {
                           </div>
                           <div>
                             <div className="fw-medium">{vehicle.model}</div>
-                            <small className="text-muted">
-                              ID: {vehicle.id}
-                            </small>
+                            <small className="text-muted">ID: {vehicle.id}</small>
                           </div>
                         </div>
                       </td>

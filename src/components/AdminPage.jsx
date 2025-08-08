@@ -9,8 +9,9 @@ import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
-
+import { useLanguage } from "../context/LanguageContext";
 const AdminPage = () => {
+  const { myLanguage } = useLanguage();
   const [data, setData] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [departments, setDepartments] = useState([]);
@@ -31,19 +32,19 @@ const AdminPage = () => {
     role: "",
     department: "",
   });
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null); 
   const navigate = useNavigate();
 
   const ROLE_CHOICES = [
-    { value: 1, label: "Employee" },
-    { value: 2, label: "Department Manager" },
-    { value: 3, label: "Finance Manager" },
-    { value: 4, label: "Transport Manager" },
-    { value: 5, label: "CEO" },
-    { value: 6, label: "Driver" },
-    { value: 7, label: "System Admin" },
-    { value: 8, label: "General System Excuter" }, // Added Budget Manager
-    { value: 9, label: "Budget Manager" }, // Added Budget Officer
+    { value: 1, label: myLanguage === "EN" ? "Employee" : "ሰራተኛ" },
+    { value: 2, label: myLanguage === "EN" ? "Department Manager" : "የክፍል አስተዳዳሪ" },
+    { value: 3, label: myLanguage === "EN" ? "Finance Manager" : "የፋይናንስ አስተዳዳሪ" },
+    { value: 4, label: myLanguage === "EN" ? "Transport Manager" : "የትራንስፖርት አስተዳዳሪ" },
+    { value: 5, label: myLanguage === "EN" ? "CEO" : "ዋና አስተዳዳሪ" },
+    { value: 6, label: myLanguage === "EN" ? "Driver" : "ሹፌር" },
+    { value: 7, label: myLanguage ==="EN"? "System Admin":"የስርዓት አስተዳዳሪ" },
+    { value: 8, label: myLanguage ==="EN"? "General System Excuter":"የመሰረታዊ አገልግሎት ስራ አስኪያጅ" }, 
+    { value: 9, label: myLanguage ==="EN"?"Budget Manager":"የበጀት አስተዳዳሪ" }, 
   ];
 
   const fetchDepartments = async () => {
@@ -72,7 +73,7 @@ const AdminPage = () => {
           setErrorType("server");
         }
         const errorData = await response.json();
-        throw new Error(errorData.detail || "Failed to fetch departments.");
+        throw new Error(errorData.detail || myLanguage==="EN"?"Failed to fetch departments.":"" + "ክፍሎች ማግኘት አልተቻለም።");
       }
     } catch (error) {
       toast.error(error.message);
@@ -124,7 +125,7 @@ const AdminPage = () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        toast.error("You need to be logged in to approve users.");
+        toast.error(myLanguage==="EN"?"You need to be logged in to approve users.":"ተጠቃሚዎችን ለማጽደቅ በመለያ መግባት አለብዎት።");
         return;
       }
 
@@ -138,14 +139,14 @@ const AdminPage = () => {
       });
 
       if (response.ok) {
-        toast.success("User approved successfully!");
+        toast.success(myLanguage==="EN"?"User approved successfully!":"ተጠቃሚ በተሳካ ሁኔታ ጸድቋል!");
         fetchUsers(); // Refresh user list
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || "Failed to approve user.");
+        toast.error(errorData.error || myLanguage==="EN"?"Failed to approve user.":"ተጠቃሚን ማጽደቅ አልተቻለም።");
       }
     } catch (error) {
-      toast.error("An error occurred while approving the user.");
+      toast.error(myLanguage==="EN"?"An error occurred while approving the user.":"ተጠቃሚን ማጽደቅ አልተቻለም።");
     } finally {
       setIsProcessing(false); // Stop animation after process completes
     }
@@ -153,7 +154,7 @@ const AdminPage = () => {
 
   const getRoleLabel = (roleId) => {
     const role = ROLE_CHOICES.find((role) => role.value === roleId);
-    return role ? role.label : "Unknown Role";
+    return role ? role.label : myLanguage==="EN"?"Unknown Role":"የማይታወቅ ሚና";
   };
 
   const handleReject = (userId) => {
@@ -163,7 +164,7 @@ const AdminPage = () => {
 
   const confirmRejection = () => {
     if (!rejectionReason) {
-      toast.error("Please provide a rejection message.");
+      toast.error(myLanguage==="EN"?"Please provide a rejection message.":"እባክዎን መልእክት ያቅርቡ");
       return;
     }
     sendRejectionEmail(rejectionReason);
@@ -174,7 +175,7 @@ const AdminPage = () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        toast.error("You need to be logged in to reject users.");
+        toast.error(myLanguage==="EN"?"You need to be logged in to reject users.":"ተጠቃሚዎችን ለመሰረዝ በመለያ መግባት አለብዎት።");
         return;
       }
 
@@ -191,16 +192,16 @@ const AdminPage = () => {
       });
 
       if (response.ok) {
-        toast.success("User rejected successfully!");
+        toast.success(myLanguage==="EN"?"User rejected successfully!":"ተጠቃሚ በተሳካ ሁኔታ ተሰርዟል!");
         fetchUsers();
         setShowRejectModal(false);
         setRejectionReason("");
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || "Failed to reject user.");
+        toast.error(errorData.error || myLanguage==="EN"?"Failed to reject user.":"ተጠቃሚን ማሰረዝ አልተቻለም።");
       }
     } catch (error) {
-      toast.error("An error occurred while rejecting the user.");
+      toast.error(myLanguage==="EN"?"An error occurred while rejecting the user.":"ተጠቃሚን ማሰረዝ አልተቻለም።");
     } finally {
       setIsProcessing(false); // Stop animation
     }
@@ -237,12 +238,12 @@ const AdminPage = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success("Role updated successfully!");
+      toast.success(myLanguage==="EN"?"Role updated successfully!":"ሚና በተሳካ ሁኔታ ተሻሽሏል!");
       fetchUsers();
       setEditAccount(null);
     } catch (error) {
-      setError("Failed to update role.");
-      toast.error("Failed to update role.");
+      setError(myLanguage==="EN"?"Failed to update role.":"ሚና ማሻሻያ አልተቻለም።");
+      toast.error(myLanguage==="EN"?"Failed to update role.":"ሚና ማሻሻያ አልተቻለም።");
     }
   };
 
@@ -288,12 +289,13 @@ const AdminPage = () => {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                  <th>{myLanguage === "EN" ? "Name" : "ስም"}</th>
+<th>{myLanguage === "EN" ? "Email" : "ኢሜይል"}</th>
+<th>{myLanguage === "EN" ? "Role" : "ሚና"}</th>
+<th>{myLanguage === "EN" ? "Department" : "ክፍል"}</th>
+<th>{myLanguage === "EN" ? "Status" : "ሁኔታ"}</th>
+<th>{myLanguage === "EN" ? "Actions" : "እርምጃዎች"}</th>
+
                   </tr>
                 </thead>
                 <tbody>
@@ -327,7 +329,7 @@ const AdminPage = () => {
                             )?.name) ||
                             "N/A"}
                         </td>
-                        <td>{user.is_active ? "Active" : "Pending"}</td>
+                        <td>{user.is_active ? myLanguage==="EN"?"Active":" ንቁ" : myLanguage==="EN"?"Pending":"በመጠባበቅ ላይ"}</td>
                         <td>
                           <div
                             style={{
@@ -344,7 +346,7 @@ const AdminPage = () => {
                               }}
                               onClick={() => handleEdit(user)}
                             >
-                              Edit
+                              {myLanguage === "EN" ? "Edit" : "ለውጥ አድርግ"}
                             </button>
                             {editAccount && editAccount.id === user.id && (
                               <div>
@@ -352,13 +354,13 @@ const AdminPage = () => {
                                   className="btn btn-sm btn-primary"
                                   onClick={handleSaveEdit}
                                 >
-                                  Save
+                                  {myLanguage === "EN" ? "Save" : "አስቀምጥ"}
                                 </button>
                                 <button
                                   className="btn btn-sm btn-secondary"
                                   onClick={handleCancelEdit}
                                 >
-                                  Cancel
+                                  {myLanguage === "EN" ? "Cancel" : "ሰርዝ"}
                                 </button>
                               </div>
                             )}
@@ -371,13 +373,13 @@ const AdminPage = () => {
                                     setShowApproveModal(true);
                                   }}
                                 >
-                                  Approve
+                                  {myLanguage === "EN" ? "Approve" : "አጽድቀው"}
                                 </button>
                                 <button
                                   className="btn btn-sm btn-danger"
                                   onClick={() => handleReject(user.id)}
                                 >
-                                  Reject
+                                  {myLanguage === "EN" ? "Reject" : "ውድቅ አድርግ"}
                                 </button>
                               </>
                             )}
@@ -387,7 +389,7 @@ const AdminPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6">No users found.</td>
+                      <td colSpan="6">{myLanguage === "EN" ? "No users found." : "ምንም ተጠቃሚዎች አልተገኙም።"}</td>
                     </tr>
                   )}
                 </tbody>
@@ -411,7 +413,7 @@ const AdminPage = () => {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Approve User</h5>
+                <h5 className="modal-title">{myLanguage === "EN" ? "Approve User" : "ተጠቃሚውን አጽድቅ"}</h5>
                 <button
                   onClick={() => setShowApproveModal(false)} // Or setShowRejectModal(false)
                   style={{
@@ -429,7 +431,7 @@ const AdminPage = () => {
               </div>
               <div className="modal-body">
                 <p>
-                  Are you sure you want to approve {userToApprove?.full_name}?
+                  {myLanguage==="EN"?"Are you sure you want to approve":"እርግጠኛ ነዎት ማጽደቅ ይፈልጋሉ"} {userToApprove?.full_name}?
                 </p>
               </div>
               <div
@@ -441,14 +443,14 @@ const AdminPage = () => {
                   className="btn btn-success"
                   onClick={handleApprove}
                 >
-                  Approve
+                  {myLanguage==="EN"?"Approve":"አጽድቅ"}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowApproveModal(false)}
                 >
-                  Cancel
+                  {myLanguage==="EN"?"Cancel":"ሰርዝ"}
                 </button>
               </div>
             </div>
@@ -462,7 +464,7 @@ const AdminPage = () => {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Reject User</h5>
+                <h5 className="modal-title">{myLanguage==="EN"?"Reject User":"ተቀባይነት አላገኘም"}</h5>
                 <button
                   type="button"
                   className="close"
@@ -481,7 +483,7 @@ const AdminPage = () => {
                 </button>
               </div>
               <div className="modal-body">
-                <label htmlFor="rejectionReason">Rejection Reason:</label>
+                <label htmlFor="rejectionReason">{myLanguage==="EN"?"Rejection Reason:":"ውድቅ የተደረገ ምክንያት"}</label>
                 <textarea
                   id="rejectionReason"
                   value={rejectionReason}
@@ -499,14 +501,14 @@ const AdminPage = () => {
                   className="btn btn-danger"
                   onClick={confirmRejection}
                 >
-                  Reject
+                 {myLanguage==="EN"?"Reject":"ውድቅ አድርግ"}
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setShowRejectModal(false)}
                 >
-                  Cancel
+                  {myLanguage==="EN"?"Cancel":"ሰርዝ"}
                 </button>
               </div>
             </div>

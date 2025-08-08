@@ -5,8 +5,9 @@ import { ENDPOINTS } from "../utilities/endpoints";
 import CustomPagination from "./CustomPagination";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
-
+import { useLanguage } from "../context/LanguageContext";
 const AdminDepartmentPage = () => {
+  const { myLanguage } = useLanguage();
   const [departments, setDepartments] = useState([]); // Ensure it's always an array
   const [users, setUsers] = useState([]); // State for users
   const [showModal, setShowModal] = useState(false);
@@ -126,7 +127,7 @@ const AdminDepartmentPage = () => {
     >
       <div className="flex-grow-1">
         <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
-          <h2 className="h5">Department Management</h2>
+          <h2 className="h5">{myLanguage==="EN"?"Department Management":"የመምሪያው አስተዳደር"}</h2>
         </div>
 
         <div className="container py-4">
@@ -141,7 +142,7 @@ const AdminDepartmentPage = () => {
               }}
               onClick={() => setShowModal(true)}
             >
-              + Add Department
+              {myLanguage==="EN"?"Add Department":"ዲፓርትመንት አክል"}
             </button>
           </div>
 
@@ -152,8 +153,8 @@ const AdminDepartmentPage = () => {
                   <thead className="table-light">
                     <tr>
                       <th>#</th>
-                      <th>Department Name</th>
-                      <th>Manager</th>
+                      <th>{myLanguage==="EN"?"Department Name":"የመምሪያው ስም"}</th>
+                      <th>{myLanguage==="EN"?"Manager":"አስተዳዳሪ"}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -168,14 +169,14 @@ const AdminDepartmentPage = () => {
                           <td>
                             {dept.department_manager
                               ? dept.department_manager
-                              : "No Manager Assigned"}
+                              : (myLanguage === "EN" ? "No Manager Assigned" : "የአስተዳዳሪ መለያ የለም")}
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
                         <td colSpan="3" className="text-center">
-                          No departments added yet.
+                          {myLanguage === "EN" ? "No departments added yet." : "ምንም ክፍሎች አልተጨመሩም።"}
                         </td>
                       </tr>
                     )}
@@ -203,7 +204,7 @@ const AdminDepartmentPage = () => {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">
-                    {currentDepartment ? "Edit Department" : "Add Department"}
+                    {currentDepartment ? (myLanguage === "EN" ? "Edit Department" : "ዲፓርትመንት ቀይር") : (myLanguage === "EN" ? "Add Department" : "ዲፓርትመንት አክል")}
                   </h5>
                   <button
                     type="button"
@@ -213,7 +214,7 @@ const AdminDepartmentPage = () => {
                 </div>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Department Name</label>
+                    <label className="form-label">{myLanguage === "EN" ? "Department Name" : "የመምሪያው ስም"}</label>
                     <input
                       type="text"
                       className="form-control"
@@ -234,14 +235,14 @@ const AdminDepartmentPage = () => {
                     className="btn btn-secondary"
                     onClick={handleCloseModal}
                   >
-                    Cancel
+                    { myLanguage === "EN" ? "Cancel" : "ሰርዝ"}
                   </button>
                   <button
                     type="button"
                     className="btn btn-primary"
                     onClick={handleAddOrEdit}
                   >
-                    Save
+                    {myLanguage === "EN" ? "Save" : "አስቀምጥ"}
                   </button>
                 </div>
               </div>

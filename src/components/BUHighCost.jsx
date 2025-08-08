@@ -383,6 +383,56 @@ const BUHighCost = () => {
                   <strong>Created At:</strong>{" "}
                   {new Date(selectedRequest.created_at).toLocaleString()}
                 </p>
+                {selectedRequest.employee_list_file && (
+  <div className="mb-3 d-flex flex-column align-items-center gap-2">
+    <strong>Employee List File:</strong>
+    <a
+      href={selectedRequest.employee_list_file}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="btn btn-sm"
+      style={{
+        backgroundColor: "#181E4B",
+        color: "white",
+        minWidth: "160px",
+        fontWeight: "bold",
+        letterSpacing: "0.5px",
+        border: "none",
+      }}
+      download
+    >
+      Download Excel
+    </a>
+    <button
+      className="btn btn-sm"
+      type="button"
+      style={{
+        backgroundColor: "hsl(32.1, 94.6%, 43.7%)",
+        color: "white",
+        minWidth: "160px",
+        fontWeight: "bold",
+        letterSpacing: "0.5px",
+        border: "none",
+      }}
+      onClick={() => {
+        const previewUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+          selectedRequest.employee_list_file
+        )}`;
+        window.open(
+          previewUrl,
+          "_blank",
+          "toolbar=0,location=0,menubar=0,width=" +
+            window.screen.width +
+            ",height=" +
+            window.screen.height +
+            ",top=0,left=0"
+        );
+      }}
+    >
+      Preview
+    </button>
+  </div>
+)}
               </div>
               <div className="modal-footer">
                 <button

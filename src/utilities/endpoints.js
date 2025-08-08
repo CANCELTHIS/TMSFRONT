@@ -40,6 +40,10 @@ export const ENDPOINTS = {
   AVAILABLE_DRIVERS: `${BASE_URL}available-drivers/`,
   AVAILABLE_VEHICLES: `${BASE_URL}available-vehicles/`,
 
+  
+ RENTED_AVAILABLE_VEHICLES: `${BASE_URL}rented-available-vehicles/`, // GET available rented vehicles
+  ORGANIZATION_AVAILABLE_VEHICLES: `${BASE_URL}organization-available-vehicles/`, // GET available organization vehicles
+
   CREATE_REQUEST: `${BASE_URL}transport-requests/create/`,
   TM_APPROVE_REJECT: (request_id) =>
     `${BASE_URL}transport-requests/${request_id}/action/`,
@@ -120,7 +124,11 @@ export const ENDPOINTS = {
     `${BASE_URL}service-requests/${request_id}/action/`, // POST: { action: "forward" | "approve" }
   SERVICE_REQUEST_DETAIL: (pk) => `${BASE_URL}service-requests/${pk}/`,
   SERVICED_VEHICLES: `${BASE_URL}service-requests/serviced-vehicles/`, // GET: under service vehicles
-  MARK_VEHICLE_AVAILABLE: (id) => `${BASE_URL}service-requests/${id}/mark-available/`, // POST: mark as available (empty JSON)
+  MARK_VEHICLE_AVAILABLE: (id) => `${BASE_URL}service-requests/${id}/mark-available/`, 
+  
+
+  ADD_MONTHLY_KILOMETERS: `${BASE_URL}vehicles/add-monthly-kilometers/`,
+  
   // Dashboard endpoints
   DASHBOARD_RECENT_VEHICLES: `${BASE_URL}dashboard/recent-vehicles/`,
   DASHBOARD_OVERVIEW: `${BASE_URL}dashboard/overview/`,

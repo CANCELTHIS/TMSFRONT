@@ -18,11 +18,8 @@ const TransportRequest = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [showRejectionModal, setShowRejectionModal] = useState(false);
-  const [showConfirmation, setShowConfirmation] = useState(false);
   const [showApproveConfirmation, setShowApproveConfirmation] = useState(false);
-  const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [selectedDriver, setSelectedDriver] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -88,40 +85,37 @@ const TransportRequest = () => {
     }
   };
 
-  const fetchDrivers = async () => {
-    try {
-      const response = await fetch(ENDPOINTS.AVAILABLE_DRIVERS, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const data = await response.json();
-      setDrivers(data || []);
-    } catch (error) {
-      setDrivers([]);
-    }
-  };
-
+  // Fetch available vehicles with driver info
   const fetchVehicles = async () => {
+    setVehicles([]);
     try {
-      const response = await fetch(ENDPOINTS.AVAILABLE_VEHICLES, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      const response = await fetch(ENDPOINTS.RENTED_AVAILABLE_VEHICLES, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       });
+      if (!response.ok) {
+        throw new Error("Failed to fetch vehicles");
+      }
       const data = await response.json();
+      console.log("rented vehicles: ",data)
       const availableVehicles = (data.results || []).filter(
-        (vehicle) => vehicle.status !== "in_use"
+        (vehicle) => vehicle.status === "available"
       );
       setVehicles(availableVehicles);
     } catch (error) {
+      toast.error("Failed to fetch vehicles.");
       setVehicles([]);
     }
   };
 
   useEffect(() => {
-    if (showApproveConfirmation) fetchDrivers();
+    if (showApproveConfirmation) {
+      fetchVehicles();
+    }
   }, [showApproveConfirmation]);
-
-  useEffect(() => {
-    if (drivers.length > 0) fetchVehicles();
-  }, [drivers]);
 
   const getEmployeeNames = (employeeIds) => {
     return employeeIds
@@ -138,8 +132,9 @@ const TransportRequest = () => {
     setSelectedRequest(null);
     setRejectionReason("");
     setShowRejectionModal(false);
-    setShowConfirmation(false);
     setShowApproveConfirmation(false);
+    setVehicles([]);
+    setSelectedVehicle(null);
   };
 
   const handleApproveClick = () => setShowApproveConfirmation(true);
@@ -147,19 +142,17 @@ const TransportRequest = () => {
   const handleVehicleChange = (e) => {
     const vehicleId = e.target.value;
     const vehicle = vehicles.find((vehicle) => vehicle.id.toString() === vehicleId);
-    if (vehicle) {
-      const driver = drivers.find((driver) => driver.id === vehicle.driver);
-      setSelectedVehicle(vehicle);
-      setSelectedDriver(driver || { full_name: "No Driver Assigned" });
-    } else {
-      setSelectedVehicle(null);
-      setSelectedDriver(null);
-    }
+    setSelectedVehicle(vehicle || null);
   };
 
+  // Approve: send vehicle_id and driver_id
   const handleConfirmApprove = async (requestId) => {
-    if (!selectedDriver || !selectedVehicle) {
-      toast.error("Please select a driver and vehicle before approving.");
+    if (!selectedVehicle) {
+      toast.error("Please select a vehicle before approving.");
+      return;
+    }
+    if (!selectedVehicle.driver) {
+      toast.error("Selected vehicle does not have a driver assigned.");
       return;
     }
     try {
@@ -174,7 +167,7 @@ const TransportRequest = () => {
           body: JSON.stringify({
             action: "approve",
             vehicle_id: selectedVehicle.id,
-            driver_id: selectedDriver.id,
+            driver_id: selectedVehicle.driver
           }),
         }
       );
@@ -184,29 +177,6 @@ const TransportRequest = () => {
       }
     } catch {
       toast.error("Failed to approve request.");
-      fetchRequests();
-    }
-  };
-
-  const handleForwardRequest = async (requestId) => {
-    try {
-      setRequests((prevRequests) =>
-        prevRequests.filter((req) => req.id !== requestId)
-      );
-      const response = await fetch(
-        ENDPOINTS.TM_APPROVE_REJECT(requestId),
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "forward" }),
-        }
-      );
-      if (response.ok) {
-        toast.success("Request forwarded successfully!");
-        handleCloseDetail();
-      }
-    } catch {
-      toast.error("Failed to forward request.");
       fetchRequests();
     }
   };
@@ -237,7 +207,7 @@ const TransportRequest = () => {
     }
   };
 
-  // Filtering and sorting
+  // Filtering and sorting logic
   const filterRequests = () => {
     let filtered = requests;
     if (searchTerm) {
@@ -284,12 +254,8 @@ const TransportRequest = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentPageRequests = filteredRequests.slice(startIndex, startIndex + itemsPerPage);
 
-  if (errorType === "unauthorized") {
-    return <UnauthorizedPage />;
-  }
-  if (errorType === "server") {
-    return <ServerErrorPage />;
-  }
+  if (errorType === "unauthorized") return <UnauthorizedPage />;
+  if (errorType === "server") return <ServerErrorPage />;
 
   return (
     <div className="container py-4">
@@ -535,7 +501,7 @@ const TransportRequest = () => {
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "600px" }}>
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Assign Driver and Vehicle</h5>
+                <h5 className="modal-title">Assign Vehicle</h5>
                 <button type="button" className="btn-close" onClick={() => setShowApproveConfirmation(false)}></button>
               </div>
               <div className="modal-body">
@@ -556,13 +522,26 @@ const TransportRequest = () => {
                     onChange={handleVehicleChange}
                   >
                     <option value="">Select a vehicle</option>
+                    {vehicles.length === 0 && (
+                      <option disabled>No available vehicles</option>
+                    )}
                     {vehicles.map((vehicle) => (
                       <option key={vehicle.id} value={vehicle.id}>
-                        {`Plate Number-${vehicle.license_plate}, Driver-${vehicle.driver_name || "No Driver Assigned"}, Capacity-${vehicle.capacity}`}
+                        {`Plate Number: ${vehicle.license_plate}, Model: ${vehicle.model}, Driver: ${vehicle.driver_name || "No Driver Assigned"}, Capacity: ${vehicle.capacity}`}
                       </option>
                     ))}
                   </select>
                 </div>
+                {selectedVehicle && (
+                  <div className="mb-3">
+                    <label className="form-label"><strong>Assigned Driver:</strong></label>
+                    <input
+                      className="form-control"
+                      disabled
+                      value={selectedVehicle.driver_name || "No Driver Assigned"}
+                    />
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowApproveConfirmation(false)}>

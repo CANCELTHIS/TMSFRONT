@@ -61,6 +61,9 @@ import { Import } from "lucide-react";
 import UnderMaintanaceVechile from "./components/UnderMaintanaceVechile";
 import CEODashboard from "./components/CEODashboard";
 import BMRefulingTable from "./components/BMRefulingTable";
+import AvailableVehiclesTable from "./components/AvailableVehiclesTable";
+import GSDashboard  from "./components/GSDashboard";
+import ActorAccessPage from "./components/ActorAccessPage";
 const App = () => {
   const [modalType, setModalType] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -279,6 +282,10 @@ const App = () => {
                               path="vehicle-services"
                               element={<VehicleServices />}
                             />
+                              <Route
+                                  path="available-vehicles"
+                                   element={<AvailableVehiclesTable />}
+                                    />   
                           </Routes>
                         </div>
                       </div>
@@ -339,6 +346,10 @@ const App = () => {
                               element={<VehicleServices />}
                             />
                               <Route path="hight-cost-request" element={<HightCost />} />
+                            <Route
+                                  path="available-vehicles"
+                                   element={<AvailableVehiclesTable />}
+                                    />   
                           </Routes>
                         </div>
                       </div>
@@ -405,7 +416,11 @@ const App = () => {
                               <Route
                               path="dashbord"
                               element={<CEODashboard />}
-                            />            
+                            />  
+                              <Route
+                                  path="available-vehicles"
+                                   element={<AvailableVehiclesTable />}
+                                    />             
                           </Routes>
                         </div>
                       </div>
@@ -473,6 +488,7 @@ const App = () => {
                               element={<AccountPage />}
                             />
                             <Route path="history" element={<HistoryPage />} />
+                             <Route path="actor-access"element={<ActorAccessPage/>}/>
                           </Routes>
                         </div>
                       </div>
@@ -563,6 +579,10 @@ const App = () => {
                               path="under-maintanace-vechile"
                               element={<UnderMaintanaceVechile />}
                             />
+                              <Route
+                                  path="available-vehicles"
+                                   element={<AvailableVehiclesTable />}
+                                    />   
                           </Routes>
                         </div>
                       </div>
@@ -628,6 +648,10 @@ const App = () => {
                               element={<VehicleServices />}
                             />
                             <Route path="hight-cost-request" element={<HightCost />} />
+                              <Route
+                                  path="available-vehicles"
+                                   element={<AvailableVehiclesTable />}
+                                    />   
                           </Routes>
                         </div>
                       </div>
@@ -645,8 +669,8 @@ const App = () => {
                         <div className="container">
                           <Routes>
                           <Route
-                              path="dashboard"
-                              element={<TransportManagerDashboard />}
+                              path="dashbord"
+                              element={<GSDashboard/>}
                             />
                             <Route path="high_cost" element={<CEOhighcost />} />
 
@@ -677,6 +701,14 @@ const App = () => {
                               path="maintenance-request"
                               element={<MaintenanceRequest />}
                             />
+                              <Route
+                                  path="available-vehicles"
+                                   element={<AvailableVehiclesTable />}
+                                    />  
+                                    <Route
+                              path="refueling-request"
+                              element={<RefuelingRequest />}
+                            /> 
                           </Routes>
                         </div>
                       </div>

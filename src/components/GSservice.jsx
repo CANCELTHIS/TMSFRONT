@@ -4,7 +4,9 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UnauthorizedPage from "./UnauthorizedPage";
 import ServerErrorPage from "./ServerErrorPage";
-import { FaSync, FaSearch, FaFilePdf, FaWindowClose, FaForward, FaTimes } from "react-icons/fa";
+import { FaSync, FaSearch, FaFilePdf } from "react-icons/fa";
+import { MdOutlineClose } from "react-icons/md"; // Import the MdOutlineClose icon
+import Button from "@mui/material/Button"; // Assuming MUI Button component
 
 const ListServiceRequestsTable = () => {
   const [serviceRequests, setServiceRequests] = useState([]);
@@ -14,13 +16,16 @@ const ListServiceRequestsTable = () => {
   const [receiptFile, setReceiptFile] = useState(null);
   const [maintenanceTotalCost, setMaintenanceTotalCost] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // OTP integration
   const [otpModalOpen, setOtpModalOpen] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpAction, setOtpAction] = useState(null); // "forward" or "reject"
   const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false); // To track if OTP was sent
+  const [rejectionMessage, setRejectionMessage] = useState(""); // For rejection reason
+
+  const [mylanguage, setMylanguage] = useState("EN"); // State for language
 
   const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
 
@@ -67,7 +72,6 @@ const ListServiceRequestsTable = () => {
     }
   };
 
-  // Standard submit files (NO OTP)
   const handleSubmitFiles = async (requestId) => {
     if (!maintenanceLetter || !receiptFile || !maintenanceTotalCost) {
       toast.error(
@@ -104,8 +108,10 @@ const ListServiceRequestsTable = () => {
   const sendOtp = async (actionType) => {
     setOtpAction(actionType);
     setOtpValue("");
+    setRejectionMessage(""); // Clear rejection message on new OTP request
     setOtpModalOpen(true);
     setOtpLoading(true);
+    setOtpSent(false); // Reset otpSent state
     try {
       const token = localStorage.getItem("authToken");
       const response = await fetch(ENDPOINTS.OTP_REQUEST, {
@@ -118,6 +124,7 @@ const ListServiceRequestsTable = () => {
       });
       if (!response.ok) throw new Error("Failed to send OTP");
       toast.success("OTP sent to your phone");
+      setOtpSent(true); // Set otpSent to true after successful sending
     } catch (err) {
       toast.error(err.message);
       setOtpModalOpen(false);
@@ -126,10 +133,29 @@ const ListServiceRequestsTable = () => {
     }
   };
 
-  // OTP-protected forward request
-  const handleOtpForward = async () => {
+  // OTP-protected action (forward or reject)
+  const handleOtpAction = async () => {
+    if (otpValue.length !== 6) {
+      toast.error(mylanguage === "EN" ? "Please enter a 6-digit OTP." : "እባክዎ ባለ 6 አሃዝ OTP ያስገቡ።");
+      return;
+    }
+
     setOtpLoading(true);
     const token = localStorage.getItem("authToken");
+    const payload = {
+      action: otpAction,
+      otp_code: otpValue,
+    };
+
+    if (otpAction === "reject") {
+      if (!rejectionMessage.trim()) {
+        toast.error(mylanguage === "EN" ? "Please provide a reason for rejection." : "እባክዎ እምቢ ለማለት ምክንያት ያቅርቡ።");
+        setOtpLoading(false);
+        return;
+      }
+      payload.rejection_reason = rejectionMessage;
+    }
+
     try {
       const response = await fetch(
         ENDPOINTS.SERVICE_REQUEST_ACTION(selectedRequest.id),
@@ -139,63 +165,32 @@ const ListServiceRequestsTable = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ action: "forward", otp_code: otpValue }),
+          body: JSON.stringify(payload),
         }
       );
-      if (!response.ok) throw new Error("Failed to forward request.");
-      toast.success("Request forwarded successfully!");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to perform action.");
+      }
+      toast.success(
+        mylanguage === "EN"
+          ? `Request ${otpAction}ed successfully!`
+          : `ጥያቄው በተሳካ ሁኔታ ${otpAction === "forward" ? "ተልኳል" : "ተቀባይነት አግኝቷል"}!`
+      );
       setSelectedRequest(null);
       setMaintenanceLetter(null);
       setReceiptFile(null);
       setMaintenanceTotalCost("");
       setOtpModalOpen(false);
-      setShowConfirmModal(false);
+      setOtpValue("");
+      setOtpSent(false);
+      setOtpAction(null);
+      setRejectionMessage("");
       fetchRequests();
     } catch (error) {
-      toast.error(error.message || "Failed to forward request.");
+      toast.error(error.message || `Failed to ${otpAction} request.`);
     } finally {
       setOtpLoading(false);
-    }
-  };
-
-  // OTP-protected reject request
-  const handleOtpReject = async () => {
-    setOtpLoading(true);
-    const token = localStorage.getItem("authToken");
-    try {
-      const response = await fetch(
-        ENDPOINTS.SERVICE_REQUEST_ACTION(selectedRequest.id),
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ action: "reject", otp_code: otpValue }),
-        }
-      );
-      if (!response.ok) throw new Error("Failed to reject request.");
-      toast.success("Request rejected successfully!");
-      setSelectedRequest(null);
-      setMaintenanceLetter(null);
-      setReceiptFile(null);
-      setMaintenanceTotalCost("");
-      setOtpModalOpen(false);
-      setShowConfirmModal(false);
-      fetchRequests();
-    } catch (error) {
-      toast.error(error.message || "Failed to reject request.");
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  // Handle OTP modal submit actions
-  const handleOtpSubmit = async () => {
-    if (otpAction === "forward") {
-      await handleOtpForward();
-    } else if (otpAction === "reject") {
-      await handleOtpReject();
     }
   };
 
@@ -313,7 +308,7 @@ const ListServiceRequestsTable = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Maintenance Request Details</h5>
-                <FaWindowClose
+                <MdOutlineClose // Changed from FaWindowClose to MdOutlineClose
                   style={{
                     cursor: "pointer",
                     position: "absolute",
@@ -420,10 +415,9 @@ const ListServiceRequestsTable = () => {
                       minWidth: 120,
                       border: "none",
                     }}
-                    onClick={() => setShowConfirmModal(true)}
+                    onClick={() => sendOtp("forward")}
                     disabled={actionLoading}
                   >
-                    <FaForward className="me-1" />
                     {actionLoading ? "Processing..." : "Forward"}
                   </button>
                   <button
@@ -432,7 +426,6 @@ const ListServiceRequestsTable = () => {
                     onClick={() => sendOtp("reject")}
                     disabled={actionLoading}
                   >
-                    <FaTimes className="me-1" />
                     Reject
                   </button>
                 </div>
@@ -442,123 +435,135 @@ const ListServiceRequestsTable = () => {
         </div>
       )}
 
-      {/* Confirm Forward Modal */}
-      {showConfirmModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Confirm Forward</h5>
-                <FaWindowClose
-                  style={{
-                    cursor: "pointer",
-                    position: "absolute",
-                    top: "16px",
-                    right: "16px",
-                    fontSize: "1.5rem",
-                    color: "#888"
-                  }}
-                  onClick={() => setShowConfirmModal(false)}
-                />
-              </div>
-              <div className="modal-body">
-                <p>Are you sure you want to forward this request?</p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  disabled={actionLoading}
-                  onClick={() => {
-                    setShowConfirmModal(false);
-                    sendOtp("forward");
-                  }}
-                >
-                  {actionLoading ? "Processing..." : " Forward"}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowConfirmModal(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* OTP Modal */}
       {otpModalOpen && (
-        <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  Enter OTP to {otpAction === "forward" ? "forward" : "reject"} request
+                  {mylanguage === "EN" ? "Enter OTP to " : "OTP ያስገቡ ለ "}
+                  {otpAction === "forward"
+                    ? (mylanguage === "EN" ? "forward" : "ወደ ፊት ለመላክ")
+                    : (mylanguage === "EN" ? "reject" : "መሰረዝ")}
+                  {mylanguage === "EN" ? " request" : " ጥያቄ"}
                 </h5>
-                <FaWindowClose
-                  style={{
-                    cursor: "pointer",
-                    position: "absolute",
-                    top: "16px",
-                    right: "16px",
-                    fontSize: "1.5rem",
-                    color: "#888"
-                  }}
+                <button
+                  type="button"
+                  className="btn-close"
                   onClick={() => {
                     setOtpModalOpen(false);
                     setOtpValue("");
+                    setOtpSent(false);
                     setOtpAction(null);
+                    setRejectionMessage("");
                   }}
                   disabled={otpLoading}
-                />
+                >
+                  <MdOutlineClose />
+                </button>
               </div>
               <div className="modal-body">
-                <input
-                  type="text"
-                  className="form-control"
-                  maxLength={6}
-                  value={otpValue}
-                  onChange={(e) =>
-                    setOtpValue(e.target.value.replace(/\D/g, ""))
-                  }
-                  disabled={otpLoading}
-                  placeholder="Enter OTP"
-                />
+                <p>{mylanguage === "EN" ? "Enter the OTP code sent to your phone number." : "ወደ ስልካችሁ የተላከውን OTP ኮድ ያስገቡ።"}</p>
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {[...Array(6)].map((_, idx) => (
+                    <input
+                      key={idx}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      className="form-control text-center"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        fontSize: "1.5rem",
+                        borderRadius: "6px",
+                        border: "1px solid #ccc",
+                        boxShadow: "none",
+                      }}
+                      value={otpValue[idx] || ""}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        let newOtp = otpValue.split("");
+                        newOtp[idx] = val;
+                        if (val && idx < 5) {
+                          const next = document.getElementById(
+                            `otp-input-${idx + 1}`
+                          );
+                          if (next) next.focus();
+                        } else if (!val && idx > 0 && e.nativeEvent.inputType === 'deleteContentBackward') {
+                            const prev = document.getElementById(
+                                `otp-input-${idx - 1}`
+                            );
+                            if (prev) prev.focus();
+                        }
+                        setOtpValue(newOtp.join("").slice(0, 6));
+                      }}
+                      onKeyDown={(e) => {
+                        if (
+                          e.key === "Backspace" &&
+                          !otpValue[idx] &&
+                          idx > 0
+                        ) {
+                          const prev = document.getElementById(
+                            `otp-input-${idx - 1}`
+                          );
+                          if (prev) prev.focus();
+                        }
+                      }}
+                      id={`otp-input-${idx}`}
+                      disabled={otpLoading}
+                    />
+                  ))}
+                </div>
+                {otpAction === "reject" && (
+                  <textarea
+                    className="form-control mt-3"
+                    rows={2}
+                    value={rejectionMessage}
+                    onChange={(e) => setRejectionMessage(e.target.value)}
+                    placeholder={mylanguage === "EN" ? "Reason for rejection" : "ምክንያት"}
+                    disabled={otpLoading}
+                  />
+                )}
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn btn-link"
-                  style={{ color: "#181E4B" }}
-                  onClick={() => sendOtp(otpAction)}
+                <Button
+                  variant="text"
+                  onClick={() => sendOtp(otpAction)} // Pass otpAction to sendOtp
                   disabled={otpLoading}
                 >
-                  Resend OTP
-                </button>
-                <button
-                  className="btn btn-secondary"
+                  {mylanguage === "EN" ? "Resend OTP" : "OTP እንደገና ይላኩ"}
+                </Button>
+                <Button
+                  variant="outlined" // Changed to outlined for Cancel
                   onClick={() => {
                     setOtpModalOpen(false);
                     setOtpValue("");
+                    setOtpSent(false);
                     setOtpAction(null);
+                    setRejectionMessage("");
                   }}
                   disabled={otpLoading}
+                  style={{ borderColor: "#181E4B", color: "#181E4B" }}
                 >
-                  Cancel
-                </button>
-                <button
-                  className="btn"
-                  style={{ backgroundColor: "#181E4B", color: "white" }}
-                  disabled={otpLoading || otpValue.length !== 6}
-                  onClick={handleOtpSubmit}
+                  {mylanguage === "EN" ? "Cancel" : "ሰርዝ"}
+                </Button>
+                <Button
+                  variant="contained"
+                  style={{ backgroundColor: "#181E4B", color: "#fff" }}
+                  disabled={otpLoading || otpValue.length !== 6 || (otpAction === "reject" && !rejectionMessage.trim())}
+                  onClick={handleOtpAction} // Call new handleOtpAction
                 >
                   {otpLoading
-                    ? "Processing..."
+                    ? (mylanguage === "EN" ? "Processing..." : "በማከናወን ላይ...")
                     : otpAction === "forward"
-                    ? "Forward"
-                    : "Reject"}
-                </button>
+                    ? (mylanguage === "EN" ? "Forward" : "ወደ ፊት ያስቀምጡ")
+                    : (mylanguage === "EN" ? "Reject" : "አትቀበሉ")}
+                </Button>
               </div>
             </div>
           </div>

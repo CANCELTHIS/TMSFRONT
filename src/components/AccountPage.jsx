@@ -21,7 +21,9 @@ const AccountPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [errorType, setErrorType] = useState(null); // "unauthorized" | "server" | null
+  const [errorType, setErrorType] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // search state
+  const [roleFilter, setRoleFilter] = useState("all"); // role filter
 
   useEffect(() => {
     fetchUsers();
@@ -42,8 +44,6 @@ const AccountPage = () => {
       const response = await axios.get(ENDPOINTS.APPROVED_USERS, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      console.log("Fetched Users:", response.data);
 
       const filteredAccounts = response.data.filter((user) => user.role !== 7);
       filteredAccounts.sort(
@@ -76,8 +76,6 @@ const AccountPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("Fetched Departments:", response.data);
-
       setDepartments(response.data);
     } catch (error) {
       if (error.response && error.response.status === 401) {
@@ -88,6 +86,7 @@ const AccountPage = () => {
       setError("Failed to load departments.");
     }
   };
+
   const fetchRoles = async () => {
     const roleData = {
       1: "Employee",
@@ -103,10 +102,30 @@ const AccountPage = () => {
     setRoleMappings(roleData);
   };
 
+  // Filtering and searching logic
+  const filteredAccounts = accounts
+    .filter((acc) => {
+      if (roleFilter === "all") return true;
+      return String(acc.role) === String(roleFilter);
+    })
+    .filter((acc) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        (acc.full_name && acc.full_name.toLowerCase().includes(query)) ||
+        (acc.email && acc.email.toLowerCase().includes(query)) ||
+        (roleMappings[acc.role] && roleMappings[acc.role].toLowerCase().includes(query)) ||
+        (
+          departments &&
+          departments.find((dep) => dep.id === acc.department)?.name?.toLowerCase().includes(query)
+        )
+      );
+    });
+
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentPageAccounts = accounts.slice(startIndex, endIndex);
-  const totalPages = Math.ceil(accounts.length / itemsPerPage);
+  const currentPageAccounts = filteredAccounts.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage);
 
   const handleToggleStatus = async (id, isActive) => {
     const token = localStorage.getItem("authToken");
@@ -123,7 +142,6 @@ const AccountPage = () => {
         }
       );
 
-      // Update the UI without refetching the entire list
       setAccounts((prevAccounts) =>
         prevAccounts.map((acc) =>
           acc.id === id ? { ...acc, is_active: !isActive } : acc
@@ -149,41 +167,36 @@ const AccountPage = () => {
     const token = localStorage.getItem("authToken");
 
     try {
-      const response = await axios.patch(
+      // Update both role and department
+      await axios.patch(
         ENDPOINTS.UPDATE_ROLE(editAccount.id),
-        { role: formValues.role },
+        { role: formValues.role, department: formValues.department },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const updatedAccounts = accounts.map((acc) =>
-        acc.id === editAccount.id ? { ...acc, role: formValues.role } : acc
+        acc.id === editAccount.id
+          ? { ...acc, role: formValues.role, department: formValues.department }
+          : acc
       );
 
       setAccounts(updatedAccounts);
       setEditAccount(null);
     } catch (error) {
-      setError("Failed to update role.");
+      setError("Failed to update role and department.");
     }
   };
 
   const handleCancelEdit = () => {
-    setEditAccount(null); // Cancel the editing mode
+    setEditAccount(null);
   };
 
   const handleRoleChange = (e) => {
     setFormValues({ ...formValues, role: e.target.value });
   };
 
-  const handleNextPage = () => {
-    if (currentPage * itemsPerPage < accounts.length) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const handleDepartmentChange = (e) => {
+    setFormValues({ ...formValues, department: e.target.value });
   };
 
   const handlePageChange = (page) => {
@@ -196,7 +209,6 @@ const AccountPage = () => {
       style={{ minHeight: "100vh", backgroundColor: "#f8f9fc" }}
     >
       <div className="flex-grow-1 mt-2">
-        {/* Error Page Handling */}
         {errorType === "unauthorized" ? (
           <UnauthorizedPage />
         ) : errorType === "server" ? (
@@ -205,7 +217,35 @@ const AccountPage = () => {
           <>
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h2 className="h5">Account Management</h2>
-              <div className="d-flex align-items-center"></div>
+              <div className="d-flex align-items-center" style={{ gap: "1rem" }}>
+                <select
+                  className="form-select"
+                  style={{ width: 180, maxWidth: "100%", fontWeight: "500" }}
+                  value={roleFilter}
+                  onChange={(e) => {
+                    setRoleFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="all">All Roles</option>
+                  {Object.keys(roleMappings).map((roleId) => (
+                    <option key={roleId} value={roleId}>
+                      {roleMappings[roleId]}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-control"
+                  style={{ width: 230, maxWidth: "100%" }}
+                  placeholder="Search name, email, role, dept..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                />
+              </div>
             </div>
 
             {isLoading ? (
@@ -235,9 +275,8 @@ const AccountPage = () => {
                             currentPageAccounts.map((acc, index) => (
                               <tr key={acc.id}>
                                 <td>
-                                  {(currentPage - 1) * itemsPerPage + index + 1}
-                                </td>{" "}
-                                {/* Adjust numbering */}
+                                  {startIndex + index + 1}
+                                </td>
                                 <td>{acc.full_name}</td>
                                 <td>{acc.email}</td>
                                 <td>
@@ -260,7 +299,20 @@ const AccountPage = () => {
                                   )}
                                 </td>
                                 <td>
-                                  {departments.length > 0
+                                  {editAccount && editAccount.id === acc.id ? (
+                                    <select
+                                      className="form-control"
+                                      value={formValues.department}
+                                      onChange={handleDepartmentChange}
+                                    >
+                                      <option value="">Select Department</option>
+                                      {departments.map((dep) => (
+                                        <option key={dep.id} value={dep.id}>
+                                          {dep.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  ) : departments.length > 0
                                     ? departments.find(
                                         (dep) => dep.id === acc.department
                                       )?.name || "No Department"
@@ -341,7 +393,6 @@ const AccountPage = () => {
 
             <div
               className="d-flex justify-content-center align-items-center"
-              // Full viewport height
             >
               <CustomPagination
                 currentPage={currentPage}
